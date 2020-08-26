@@ -1,0 +1,24 @@
+{% load i18n static %}
+<h5 class="pb-3 border-bottom">Services</h5>
+<div
+  class="service-listing pt-3"
+  data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+  data-api-action="services">
+  <div class="templates" style="display:none">
+    <table >
+      <tr data-template="row" class="">
+        <td scope="col" data-field="name"></td>
+      </tr>
+    </table>
+  </div>
+
+  <table class="table table-sm table-inline service-list">
+    <tbody id="serviceListBody" class="list-body"></tbody>
+  </table>
+</div>
+
+<script>
+$(document).ready(function() {
+  var services = new account.Services();
+});
+</script>

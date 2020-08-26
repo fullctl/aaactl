@@ -1,0 +1,36 @@
+{% extends "account/controlpanel/index.html" %}
+{% load i18n static %}
+
+
+{% block controlpanel %}
+<h5>{{ order_history.description }} - <small>{{ order_history.processed|date:"Y-m-d" }}</small></h5>
+<h6>#{{ order_history.order_id }}</h6>
+<h6>{% trans "Billed to" %} {{ order_history.billed_to }}</h6>
+
+<div class="mt-large">
+  <table class="table table-sm">
+    <thead>
+      <tr>
+        <th scope="col">{% trans "Description" %}</th>
+        <th scope="col">{% trans "Price" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for orderitem in order_history.orderitem_set.all %}
+      <tr>
+        <td>{{ orderitem.description }}</td>
+        <td>${{ orderitem.price }} USD</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block menu %}
+<div class="row mt-4">
+  <div class="col text-center">
+    <a class="btn btn-secondary" href="/">{% trans "Return to Account Dashboard" %}
+  </div>
+</div>
+{% endblock %}

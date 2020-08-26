@@ -1,0 +1,65 @@
+{% load static i18n %}
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+
+<title>{% trans "20C Account" %}</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static "common/site.css" %}">
+{% block css %}
+{% endblock %}
+
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="{% static "common/20c/twentyc.core.min.js" %}"></script>
+<script src="{% static "common/20c/twentyc.rest.js" %}"></script>
+<script src="{% static "account/account.js" %}"></script>
+<script src="{% static "billing/billing.js" %}"></script>
+
+<script>
+twentyc.rest.config.csrf = "{{ csrf_token }}"
+</script>
+
+{% block javascript %}
+{% endblock %}
+
+</head>
+
+<body>
+
+<div class="container-fluid header-outer">
+  <div class="container header">
+  {% include "account/header.html" %}
+  </div>
+</div>
+
+<div class="container-fluid content-outer">
+  <div class="container content">
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div {% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+
+  {% block content %}{% endblock %}
+  </div>
+</div>
+
+<div class="container-fluid footer-outer">
+  <div class="container footer">
+  {% include "account/footer.html" %}
+  </div>
+</div>
+
+</body>
+
+</html>

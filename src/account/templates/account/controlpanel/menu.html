@@ -1,0 +1,124 @@
+{% load i18n static crispy_forms_tags %}
+<div>
+  <div class="user-info" id="accordion">
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4 pr-4" id="userInformation">
+        <div class="row">
+          <div class="col-8">
+            <h5 class="d-inline text-dark">
+              {{ request.user.get_full_name }}
+            </h5>
+          </div>
+          <div class="col-4 right">
+            <button 
+              class="btn btn-link edit-collapse" 
+              data-toggle="collapse" 
+              data-target="#collapseOne" 
+              aria-expanded="true" 
+              aria-controls="collapseOne">
+            <img
+              alt="pencil icon"
+              title="pencil icon"
+              src="{% static "account/icons/pencil.svg" %}"/>
+              Edit
+            </button>
+          </div>
+        </div>
+        <p>{{ request.user.email }}</p>
+      </div>
+      <div id="collapseOne" class="collapse" aria-labelledby="userInformation" data-parent="#accordion">
+        <div class="card-body">
+          <form
+            class="change-information"
+            data-api-base="{% url "account_api:api-root" %}"
+            data-api-action="user"
+            data-api-method="PUT"
+          >
+            <div data-api-submit="yes">
+            {{ form.email | as_crispy_field }}
+            <div class="form-row">
+              <div class="form-group col-6 mb-0">
+                {{ form.first_name | as_crispy_field }}
+              </div>
+              <div class="form-group col-6 mb-0">
+                {{ form.last_name | as_crispy_field }}
+              </div>
+            </div>
+            {{ form.username | as_crispy_field }}
+            {% if request.user.has_usable_password %}
+              {{ form.password | as_crispy_field }}
+            {% endif %}
+            </div>
+            <div class="right">
+              <button 
+                class="btn btn-link cancel-collapse" 
+                data-toggle="collapse" 
+                data-target="#collapseOne" 
+                aria-expanded="true" 
+                aria-controls="collapseOne">
+              Cancel</button>
+              <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingTwo">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            <h5 class="mb-0">Linked Authentication</h5>
+          </a>
+      </div>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+        <div class="card-body">
+          {% include "account/controlpanel/linked-authentication.html" %}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingThree">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            <h5 class="mb-0">API Keys</h5>
+          </a>
+      </div>
+      <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+        <div class="card-body pt-0">
+          {% include "account/controlpanel/personal-keys.html" %}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingFour">
+          <a tabindex="0"
+            id="changePwdPopover" 
+            data-container="body" 
+            data-trigger="manual"
+            data-toggle="popover"
+            data-content="Password successfully changed"
+            data-placement="top">
+            <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+              {% if initial_password %}
+              <h5 class="mb-0">Set Password</h5>
+              {% else %}
+              <h5 class="mb-0">Change Password</h5>
+              {% endif %}
+            </a>
+          </a>
+      </div>
+      <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+        <div class="card-body pt-0">
+          {% include "account/controlpanel/change-password-card.html" %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-4 pl-3">
+  <a href="{% url "account:auth-logout" %}" class="btn btn-secondary">{% trans "Logout" %}</a>
+  </div>
+</div>
+<script>
+$(document).ready(function() {
+  var change_information = new account.ChangeInformation();
+});
+</script>
+

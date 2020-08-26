@@ -1,0 +1,149 @@
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
+import reversion
+
+import billing.models as models
+
+from billing.rest.serializers import Serializers
+from billing.rest.route import route
+
+from common.rest.decorators import grainy_endpoint
+from account.rest.decorators import set_org
+
+
+@route
+class Organization(viewsets.ViewSet):
+    ref_tag = "org"
+
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing", explicit=False)
+    def retrieve(self, request, pk, org):
+        return Response({})
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    def billing_setup(self, request, pk, org):
+
+        reversion.set_user(request.user)
+
+        serializer = Serializers.setup(
+            data=request.data,
+            many=False,
+            context={"user": request.user, "org": org, "data": request.data},
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    def payment_methods(self, request, pk, org):
+        billcon = request.GET.get("billcon")
+
+        if not billcon:
+            return Response({"billcon": ["Required field"]}, status=400)
+
+        queryset = models.PaymentMethod.get_for_org(org).filter(billcon_id=billcon)
+        serializer = Serializers.pay(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    def payment_method(self, request, pk, org):
+        pay = models.PaymentMethod.objects.get(
+            billcon__org=org, id=request.data.get("id")
+        )
+
+        if pay.sub_set.filter(status="ok").count():
+            return Response(
+                {
+                    "non_field_errors": [
+                        "Payment method is still linked to one or more subscriptions, please replace it before deleting it"
+                    ]
+                },
+                status=400,
+            )
+
+        if pay.billcon.pay_set.filter(status="ok").count() <= 1:
+            return Response(
+                {
+                    "non_field_errors": [
+                        "Need at least one payment method set on a billing contact. Delete the billing contact itself if it is no longer needed"
+                    ]
+                },
+                status=400,
+            )
+
+        old_id = pay.id
+        pay.delete()
+        pay.id = old_id
+        serializer = Serializers.pay(pay, many=False)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["PUT", "DELETE"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    def billing_contact(self, request, pk, org):
+
+        instance = org.billcon_set.get(id=request.data.get("id"))
+
+        if request.method == "PUT":
+            serializer = Serializers.billcon(instance=instance, data=request.data)
+
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=400)
+            serializer.save()
+
+        elif request.method == "DELETE":
+
+            serializer = Serializers.billcon(instance=instance)
+
+            if instance.active:
+                return Response(
+                    {
+                        "non_field_errors": [
+                            "This billing contact is still actively used in one or more subscriptions. Please replace it before removing it."
+                        ]
+                    },
+                    status=400,
+                )
+            instance.delete()
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.service", explicit=False)
+    def services(self, request, pk, org):
+        queryset = models.Subscription.objects.filter(org=org)
+        serializer = Serializers.sub(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("account.org.{org.id}.billing.service", explicit=False)
+    def orders(self, request, pk, org):
+        queryset = models.OrderHistory.objects.filter(billcon__org=org)
+        queryset = queryset.prefetch_related("orderitem_set").select_related("billcon")
+        queryset = queryset.order_by("-processed")
+        serializer = Serializers.order(queryset, many=True)
+        return Response(serializer.data)
+
+
+
+@route
+class Product(viewsets.ViewSet):
+
+    serializer_class = Serializers.prod
+    queryset = models.Product.objects.all()
+
+    def list(self, request):
+        queryset = models.Product.objects.filter(status="ok")
+        serializer = Serializers.prod(queryset, many=True)
+        return Response(serializer.data)

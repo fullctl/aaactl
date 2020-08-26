@@ -1,0 +1,60 @@
+{% load i18n static %}
+
+<div
+  class="personal-keys"
+  data-api-base="{% url "account_api:api-root" %}"
+  data-api-action="user/api_keys"
+>
+<div class="templates" style="display:none">
+      <a data-template="row">
+        <div class="container-fluid personal-key-card">
+          <div class="row">
+            <div class="col pl-0 pr-0">
+              <div class="small-label">Key:</div>
+              <div class="personal-key-container d-flex justify-content-between">
+                <textarea readonly rows="3" class="pkb personal-key-box-redacted">
+                </textarea>
+                <textarea readonly rows="3" class="pkb personal-key-box d-none">
+                </textarea>
+                <div class="d-flex flex-column justify-content-around mr-1">
+                  <button class="btn btn-square show-button">
+                    <img
+                      alt="show icon"
+                      title="show icon"
+                      src="{% static "account/icons/show.svg" %}"/>
+                    <span class="ml-1"><u>Show</u></span>
+                  </button>
+                  <button class="btn btn-square copy-button">
+                    <img
+                    alt="copy icon"
+                    title="copy icon"
+                    src="{% static "account/icons/copy.svg" %}"/>
+                    <span class="ml-1"><u>Copy</u></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2 justify-content-between">
+            <div class="pl-0">
+              <span class="normal-label light-grey">Created: </span>
+              <strong><span data-field="created" class="table-text-normal dark-grey"></span></strong>
+            </div>
+            <div>
+              <span class="normal-label">Status: </span>
+              <span data-field="status"></span>
+            </div>
+          </div>
+        </div>
+      </a>
+</div>
+
+<div class="list-body"></div>
+</div>
+
+
+<script>
+$(document).ready(function() {
+  var personal_api_keys = new account.PersonalAPIKeys();
+});
+</script>

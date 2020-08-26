@@ -1,0 +1,1 @@
+{"data": [{"id": 4, "name": " ", "email": "test_unperm@localhost", "you": false, "manageable": "r", "permissions": {"users": "", "billing.contact": "", "billing.service": "", "billing.orderhistory": "", "manage": ""}}], "errors": {}, "profiling": {"queries": 0}}

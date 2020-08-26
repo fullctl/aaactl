@@ -1,0 +1,541 @@
+@import url(https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:300,400,500,600" rel="stylesheet);
+
+body {
+  background-color: #4a4d50;
+  font-family: 'IBM Plex Sans', sans-serif !important;
+}
+/* Adding extra large container breakpoint */
+@media screen and (min-width: 1600px){
+  .container {
+      min-width: 1500px;
+  }
+}
+
+h5 {
+  color: #4A4D50
+}
+
+.right {
+  text-align: right;
+}
+
+.validation-error {
+  color: darkred;
+}
+.validation-error-indicator {
+  border-color: darkred !important;
+}
+
+input[type="checkbox"].validation-error-indicator ~label {
+  color: darkred;
+}
+
+[data-api-action] {
+  position: relative;
+}
+
+[data-api-action] .loading-shim {
+  z-index: 10;
+  background-color: rgba(255,255,255,0.5);
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+}
+
+.form-inline > .form-group > label {
+  display: none;
+}
+
+.right {
+  text-align: right;
+}
+
+.header-outer {
+  background: #4a4d50;
+  height: 80px;
+}
+
+.header {
+  color: #fff;
+  position: relative;
+}
+
+.header a h1 {
+  color: #fff;
+  text-decoration: none;
+}
+
+.header img.logo {
+  position: absolute;
+  z-index: 10;
+}
+
+.header h1 {
+  margin: 0px;
+  font-size: 1.5rem;
+  display: inline;
+}
+
+.footer-outer {
+  background-color: #4a4d50;
+  min-height: 264px;
+}
+
+.footer {
+  color: #fff;
+  -webkit-box-shadow: 0px -4px 0px 0px #caccce;
+  -moz-box-shadow: 0px -4px 0px 0px #caccce;
+  box-shadow: 0px -4px 0px 0px #caccce;
+}
+
+.footer a {
+  color: #fff;
+}
+
+.tagline {
+  display: absolute;
+  top: -7px;
+  min-width: 400px;
+  z-index:100;
+}
+
+.developed-by{
+  opacity: 0.4;
+  color: #FFFFFF;
+  font-size: 20px;
+  letter-spacing: 0;
+  line-height: 22px;
+  text-align: right;
+}
+
+img.small-logo{
+  height: 55.49px;
+  width: 195.82px;
+  color: #CACCCE;
+  z-index: 10;
+  margin-left: 8px;
+}
+
+.footer-links{
+  padding-left: 120px;
+  padding-right: 120px;
+}
+
+.copyright {
+  color: #909294;
+}
+.content-outer {
+  background-color: #fff;
+}
+
+.content {
+  padding-top: 4rem;
+  padding-bottom: 2rem;
+}
+
+.btn-oauth {
+  width: 210px;
+}
+
+img.login-peeringdb {
+  height: 40px;
+}
+
+img.login-google {
+  width: 40px;
+}
+
+.linked-auth {
+  width: 140px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.available-apps {
+  padding: .5rem;
+  background-color: #f5f6f6;
+  box-shadow: 0 0 1px 0 rgba(0,0,0,0.12), 0 1px 1px 0 rgba(0,0,0,0.24);
+}
+
+img.linked-auth-google  {
+  width: 32px;
+}
+
+img.linked-auth-peering {
+  height: 32px;
+}
+
+/* Remove default button styling for dropdown button*/
+#dropdownMenuLink, 
+#dropdownMenuLink:hover, 
+#dropdownMenuLink:active,
+#dropdownMenuLink:focus{
+  box-shadow: none;
+  color: black;
+}
+
+/* A custom divider that doesn't reach across the entire dropdown
+Place content inside of this. */
+.custom-divider::after {
+  border-bottom: 1px solid #E0E1E2;
+  content: '';
+  display: block;
+  width: 94%;
+  margin: 0.5rem 3%;
+}
+
+/* Styles the header / link for the dropdown */
+.org-select-dropdown-header {
+  position: relative;
+  min-width: 288px;
+  color: #4A4D50;
+  font-weight: 600;
+  background-color: #fff;
+  border-radius: 0;
+  box-shadow: none;
+  /* Add negative margin because "custom-divider" has top margin*/
+  margin-bottom: -0.5rem;
+}
+
+/* Removes default Caret*/
+.org-select-dropdown::after {
+  display: none;
+}
+
+/* Styles the entire dropdown menu that
+appears when the header is clicked.*/
+.org-select-menu {
+  min-width: 288px; 
+  border-radius: 0px;
+  border: none;
+  position: relative;
+}
+
+.dd-box-shadow {
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
+}
+
+/* Aligns dropdown items with dropdown header text*/
+.org-item {
+  color: #7B8085;
+  padding-left: .75rem;
+  padding-right: .75rem;
+}
+/* Custom css-only caret*/
+.caret {
+  width: 0;
+  height: 0;
+  display: inline-block;
+  float: right;
+  border: 8px solid transparent;
+}
+
+.caret.down{
+  border-top-color: black;
+  margin-top: 8px;
+}
+
+.caret.up{
+  border-bottom-color: grey;
+  margin-bottom: 8px;
+}
+
+
+.controlpanel{
+  border-top: 1px solid #caccce;
+}
+
+.controlpanel .space {
+  margin-top: 1rem;
+}
+
+.controlpanel .user-info .section {
+  font-weight: bold;
+}
+
+.controlpanel .user-info a {
+  display: block;
+}
+
+.small-links a {
+  font-size: 0.875rem;
+  text-decoration: underline;
+  color: #4A4D50;
+}
+
+
+/* User information editing panel */
+.sidebar {
+  padding: 0;
+}
+
+.user-info {
+  background-color: #f5f6f6;
+  border-radius: 0;
+  color: #7e8288;
+  border-bottom: 1.5px solid rgba(0,0,0,.125);
+}
+
+.user-info button.edit-collapse {
+  padding: 0 0 4px 0;
+  color: #4A4D50;
+  line-height: 0;
+  border-radius: 0;
+  border-bottom: 1px solid #4A4D50;
+  text-decoration: none;
+}
+
+.user-info button.cancel-collapse {
+  color: #4A4D50;
+  text-decoration: underline;
+}
+
+.user-info button.submit {
+  color: white;
+  text-decoration: none;
+  background-color: #9fa1a2;
+  border: 1px solid #ecedee;
+  border-radius: 100px;
+}
+
+.card {
+  background-color: #f5f6f6;
+  border-radius: 0;
+  color: #7e8288;
+  border-right: none;
+  border-left: none;
+  border-top: none;
+  border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.collapse .collapsing .show {
+  background-color: #ecedee;
+  border: none;
+}
+
+h6 {
+  color: #7b8084;
+  font-weight: 400;
+}
+
+.alert-error {
+  color: darkred;
+  background-color: rgba(255,0,0,0.1);
+}
+
+.large-table-row {
+  height: 4rem;
+}
+
+.small-table-row {
+  height: 3rem;
+}
+
+table.table-inline td,
+table.table-inline th {
+  border: none;
+}
+
+.table-sm td,
+.table-sm th {
+  padding: .3rem 0;
+}
+.table td {
+  vertical-align: middle;
+}
+
+table.table-sm {
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+}
+
+
+.dark-grey {
+  color: #4A4D50;
+}
+
+.light-grey {
+  color: #7B8085;
+}
+
+.lighter-grey {
+  color: #CACCCE;
+}
+
+.table-text-large {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+
+.table-text-bold {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+}
+.table-text-normal {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 500;
+}
+
+.table-text-thin {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 300;
+}
+
+
+/*.user-list {
+  border-bottom: 1px solid #E0E1E2;
+}
+*/
+
+
+.order-history {
+  border-top: 1px solid #E0E1E2;
+  border-bottom: 1px solid #E0E1E2;
+}
+
+.mt-large {
+  margin-top: 4rem;
+}
+
+
+.btn-slim {
+  padding: .2rem .75rem;
+  min-width: 86px;
+  max-height: 1.6rem;
+  font-size: .875rem;
+  line-height: 1.125rem;
+  border-radius: 100px;
+}
+
+.btn-manage {
+  border: 1px solid #7B8085;
+  background-color: #E0E1E2;
+  color: #7B8085;
+}
+
+.btn-disabled {
+  border: 1px solid #CACCCE;
+  background-color: #FFFFFF;
+}
+
+.btn-square {
+  border-radius: 0px;
+  background-color: #E0E1E2;
+  font-size: 14px;
+  color: #4A4D50;
+}
+
+.user-badge {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 300;
+  text-transform: uppercase;
+  padding: 2px 3px;
+  border-radius: 4px;
+}
+
+.ub-pending{
+  background-color: #CACCCE;
+  opacity: 0.4;
+  color: #2C2E30;
+}
+
+.ub-admin {
+  background-color: #4A4D50;
+  color: #CACCCE;
+  border: 1px solid #4A4D50;
+}
+
+.ub-billing {
+  background-color: #FFFFFF;
+  color: #4A4D50;
+  border: 1px solid #4A4D50;
+}
+
+
+.item-table {
+  border: 1px solid #E0E1E2;
+  width: 100%;
+}
+
+.item-group {
+  background-color: #4A4D50;
+  color: #FFFFFF;
+  font-size: 20px;
+  height: 28px;
+}
+
+.blank-row {
+  border: none;
+  border-top: 1px solid #E0E1E2;
+  height: 28px;
+}
+
+.service-list td {
+  padding: .3rem 1rem;
+}
+
+
+.personal-key-card {
+  width: 96%;
+  margin: 0 auto;
+}
+
+.personal-key-container {
+  background-color: #FFFFFF;
+  border: 1px solid #CACCCE;
+}
+
+.pkb {
+  background-color: #FFFFFF;
+  border: none;
+  padding: .2rem .5rem;
+  width: 100%; 
+  height: 100%;
+  resize: none;
+}
+
+.pkb:focus {
+  outline: none;
+}
+
+
+.small-label {
+  font-size: .875rem;
+}
+
+.normal-label {
+  font-size: 1.125rem;
+}
+
+.name-column {
+  min-width: 200px;
+}
+
+.manage-column {
+  min-width: 86px;
+}
+
+.grey-bg {
+  background-color: #E0E1E2;
+}
+
+.op-40 {
+  opacity: 0.4;
+}
+
+.user-info label {
+  font-size: .875rem;
+}
+
+
+.pointer:hover{
+  cursor: pointer;
+}

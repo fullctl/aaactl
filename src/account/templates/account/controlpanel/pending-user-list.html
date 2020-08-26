@@ -1,0 +1,34 @@
+<div
+  class="pending-user-listing"
+  data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+  data-api-action="invites">
+  <table class="templates" style="display:none">
+    <tr data-template="row" class="large-table-row">
+      <td scope="col" class="name-column table-text-bold dark-grey op-40" data-field="user_name"></td>
+      <td scope="col" class="light-grey op-40" data-field="email"></td>
+      <td scope="col" class="manage-column right small-links">
+        {% if permissions.create_org_users %}
+        <a 
+          tabindex="0"
+          class="resend-invite" 
+          href="javascript:void(0)"
+          data-container="body" 
+          data-toggle="popover"
+          data-placement="top">Re-Send Invitation</a>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <table table class="table table-sm mt-n2">
+    <tbody class="list-body"></tbody>
+  </table>
+</div>
+
+
+<script>
+$(document).ready(function() {
+  var pending_users = new account.PendingUsers();
+});
+</script>
+

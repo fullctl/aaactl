@@ -1,0 +1,49 @@
+{% extends "account/base.html" %}
+{% load i18n static crispy_forms_tags %}
+{% block content %}
+
+<div class="row">
+
+
+  <!-- OAUTH -->
+
+  <div class="col-xs-12 col-sm-4 col-md-3">
+  <h4>{% trans "Authenticate with" %}</h4>
+  {% include "account/auth/oauth.html" %}
+  </div>
+
+  <!-- LOGIN -->
+
+  <div class="col-xs-12 col-sm-6 col-md-6">
+  <h4>{% trans "Sign up" %}</h4>
+  <form method="POST" action="{% url 'account:auth-register' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    <div class="row">
+      <div class="col-xs-12 col-lg-6">{{ register_form.username|as_crispy_field }}</div>
+      <div class="col-xs-12 col-lg-6">{{ register_form.email|as_crispy_field }}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-lg-6">{{ register_form.password|as_crispy_field }}</div>
+      <div class="col-xs-12 col-lg-6">{{ register_form.password_confirmation|as_crispy_field }}</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-lg-6">{{ register_form.first_name|as_crispy_field }}</div>
+      <div class="col-xs-12 col-lg-6">{{ register_form.last_name|as_crispy_field }}</div>
+    </div>
+    <div class="row">
+      <div class="col-12">{{ register_form.captcha|as_crispy_field }}</div>
+    </div>
+
+    <button type="submit" class="btn btn-success">{% trans "Sign up" %}</button>
+  </form>
+  </div>
+
+  <!-- PADDING RIGHT -->
+
+  <div class="col-xs-12 col-sm-2 col-md-3"></div>
+
+
+</div>
+
+{% endblock %}

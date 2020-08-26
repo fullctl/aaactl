@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "response": {"data": [], "errors": {"component": ["Not a valid permissioning component"]}, "profiling": {"queries": 0}}
+}

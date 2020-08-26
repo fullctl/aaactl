@@ -1,0 +1,33 @@
+{% load i18n static %}
+
+{% if backends.associated %}
+<div class="row">
+  <div class="col">
+    <span class="small-label pb-2">{% trans "Linked social apps" %}:</span>
+    {% for socialauth in backends.associated %}
+      <div class="pt-2 pb-2 row justify-content-between align-items-center">
+        <div class="ml-3 oauth-backend {{ backend }} linked-auth" title="{{ backend }}">
+          {% include "account/auth/oauth-badge.html" with backend=socialauth.provider associated=True %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% if backends.not_associated %}
+<div class="row">
+  <div class="col">
+    <span class="small-label pb-2">{% trans "Available Social apps" %}:</span>    {% for backend in backends.not_associated %}
+    <div class="pt-2 pb-2 row justify-content-between align-items-center">
+        <div class="ml-3 oauth-backend {{ backend }} available-apps" title="{{ backend }}">
+          {% include "account/auth/oauth-badge.html" with backend=backend %}
+        </div>
+        <a href="{% url 'social:begin' backend %}?next={{ request.GET.next }}" >
+          <button class="mr-3 btn btn-slim btn-manage manage">{% trans "Add" %}</button>
+        </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+  

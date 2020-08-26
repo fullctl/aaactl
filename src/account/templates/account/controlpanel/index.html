@@ -1,0 +1,138 @@
+{% extends "account/base.html" %}
+{% load i18n static %}
+
+
+{% block content %}
+<div class="row controlpanel">
+  <div class="col-xs-12 col-md-8">
+    {% block controlpanel %}
+    <div class="row mt-2 justify-content-between">
+      <div class="col-xs-12 col-sm-auto pl-0">
+        <h2>Account Dashboard</h2>
+      </div>
+      <div class="col-xs-12 col-sm-auto pl-0">  
+        <div 
+          class="dropdown org-select"
+          data-api-base="{% url "account_api:org-list" %}">
+          <div class="custom-divider">
+            <a class="btn org-select-dropdown-header clearfix"
+                href="#" id="dropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
+            <div class="dropdown-menu org-select-menu dd-box-shadow list-body" 
+                 aria-labelledby="dropdownMenuLink"></div>
+            {% include "account/controlpanel/create-org-modal.html" %}
+          </div>
+          <div class="templates" style="display:none">
+              <a data-template="row" class="dropdown-item org-item">
+                <span data-field="label"></span>
+              </a>
+          </div> 
+       </div>
+      <div class="ml-2 small-links">
+          {% if permissions.update_org_manage %}
+          <a href="javascript:void(0)" role="button" data-toggle="modal" data-target="#editOrgModal">Organization Settings</a>
+          {% endif %}
+          {% if permissions.update_org_manage and permissions.read_org_billing__contact %}
+          <span> | </span>
+          {% endif %}
+          {% if permissions.read_org_billing__contact %}
+          <a href="{% url "billing:billing-contacts" %}">Billing</a>
+          {% endif %}
+      </div>
+      {% include "account/controlpanel/edit-organization-modal.html" %}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col pl-0 mt-4 mb-4">
+        {% if not user.usercfg.email_confirmed %}
+        <div class="alert alert-warning">
+          <div class="row">
+            <div class="col-6">
+            {% trans "Please confirm your email address." %}
+            </div>
+            <div class="col-6 right">
+              <form
+                class="resend-confirmation-email"
+                data-api-base="{% url "account_api:user-resend-confirmation-mail" %}"
+                data-api-method="POST">
+                <button type="button" class="btn btn-sm btn-warning submit">{% trans "Resend Email" %}</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <p>{% trans "No messages." %}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% if permissions.read_org_users %}
+    <div class="row user-container">
+      <div class="col-12 pl-0">
+        {% block users %}
+        {% include "account/controlpanel/user-list.html" %}
+        {% include "account/controlpanel/pending-user-list.html" %}
+        {% if permissions.create_org_users and request.selected_org.user != request.user %}
+          <div class="text-center">
+            <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#inviteModal">
+              + Invite Users to Your Organization
+            </button>
+          </div>
+          {% include "account/controlpanel/invite-modal.html" %}
+        {% endif %}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+    {% if permissions.read_org_billing__service %}
+    <div class="row service-container">
+      <div class="col-12 pl-0">
+        {% block services %}
+        {% include "account/controlpanel/service-list.html" %}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+    {% if permissions.read_org_billing__orderhistory %}
+    <div class="row order-history-container">
+      <div class="col-12 pl-0 pr-0">
+        <h5>Order History</h5>
+        <div
+          class="order-history"
+          data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+          data-api-action="orders">
+          <div class="templates" style="display:none">
+            <table>
+              <tr data-template="row">
+                <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
+                <td scope="col" data-field="processed" class="light-grey"></td>
+                <td scope="col" data-field="price" class="dark-grey pr-4 right "></td>
+                <td scope="col" data-field="order_id" class="small-links"></td>
+              </tr>
+            </table>
+          </div>
+          <table class="table table-sm table-inline small-table-row">
+            <tbody id="orderHistoryListBody" class="list-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+  </div>
+  <div class="col-xs-12 col-md-4">
+    {% block menu %}
+    {% include "account/controlpanel/menu.html" %}
+    {% endblock %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+{{ super }}
+<script>
+$(document).ready(function() {
+  window.controlpanel = new account.ControlPanel();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+{
+  "slug": "other-test",
+  "client": "api_client",
+  "data": {
+    "id": 4,
+    "component": "billing.contact",
+    "permissions": "crud"
+  }
+}

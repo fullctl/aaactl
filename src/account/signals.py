@@ -21,11 +21,11 @@ def generate_api_key(sender, **kwargs):
         api_key.grainy_permissions.add_permission(f"user.{user.id}", "crud")
 
 
-@receiver(post_save, sender=get_user_model())
-def set_initial_permissions(sender, **kwargs):
-    if kwargs.get("created"):
-        user = kwargs.get("instance")
-        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")
+#@receiver(post_save, sender=get_user_model())
+#def set_initial_permissions(sender, **kwargs):
+#    if kwargs.get("created"):
+#        user = kwargs.get("instance")
+#        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")
 
 
 @receiver(post_save, sender=get_user_model())

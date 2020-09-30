@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from common.rest.decorators import grainy_endpoint
+from common.rest.decorators import grainy_endpoint, user_endpoint
 
 import reversion
 
@@ -24,24 +24,24 @@ class UserInformation(viewsets.ViewSet):
     serializer_class = Serializers.user
     queryset = Serializers.user.Meta.model.objects.all()
 
-    @grainy_endpoint()
+    @user_endpoint()
     def list(self, request):
         serializer = Serializers.user(request.user)
         return Response(serializer.data)
 
-    @grainy_endpoint()
+    @user_endpoint()
     def put(self, request):
         if request.user.has_usable_password():
             serializer = Serializers.userpasswordprotected(
-                data=request.data, 
-                many=False, 
+                data=request.data,
+                many=False,
                 context={"user": request.user},
             )
-        else: 
+        else:
             serializer = Serializers.user(
-                data=request.data, 
-                many=False, 
-                context={"user": request.user}, 
+                data=request.data,
+                many=False,
+                context={"user": request.user},
             )
 
         if not serializer.is_valid():
@@ -50,7 +50,7 @@ class UserInformation(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["PUT"])
-    @grainy_endpoint()
+    @user_endpoint()
     @disable_api_key
     def set_password(self, request):
         serializer = Serializers.pwd(
@@ -65,7 +65,7 @@ class UserInformation(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["POST"])
-    @grainy_endpoint()
+    @user_endpoint()
     def resend_confirmation_mail(self, request):
 
         usercfg, created = models.UserSettings.objects.get_or_create(user=request.user)
@@ -80,7 +80,7 @@ class UserInformation(viewsets.ViewSet):
         return Response({})
 
     @action(detail=False)
-    @grainy_endpoint()
+    @user_endpoint()
     @disable_api_key
     def api_keys(self, request):
         user = request.user
@@ -99,7 +99,7 @@ class Organization(viewsets.ViewSet):
     serializer_class = Serializers.org
     queryset = models.Organization.objects.all()
 
-    @grainy_endpoint()
+    @user_endpoint()
     def list(self, request):
         serializer = Serializers.org(
             models.Organization.get_for_user(request.user),
@@ -112,14 +112,14 @@ class Organization(viewsets.ViewSet):
         return Response(serializer.data)
 
     @set_org
-    @grainy_endpoint("account.org.{org.id}")
+    @grainy_endpoint("org.{org.id}")
     def retrieve(self, request, pk, org):
         org = models.Organization.objects.get(slug=pk)
         serializer = Serializers.org(org, many=False, context={"user":request.user})
         return Response(serializer.data)
 
     @action(detail=False, methods=["POST"])
-    @grainy_endpoint()
+    @user_endpoint()
     @disable_api_key
     def select(self, request):
         org_id = request.data.get("id")
@@ -131,7 +131,7 @@ class Organization(viewsets.ViewSet):
             Serializers.org(userorg.org, context={"user": request.user}).data
         )
 
-    @grainy_endpoint()
+    @user_endpoint()
     def create(self, request):
         serializer = Serializers.org(
             data=request.data, many=False, context={"user": request.user}
@@ -146,7 +146,7 @@ class Organization(viewsets.ViewSet):
         )
 
     @set_org
-    @grainy_endpoint("account.org.{org.id}.manage", explicit=False)
+    @grainy_endpoint("org.{org.id}.manage", explicit=False)
     def update(self, request, pk, org):
         user = request.user
         if user.has_usable_password():
@@ -173,7 +173,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.users", explicit=False)
+    @grainy_endpoint("org.{org.id}.users", explicit=False)
     def users(self, request, pk, org):
         serializer = Serializers.orguser(
             org.user_set.all(),
@@ -188,7 +188,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["DELETE"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.users", explicit=False)
+    @grainy_endpoint("org.{org.id}.users", explicit=False)
     def user(self, request, pk, org):
         orguser = models.OrganizationUser.objects.get(
             id=request.data.get("id"), org=org
@@ -210,7 +210,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["PUT"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.users", explicit=False)
+    @grainy_endpoint("org.{org.id}.users", explicit=False)
     def set_permissions(self, request, pk, org):
         serializer = Serializers.orguserperm(
             data={
@@ -228,7 +228,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.users", explicit=False)
+    @grainy_endpoint("org.{org.id}.users", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)
         serializer = Serializers.inv(invitations, many=True)
@@ -237,7 +237,7 @@ class Organization(viewsets.ViewSet):
     # XXX RATE LIMIT
     @action(detail=True, methods=["POST"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.users", explicit=False)
+    @grainy_endpoint("org.{org.id}.users", explicit=False)
     def invite(self, request, pk, org):
         context = {"user": request.user, "org": org}
         serializer = Serializers.inv(data=request.data, many=False, context=context)

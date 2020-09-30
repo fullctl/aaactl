@@ -18,13 +18,13 @@ class Organization(viewsets.ViewSet):
     ref_tag = "org"
 
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing", explicit=False)
     def retrieve(self, request, pk, org):
         return Response({})
 
     @action(detail=True, methods=["POST"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.contact", explicit=False)
     def billing_setup(self, request, pk, org):
 
         reversion.set_user(request.user)
@@ -41,7 +41,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.contact", explicit=False)
     def payment_methods(self, request, pk, org):
         billcon = request.GET.get("billcon")
 
@@ -54,7 +54,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["DELETE"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.contact", explicit=False)
     def payment_method(self, request, pk, org):
         pay = models.PaymentMethod.objects.get(
             billcon__org=org, id=request.data.get("id")
@@ -88,7 +88,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["PUT", "DELETE"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.contact", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.contact", explicit=False)
     def billing_contact(self, request, pk, org):
 
         instance = org.billcon_set.get(id=request.data.get("id"))
@@ -119,7 +119,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.service", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.service", explicit=False)
     def services(self, request, pk, org):
         queryset = models.Subscription.objects.filter(org=org)
         serializer = Serializers.sub(queryset, many=True)
@@ -127,7 +127,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("account.org.{org.id}.billing.service", explicit=False)
+    @grainy_endpoint("org.{org.id}.billing.service", explicit=False)
     def orders(self, request, pk, org):
         queryset = models.OrderHistory.objects.filter(billcon__org=org)
         queryset = queryset.prefetch_related("orderitem_set").select_related("billcon")

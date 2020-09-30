@@ -70,7 +70,7 @@ def generate_org_slug():
 
 
 @reversion.register
-@grainy_model(namespace="account.org")
+@grainy_model(namespace="org")
 class Organization(HandleRefModel):
     name = models.CharField(max_length=255, unique=True, default=generate_org_name)
     slug = models.CharField(max_length=255, unique=True, default=generate_org_slug)

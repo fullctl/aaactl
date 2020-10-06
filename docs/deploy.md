@@ -48,6 +48,49 @@ from there the user can run specific tests, for example:
 ```
 pytest tests/test_account_api.py::test_org_users
 ```
+
+
+## Configure instance
+
+### Setup PDB oauth2 client
+
+Redirect goes to:
+
+`https://$ACCOUNT_SERVICE_URL/social/complete/peeringdb/`
+
+For example:
+
+`https://account.dev8.20c.com/social/complete/peeringdb/`
+￼
+￼
+### Setup Google oauth2 client
+
+https://$ACCOUNT_SERVICE_URL/social/complete/google-oauth2/
+
+https://account.dev8.20c.com/social/complete/google-oauth2/
+
+### Setup oauth2 provider
+
+Create an application for FullCtl at /admin/oauth2_provider/application
+
+Redirect to https://`$FULLCTL_URL`/complete/twentyc/
+
+For example:
+
+https://fullctl.dev8.20c.com/complete/twentyc/
+
+
+* client type: confidential
+* authoriozation grant type: authorization code
+* name: FullCTL
+* skip authorization: true
+* client id: generated or if fullctl already set up use the client id set up there
+* secret: generated or if fullctl already set up use the secret setup there
+
+
+-----
+
+
 ## **OLD** Ctl
 
 ```sh
@@ -206,38 +249,3 @@ Save and restart the postgres service
 sudo service postgresql-11 reload
 ```
 
-## Configure instance
-
-### Setup PDB oauth2 client
-
-Redirect goes to:
-
-`https://$ACCOUNT_SERVICE_URL/social/complete/peeringdb/`
-
-For example:
-
-`https://account.dev8.20c.com/social/complete/peeringdb/`
-￼
-￼
-### Setup PDB oauth2 client
-
-https://$ACCOUNT_SERVICE_URL/social/complete/google-oauth2/
-
-https://account.dev8.20c.com/social/complete/google-oauth2/
-
-### Setup oauth2 provider
-
-Create an application for FullCtl at /admin/oauth2_provider/application
-
-Redirect to https://`$FULLCTL_URL`/complete/twentyc/
-
-For example:
-
-https://fullctl.dev8.20c.com/social/complete/twentyc/
-
-* client type: confidential
-* authoriozation grant type: authorization code
-* name: FullCTL
-* skip authorization: true
-* client id: generated or if fullctl already set up use the client id set up there
-* secret: generated or if fullctl already set up use the secret setup there

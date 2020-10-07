@@ -77,9 +77,18 @@ if settings.DEBUG:
         ),
     ]
 
-urlpatterns = [
-    # XXX don't expose on prod deploy
-    path("admin/", admin.site.urls),
+urlpatterns = []
+
+if settings.RELEASE_ENV != "prod":
+
+    # we only expose admin on non-production
+    # environments
+
+    urlpatterns + [
+        path("admin/", admin.site.urls),
+    ]
+
+urlpatterns += [
     # account
     path(
         "account/auth/o/",

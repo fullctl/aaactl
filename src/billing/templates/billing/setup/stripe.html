@@ -44,6 +44,7 @@ cardElement.on('change', function(event) {
   </div>
 </div>
 
+{% if billing_env == "test" %}
 <div class="alert alert-warning">
 <p>TESTING MODE</p>
 <p>Credit card numbers for testing (any 3 digits for CVC)</p>
@@ -54,6 +55,7 @@ cardElement.on('change', function(event) {
 2223003122003222  Mastercard
 </pre>
 </div>
+{% endif %}
 
 <div data-api-submit="yes">
   <input type="hidden" placeholder="stripe token" name="stripe_token" id="stripe-token" />

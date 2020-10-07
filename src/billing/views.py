@@ -34,7 +34,7 @@ from account.forms import ChangeInformation
 @login_required
 @org_view(["billing", "orderhistory"])
 def order_history(request):
-    
+
     order_history = OrderHistory.objects.filter(billcon__org=request.selected_org)
     order_history = order_history.order_by("-processed")
     env = dict(order_history=order_history, form=ChangeInformation(None))
@@ -106,11 +106,11 @@ def services(request):
     return render(request, "billing/controlpanel/services.html", env)
 
 
+"""
 @login_required
 @org_view(["billing", "contact"])
 def setup_test(request):
 
-    # XXX
     # we are initializing with test data to speed up
     # development, this part should be removed once
     # implementation is complete
@@ -123,7 +123,7 @@ def setup_test(request):
     }
 
     return setup(request, test_init=test_init)
-
+"""
 
 @login_required
 @org_view(["billing", "contact"])

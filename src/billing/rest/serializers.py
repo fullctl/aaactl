@@ -164,9 +164,6 @@ class BillingSetup(serializers.Serializer):
     prod = serializers.CharField(required=False)
     redirect = serializers.CharField(required=False, allow_blank=True)
 
-    # XXX remove
-    test_charge = serializers.BooleanField(required=False)
-
     # Payment option (forms.SelectPaymentMethodForm)
 
     payment_method = serializers.CharField(
@@ -269,10 +266,3 @@ class BillingSetup(serializers.Serializer):
             sub = None
 
         processor.setup_billing(**data.get("processor_data"))
-
-        if data.get("test_charge") and settings.BILLING_ENVIRONMENT == "test":
-            chg = models.PaymentCharge.objects.create(
-                pay=pay_method, price=1.00, description="Test Charge"
-            )
-            processor.charge(chg)
-            chg.sync_status()

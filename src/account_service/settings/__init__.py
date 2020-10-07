@@ -303,7 +303,8 @@ VALIDATE_PASSWORD_LENGTH = 8
 INTERNAL_API_KEY_PERMS = {"account_service": "crud", "fullctl": "crud"}
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
-    "account.context_processors.permissions"
+    "account.context_processors.permissions",
+    "account.context_processors.info",
 ]
 
 
@@ -321,7 +322,8 @@ BILLING_AGREEMENT_DESCRIPTION = BILLING_AGREEMENT_NAME
 
 BILLING_DEFAULT_CURRENCY = "USD"
 
-BILLING_ENVIRONMENT = "test"
+set_option("BILLING_ENV", "test")
+print_debug("Billing env is '{}'".format(BILLING_ENV))
 
 # OAUTH PROVIDER
 

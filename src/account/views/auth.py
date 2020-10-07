@@ -213,7 +213,7 @@ def oauth_profile(request):
         given_name=user.first_name,
         family_name=user.last_name,
         name="{} {}".format(user.first_name, user.last_name),
-        # XXX
+        # TODO: dont assume oauth implies verification
         verified_user=True,
         organizations=[
             Serializers.org(instance=org.org, context={"user": user}).data

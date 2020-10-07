@@ -20,9 +20,6 @@ class BillingSetupInitForm(forms.Form):
     cycle = forms.CharField(widget=forms.HiddenInput(), required=False)
     redirect = forms.CharField(widget=forms.HiddenInput(), required=False)
 
-    # XXX remove
-    test_charge = forms.BooleanField(widget=forms.HiddenInput(), required=False)
-
     def clean(self):
         cleaned_data = super().clean()
         prod_name = cleaned_data.get("prod")

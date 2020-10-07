@@ -234,7 +234,6 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.inv(invitations, many=True)
         return Response(serializer.data)
 
-    # XXX RATE LIMIT
     @action(detail=True, methods=["POST"])
     @set_org
     @grainy_endpoint("org.{org.id}.users", explicit=False)
@@ -258,7 +257,6 @@ class PasswordReset(viewsets.ViewSet):
     serializer_class = Serializers.start_pwdrst
     queryset = models.PasswordReset.objects.all()
 
-    # XXX rate limit
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     @reversion.create_revision()
     def start(self, request):

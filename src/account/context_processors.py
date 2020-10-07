@@ -1,3 +1,6 @@
+from django.conf import settings
+
+
 def permissions(request):
     context = {}
 
@@ -15,3 +18,11 @@ def permissions(request):
                 context[key] = request.perms.check([instance, namespace], op, ignore_grant_all=True)
 
     return {"permissions": context}
+
+
+def info(request):
+
+    return {
+        "billing_env": settings.BILLING_ENV,
+        "release_env": settings.RELEASE_ENV
+    }

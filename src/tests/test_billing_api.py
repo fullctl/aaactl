@@ -9,10 +9,10 @@ def test_get_organization(billing_objects):
     response = billing_objects.api_client.get(
         reverse("billing_api:org-detail", args=[billing_objects.org.slug])
     )
-    
+
     assert response.status_code == 200
     assert response.json()["data"][0] == {}
-    
+
 
 @pytest.mark.django_db
 def test_post_billing_setup(billing_objects, mocker):
@@ -29,7 +29,6 @@ def test_post_billing_setup(billing_objects, mocker):
     output = {
         'agreement_tos': False,
         'payment_method': 'George Contact: Credit Card 8210',
-        'test_charge': False,
         "holder":"George Contact",
         "country":"US",
         "city":"Chicago",

@@ -14,6 +14,7 @@
 {% csrf_token %}
 {% if form_init %}
 {{ form_init|crispy }}
+{% if billing_env == "test" %}
 <div class="alert alert-warning">
 <p>TESTING MODE</p>
 <p>This form is currently auto-initialized to mimic a  billing setup process as it would be initiated from PrefixCTL</p>
@@ -26,6 +27,7 @@
 </ul>
 {% endif %}
 </div>
+{% endif %}
 {% endif %}
 </div>
 

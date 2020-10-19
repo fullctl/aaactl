@@ -364,6 +364,19 @@ AUTHENTICATION_BACKENDS = [
     "account.social_backends.peeringdb.PeeringDBOAuth2",
 ] + AUTHENTICATION_BACKENDS
 
+
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "account.social_backends.pipelines.sync_peeringdb",
+    "social_core.pipeline.user.user_details",
+)
+
 # We are using postgres so make use of postgres json field
 
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True

@@ -220,7 +220,6 @@ def oauth_profile(request):
             for org in user.org_set.all()
         ],
     )
-    print(data)
 
     if oauth_email:
         data.update(dict(email=user.email))

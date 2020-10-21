@@ -11,11 +11,22 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
     )
 
     if social:
-        # TODO: remove old permissions
+
+        namespaces = []
+
         for network in social.extra_data.get("networks", []):
             asn = network["asn"]
             perms = network["perms"]
-            user.grainy_permissions.add_permission(f"verified.asn.{asn}.peeringdb", perms)
+            namespace = f"verified.asn.{asn}.peeringdb"
+            user.grainy_permissions.add_permission(namespace, perms)
+            namespaces.append(namespace)
+
+        # delete old
+
+        user.grainy_permissions.filter(
+            namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
+        ).exclude(namespace__in=namespaces).delete()
+
 
 
 

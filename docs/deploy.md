@@ -37,12 +37,12 @@ Ctl/dev/compose.sh build account_django
 
 To run all tests:
 ```sh
-Ctl/dev/compose.sh run_tests
+Ctl/dev/run.sh run_tests
 ```
 
 To drop into a shell with pytest settings configured and the virtualenv activated:
 ```sh
-Ctl/dev/compose.sh test_mode
+Ctl/dev/run.sh test_mode
 ```
 from there the user can run specific tests, for example:
 ```

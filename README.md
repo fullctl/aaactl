@@ -1,3 +1,3 @@
-# auth
+# aaactl 
 
-centralized auth service for fullctl
+centralized authentication service for fullctl

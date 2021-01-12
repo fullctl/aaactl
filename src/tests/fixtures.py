@@ -12,7 +12,7 @@ _ = lambda s: s
 class BillingObjects(object):
 
     def __init__(self, handle="test"):
-        from billing.models import (ProductGroup, 
+        from billing.models import (ProductGroup,
             BillingContact,
             Product,
             RecurringProduct,
@@ -23,7 +23,7 @@ class BillingObjects(object):
             SubscriptionCycle,
             SubscriptionCycleCharge,
             SubscriptionCycleProduct,
-            SubscriptionModifier,
+            SubscriptionProductModifier,
         )
         from account.models import Organization
         from django.contrib.auth import get_user_model
@@ -261,7 +261,7 @@ def charge_objects(billing_objects, mocker):
     payment_charge = subcycle_charge.chg
 
     order_history = OrderHistory.create_from_chg(payment_charge)
-    
+
     return {
         "subcycle": subcycle,
         "subcycle_charge": subcycle_charge,

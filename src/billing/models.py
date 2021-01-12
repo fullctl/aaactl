@@ -7,6 +7,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 import reversion
 
@@ -26,8 +27,18 @@ import account.models
 
 @reversion.register()
 class ProductGroup(HandleRefModel):
+
+    """
+    Describes a container for a set of products (cyclic or one-time purchases)
+
+    This allows the grouping of products for billing purposes, which can be useful if you want.
+
+    An example here would be "Fullctl" as a product group for all it's underlying
+    products/services (ixctl, prefixctl etc.)
+    """
+
     name = models.CharField(max_length=255)
-    subscription_cycle_anchor = models.DateField(null=True, blank=True)
+    subscription_cycle_anchor = models.DateField(null=True, blank=True, help_text=_("If specified, sets a day of the month to be used as the anchor point for subscription cycles"))
 
     class HandleRef:
         tag = "prodgrp"
@@ -45,7 +56,7 @@ class ProductGroup(HandleRefModel):
 class Product(HandleRefModel):
 
     """
-    Describes a product or service that can be subscribed to
+    Describes a product or service.
     """
 
     # example: fullctl.prefixctl.prefixes
@@ -111,10 +122,18 @@ class Product(HandleRefModel):
 @reversion.register()
 class RecurringProduct(HandleRefModel):
 
+    """
+    Describes a product that can be subscribed to
+
+    Currently supports metered or fixed pricing.
+    """
+
+    # product information
     prod = models.OneToOneField(
         Product, on_delete=models.CASCADE, related_name="recurring"
     )
 
+    # metered or fixed
     type = models.CharField(
         max_length=255, choices=BILLING_PRODUCT_RECURRING_TYPES, default=None, null=True
     )
@@ -124,7 +143,7 @@ class RecurringProduct(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price in the context of recurring charges. For fixed recurring pricing this would be the price charged each cycle. For metered recurring pricing this could be the price as it relates to the metered value."
+            "Price in the context of recurring charges. For fixed recurring pricing this would be the price charged each cycle. For metered pricing this would be the usage price per metered unit."
         ),
     )
 
@@ -217,8 +236,7 @@ class ProductModifier(HandleRefModel):
 class Subscription(HandleRefModel):
 
     """
-    Describes an organization's subscription to a
-    prodct
+    Describes an organization's subscription to a product group
     """
 
     org = models.ForeignKey(
@@ -330,6 +348,11 @@ class Subscription(HandleRefModel):
 
 @reversion.register()
 class SubscriptionProduct(HandleRefModel):
+
+    """
+    Links a product to a subscription
+    """
+
     sub = models.ForeignKey(
         Subscription, on_delete=models.CASCADE, related_name="subprod_set"
     )
@@ -373,11 +396,18 @@ class SubscriptionProduct(HandleRefModel):
             return 0
 
     def __str__(self):
-        return self.prod.name
+        return f"{self.sub} - {self.prod.name}"
 
 
 @reversion.register()
 class SubscriptionCycle(HandleRefModel):
+
+    """
+    Describes a billing cycle for a subscription with a specified
+    start and end date.
+
+    Once the end date is reached, the cycle will be billed.
+    """
 
     sub = models.ForeignKey(
         Subscription, on_delete=models.CASCADE, related_name="cycle_set"
@@ -396,6 +426,11 @@ class SubscriptionCycle(HandleRefModel):
 
     @property
     def price(self):
+
+        """
+        The current total of the cycle
+        """
+
         price = 0
         for charge in self.cycleprod_set.all():
             price += float(charge.price)
@@ -403,12 +438,21 @@ class SubscriptionCycle(HandleRefModel):
 
     @property
     def charged(self):
+        """
+        Has this cycle been charged already ?
+        """
+
         return self.cyclechg_set.filter(chg__status="ok").exists()
 
     def __str__(self):
         return f"{self.sub} {self.start} - {self.end}"
 
     def charge(self):
+
+        """
+        Charge the cost of the cycle to the customer's payment method
+        """
+
         if self.charged:
             raise OSError("Cycle was already charged successfully")
 
@@ -429,6 +473,10 @@ class SubscriptionCycle(HandleRefModel):
 @reversion.register()
 class SubscriptionCycleCharge(HandleRefModel):
 
+    """
+    Describes a billing charge made for a subscription cycle
+    """
+
     cycle = models.ForeignKey(
         SubscriptionCycle, on_delete=models.CASCADE, related_name="cyclechg_set"
     )
@@ -447,6 +495,11 @@ class SubscriptionCycleCharge(HandleRefModel):
 
 @reversion.register()
 class SubscriptionCycleProduct(HandleRefModel):
+
+    """
+    Describes a relationship of a product to a subscription cycle, letting us
+    specify the product's usage for the cycle.
+    """
 
     cycle = models.ForeignKey(
         SubscriptionCycle, on_delete=models.CASCADE, related_name="cycleprod_set"
@@ -468,24 +521,41 @@ class SubscriptionCycleProduct(HandleRefModel):
 
     @property
     def price(self):
+
+        """
+        price of the product in the subscription cycle
+        """
+
         recurring = self.subprod.prod.recurring
         if recurring.type == "metered":
-            return float(self.usage) * float(recurring.price)
-        return recurring.price
+            price = float(self.usage) * float(recurring.price)
+        else:
+            price = recurring.price
+
+
+        # apply modifiers
+
+        for mod in self.subprod.modifier_set.all():
+            if mod.is_valid:
+                price = mod.apply(price, recurring.price)
+
+        return price
 
     def __str__(self):
         return f"{self.subprod}"
 
 
 @reversion.register()
-class SubscriptionModifier(HandleRefModel):
+class SubscriptionProductModifier(HandleRefModel):
 
     """
-    Describes a price modifier applied to a subscription
+    Describes a modification for a specific product in a subscription, allowing
+    us to make certain products in a subscription reduced in price or free
+    entirely.
     """
 
-    sub = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="modifier_set"
+    subprod = models.ForeignKey(
+        SubscriptionProduct, on_delete=models.CASCADE, related_name="modifier_set"
     )
     type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
     value = models.IntegerField(default=0)
@@ -501,6 +571,30 @@ class SubscriptionModifier(HandleRefModel):
         db_table = "billing_subscription_modifier"
         verbose_name = _("Subscription Price Modifier")
         verbose_name_plural = _("Subscription Price Modifiers")
+
+    @property
+    def is_valid(self):
+        return timezone.now() < self.valid
+
+    def apply(self, price, unit_price=0):
+        """
+        applies modifier to a given price and returns the modified
+        price
+        """
+        if self.type == "free":
+            return 0
+
+        if self.type == "quantity":
+            price -= float(unit_price*self.value)
+        elif self.type == "reduction":
+            price -= self.value
+        elif self.type == "reduction_p":
+            price -= (price*(self.value/100.0))
+
+
+        return max(price, 0)
+
+
 
 
 def unique_order_id():

@@ -17,7 +17,7 @@ from billing.models import (
     SubscriptionCycle,
     SubscriptionCycleProduct,
     SubscriptionCycleCharge,
-    SubscriptionModifier,
+    SubscriptionProductModifier,
     SubscriptionProduct,
     OrderHistory,
     OrderHistoryItem,
@@ -73,8 +73,8 @@ class ProductModifieradmin(BaseAdmin):
     search_fields = ("prod__name", "code")
 
 
-class SubscriptionModifierInline(admin.TabularInline):
-    model = SubscriptionModifier
+class SubscriptionProductModifierInline(admin.TabularInline):
+    model = SubscriptionProductModifier
     fields = ("type", "value", "valid", "source")
     extra = 1
 
@@ -97,7 +97,6 @@ class SubscriptionAdmin(BaseAdmin):
     search_fields = ("group__name", "prod__name", "org__name")
     inlines = (
         SubscriptionProductInline,
-        SubscriptionModifierInline,
         SubscriptionCycleInline,
     )
 
@@ -122,10 +121,10 @@ class SubscriptionCycleAdmin(BaseAdmin):
         return obj.sub.org.name
 
 
-@admin.register(SubscriptionModifier)
-class SubscriptionModifierAdmin(BaseAdmin):
-    list_display = ("sub", "type", "value", "valid", "source")
-    search_fields = ("sub__prod__name", "sub__org___name")
+@admin.register(SubscriptionProductModifier)
+class SubscriptionProductModifierAdmin(BaseAdmin):
+    list_display = ("subprod", "type", "value", "valid", "source")
+    search_fields = ("subprod__name", "subprod__sub__org___name")
 
 
 class OrderHistoryItemInline(admin.TabularInline):

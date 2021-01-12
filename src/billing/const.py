@@ -4,6 +4,7 @@ BILLING_CYCLE_CHOICES = (("month", _("Monthly")), ("year", _("Yearly")))
 
 BILLING_MODIFIER_TYPES = (
     ("reduction", _("Price Reduction")),
+    ("reduction_p", _("Price Reduction (%)")),
     ("quantity", _("Free Quantity")),
     ("free", _("Free")),
 )

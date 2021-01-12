@@ -485,7 +485,7 @@ class SubscriptionModifier(HandleRefModel):
     """
 
     sub = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="modifier_set_set"
+        Subscription, on_delete=models.CASCADE, related_name="modifier_set"
     )
     type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
     value = models.IntegerField(default=0)

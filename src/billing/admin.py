@@ -38,7 +38,7 @@ class BaseAdmin(VersionAdmin, ReversionAdmin):
 
 
 class ProductForm(forms.ModelForm):
-    component = forms.ChoiceField(choices=[(c, c) for c in settings.BILLING_COMPONENTS])
+    pass
 
 
 class ProductModifierInline(admin.TabularInline):

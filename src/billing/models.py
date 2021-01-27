@@ -21,6 +21,7 @@ from billing.const import *
 from common.models import HandleRefModel
 
 import account.models
+import applications.models
 
 # Create your models here.
 
@@ -64,9 +65,12 @@ class Product(HandleRefModel):
         max_length=255, help_text=_("Internal product name"), unique=True
     )
 
-    # example: fullctl.prefixctl
-    component = models.CharField(
-        max_length=255, help_text=_("Product belongs to component")
+    component = models.ForeignKey(
+        applications.models.Service,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text=_("Product belongs to component")
     )
 
     # example: actively monitored prefixes

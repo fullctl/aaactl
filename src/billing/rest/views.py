@@ -125,6 +125,25 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.sub(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @grainy_endpoint("org.{org.id}.billing.service", explicit=False)
+    def subscribe(self, request, pk, org):
+        name = request.data.get("product")
+
+        try:
+            product = models.Product.objects.get(name=name)
+        except models.Product.DoesNotExist:
+            return Response({"product":[f"Unknown product: {name}"]}, status=400)
+
+        sub = models.Subscription.get_or_create(org, product.group)
+        sub.add_prod(product)
+
+        serializer = Serializers.sub(sub)
+        return Response(serializer.data)
+
+
+
     @action(detail=True, methods=["GET"])
     @set_org
     @grainy_endpoint("org.{org.id}.billing.service", explicit=False)

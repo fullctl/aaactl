@@ -28,8 +28,10 @@ django-countries = "*"
 django-oauth-toolkit = "*"
 django-cors-middleware = "*"
 pytest-filedata = "<1"
-django-grainy = {file = "https://github.com/20c/django-grainy/archive/1.7.0.2.zip"}
+django-grainy = ">1.7,<2" 
 grainy = "<2"
+fullctl = {file = "https://github.com/fullctl/fullctl/archive/master.zip"}
+
 
 [requires]
-python_version = "3.6"
+python_version = "3.9"

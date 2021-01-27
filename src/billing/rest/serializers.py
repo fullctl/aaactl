@@ -141,6 +141,7 @@ class Subscription(serializers.ModelSerializer):
                 "type": subprod.prod.recurring.type_description,
                 "usage": subprod.cycle_usage,
                 "cost": subprod.cycle_cost,
+                "name": subprod.prod.name,
                 "unit_name": subprod.prod.recurring.unit,
                 "unit_name_plural": subprod.prod.recurring.unit_plural,
             } for subprod in sub.subprod_set.all()

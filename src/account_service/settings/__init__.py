@@ -14,7 +14,6 @@ import os
 
 from django.utils.translation import gettext_lazy as _
 
-
 _DEFAULT_ARG = object()
 
 
@@ -414,14 +413,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     # FIXME: need to somehow allow different drf settings by app
     "EXCEPTION_HANDLER": "common.rest.exception_handler",
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.ScopedRateThrottle',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'invite': '5/minute',
-        'resend_email': '5/minute',
-        'password_reset': '5/minute'
-    }
+    "DEFAULT_THROTTLE_RATES": {
+        "invite": "5/minute",
+        "resend_email": "5/minute",
+        "password_reset": "5/minute",
+    },
 }
 
 ####################### end concat config

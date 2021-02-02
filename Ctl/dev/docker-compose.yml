@@ -14,12 +14,14 @@ services:
       - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ixctl_some-net
 
   account_django:
     build:
       context: ../..
       dockerfile: Dockerfile
-    command: runserver 0.0.0.0:8000
+    command: runserver 0.0.0.0:8001
     env_file: .env
     environment:
       DATABASE_PASSWORD: devPASSWORD
@@ -34,9 +36,17 @@ services:
         max-file: "3"
     ports:
       # this needs to be set in the shell, compose env vars aren't read yet
-      - "${DJANGO_PORT:-8000}:8000"
+      - "${DJANGO_PORT:-8001}:8001"
     volumes:
       - ../../src:/srv/service/main
 
+    networks:
+      - ixctl_some-net
+
+
 volumes:
   postgres_data:
+
+networks:
+  ixctl_some-net:
+    external: true

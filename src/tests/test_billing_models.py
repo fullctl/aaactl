@@ -3,22 +3,10 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from billing.models import (
-    BillingContact,
-    CustomerData,
     OrderHistory,
-    OrderHistoryItem,
-    PaymentCharge,
-    PaymentMethod,
-    Product,
-    ProductGroup,
-    ProductModifier,
-    RecurringProduct,
-    Subscription,
     SubscriptionCycle,
-    SubscriptionCycleCharge,
     SubscriptionCycleProduct,
-    SubscriptionProduct,
-    SubscriptionProductModifier,
+    SubscriptionProduct
 )
 
 

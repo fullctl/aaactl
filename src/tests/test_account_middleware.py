@@ -13,13 +13,12 @@ def test_select_org_default(db, account_objects, client_anon):
     response = client_anon.get(reverse("account:auth-login"))
     request = response.wsgi_request
 
-    assert request.selected_org == None
+    assert request.selected_org is None
 
 
 def test_select_org_slug(db, account_objects, client_anon):
 
     client = account_objects.client
-    user = account_objects.user
     org = account_objects.org
     other = account_objects.other_org
 
@@ -33,7 +32,7 @@ def test_select_org_slug(db, account_objects, client_anon):
     )
     request = response.wsgi_request
 
-    assert request.selected_org == None
+    assert request.selected_org is None
 
     response = client.get(
         reverse("account:controlpanel") + "?org={}".format(other.slug)

@@ -1,8 +1,6 @@
 import pytest
 from django.urls import reverse
 
-import billing.models as models
-
 
 @pytest.mark.django_db
 def test_order_history_details(client_anon, billing_objects, charge_objects):

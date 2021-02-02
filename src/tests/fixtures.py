@@ -5,7 +5,6 @@ import pytest
 from django.test import Client
 
 
-
 class BillingObjects(object):
     def __init__(self, handle="test"):
         from django.contrib.auth import get_user_model
@@ -20,11 +19,6 @@ class BillingObjects(object):
             ProductModifier,
             RecurringProduct,
             Subscription,
-            SubscriptionCycle,
-            SubscriptionCycleCharge,
-            SubscriptionCycleProduct,
-            SubscriptionProduct,
-            SubscriptionProductModifier,
         )
 
         self.product_group = ProductGroup.objects.create(

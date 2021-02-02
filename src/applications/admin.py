@@ -1,8 +1,7 @@
 from django.contrib import admin
 
-from common.admin import BaseAdmin
-
 from applications.models import Service
+from common.admin import BaseAdmin
 
 # Register your models here.
 

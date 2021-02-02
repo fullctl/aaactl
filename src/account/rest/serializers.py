@@ -1,19 +1,16 @@
+import logging
 import re
-import logging 
-
-from django.contrib.auth import get_user_model, update_session_auth_hash
-from django.utils.translation import gettext as _
-from django.conf import settings
-
-from django_grainy.util import Permissions
 
 import reversion
+from django.conf import settings
+from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.utils.translation import gettext as _
+from django_grainy.util import Permissions
 from rest_framework import serializers
 
-from common.rest import HANDLEREF_FIELDS
-
-import account.models as models
 import account.forms as forms
+import account.models as models
+from common.rest import HANDLEREF_FIELDS
 
 
 class Serializers(object):
@@ -64,7 +61,7 @@ class OrganizationUser(serializers.ModelSerializer):
         "billing.contact",
         "billing.service",
         "billing.orderhistory",
-        "manage"
+        "manage",
     ]
 
     class Meta:
@@ -216,13 +213,14 @@ class EditOrg(FormValidationMixin, serializers.ModelSerializer):
     def get_form(self, data):
         return self.form(self.context.get("org"), data)
 
+
 @register
 class EditOrgPasswordProtected(EditOrg):
 
     ref_tag = "orgeditpwdprotected"
     form = forms.EditOrganizationPasswordProtected
     required_context = ["org", "user"]
-    
+
     password = serializers.CharField(write_only=True)
 
     class Meta(EditOrg.Meta):
@@ -231,9 +229,10 @@ class EditOrgPasswordProtected(EditOrg):
     def get_form(self, data):
         return self.form(self.context.get("user"), self.context.get("org"), data)
 
+
 @register
 class UserInformation(FormValidationMixin, serializers.ModelSerializer):
-    ref_tag = "user" 
+    ref_tag = "user"
     form = forms.UserInformationBase
     username = serializers.CharField(validators=[])
 
@@ -268,7 +267,7 @@ class UserInformationPasswordProtected(UserInformation):
 
     class Meta(UserInformation.Meta):
         fields = UserInformation.Meta.fields + ["password"]
-    
+
     def get_form(self, data):
         return self.form(self.context.get("user"), data)
 
@@ -319,7 +318,7 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Invitation
-        fields = ["org_id", "org_name","slug", "email", "user_name"]
+        fields = ["org_id", "org_name", "slug", "email", "user_name"]
 
     def get_org_name(self, obj):
         return obj.org.name
@@ -330,7 +329,7 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         if user:
             return user.get_full_name()
         else:
-            return ''
+            return ""
 
     def get_slug(self, obj):
         return obj.org.slug
@@ -342,16 +341,15 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         data.pop("form_data", None)
 
         inv = models.Invitation.objects.filter(
-                email=data["email"],
-                org=data["org"]
-                ).first()
-        
+            email=data["email"], org=data["org"]
+        ).first()
+
         if inv:
             inv.created_by = data["created_by"]
             if data.get("service"):
                 inv.service = data["service"]
-            inv.save(update_fields=['created_by','updated', 'service'])
-        
+            inv.save(update_fields=["created_by", "updated", "service"])
+
         else:
             inv = models.Invitation.objects.create(status="pending", **data)
 
@@ -382,7 +380,6 @@ class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
             if user.has_usable_password():
                 target_user = user
                 break
-
 
         if target_user:
             logger.info("User found, starting password reset")
@@ -417,11 +414,6 @@ class PasswordReset(FormValidationMixin, serializers.Serializer):
 
 @register
 class APIKey(serializers.ModelSerializer):
-
     class Meta:
         model = models.APIKey
         fields = ["key", "created", "status"]
-        
-
-
-

@@ -1,27 +1,21 @@
 from urllib.parse import urlparse
 
-from django.shortcuts import render, redirect
-from django.urls import reverse, resolve
-from django.http import Http404, JsonResponse
-from django.contrib import messages
-from django.contrib.auth import (
-    authenticate,
-    login as fn_login,
-    logout as fn_logout,
-    get_user_model,
-)
-from django.contrib.auth.decorators import login_required
-from django.utils.translation import gettext as _
-
-import grainy.core
 import django_grainy.helpers
-
+import grainy.core
+from django.contrib import messages
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import login as fn_login
+from django.contrib.auth import logout as fn_logout
+from django.contrib.auth.decorators import login_required
+from django.http import Http404, JsonResponse
+from django.shortcuts import redirect, render
+from django.urls import resolve, reverse
+from django.utils.translation import gettext as _
 from oauth2_provider.decorators import protected_resource
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 
 import account.forms
-
-from account.models import Invitation, PasswordReset, EmailConfirmation
+from account.models import EmailConfirmation, Invitation, PasswordReset
 from account.session import set_selected_org
 
 # Create your views here.

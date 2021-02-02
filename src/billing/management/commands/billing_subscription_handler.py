@@ -1,22 +1,20 @@
-import logging
 import datetime
+import logging
 
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model
 import reversion
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandError
 
 from billing.models import (
+    PaymentMethod,
     Product,
     ProductGroup,
     RecurringProduct,
     Subscription,
     SubscriptionCycleProduct,
-    PaymentMethod,
 )
-
 from billing.payment_processors.paypal import PaypalProcessor
-
 
 logging.basicConfig(level=logging.INFO)
 

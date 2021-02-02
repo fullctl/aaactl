@@ -1,16 +1,15 @@
 import re
 
+from captcha.fields import ReCaptchaField
 from django import forms
-from django.utils.translation import gettext as _
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.utils.translation import gettext as _
 
-from captcha.fields import ReCaptchaField
-
+from account.models import Invitation, Organization
+from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
-
-from account.models import Organization, Invitation, PasswordReset as PasswordResetModel
 from applications.models import Service
 
 
@@ -174,8 +173,10 @@ class EditOrganization(CreateOrganization):
             self.fields["name"].widget.attrs["readonly"] = True
             self.initial["name"] = _("Your Personal Organization")
 
+
 class EditOrganizationPasswordProtected(PasswordProtectedForm, EditOrganization):
     pass
+
 
 class InviteToOrganization(forms.Form):
     email = forms.EmailField(label=_("Email address"))

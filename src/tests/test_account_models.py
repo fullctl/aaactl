@@ -1,12 +1,12 @@
+from django.contrib.auth import authenticate
 from django_grainy.util import Permissions
 
-from django.contrib.auth import authenticate
-
-from account.models import EmailConfirmation, UserSettings, PasswordReset, Invitation
+from account.models import EmailConfirmation, Invitation, PasswordReset, UserSettings
 
 
 def test_personal_org(db, account_objects):
     assert account_objects.user.personal_org
+
 
 def test_personal_org_user_del(db, account_objects):
     personal_org = account_objects.user.personal_org
@@ -93,4 +93,3 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
 
     inv.complete(account_objects_b.user)
     assert account_objects.org.user_set.filter(user=account_objects_b.user).exists()
-

@@ -1,5 +1,6 @@
 import json
 
+
 def strip_api_fields(data):
     """
     created and updated fields will change with every test run
@@ -12,8 +13,8 @@ def strip_api_fields(data):
 
     for v in values:
         if isinstance(v, dict):
-            v.pop("created",None)
-            v.pop("updated",None)
+            v.pop("created", None)
+            v.pop("updated", None)
             v.pop("org_id", None)
             v.pop("id", None)
             strip_api_fields(v)
@@ -30,5 +31,3 @@ def assert_expected(response, expected):
     else:
         print(response.content.decode("utf-8"))
         assert response.content.decode("utf-8") == expected["response"]
-
-

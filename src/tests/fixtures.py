@@ -1,7 +1,9 @@
 from __future__ import print_function
-import os.path
-import pytest
+
 import json
+import os.path
+
+import pytest
 from django.conf import settings
 from django.test import Client
 
@@ -10,125 +12,121 @@ _ = lambda s: s
 
 
 class BillingObjects(object):
-
     def __init__(self, handle="test"):
-        from billing.models import (ProductGroup,
-            BillingContact,
-            Product,
-            RecurringProduct,
-            ProductModifier,
-            PaymentMethod,
-            Subscription,
-            SubscriptionProduct,
-            SubscriptionCycle,
-            SubscriptionCycleCharge,
-            SubscriptionCycleProduct,
-            SubscriptionProductModifier,
-        )
-        from account.models import Organization
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
 
+        from account.models import Organization
+        from billing.models import (
+            BillingContact,
+            PaymentMethod,
+            Product,
+            ProductGroup,
+            ProductModifier,
+            RecurringProduct,
+            Subscription,
+            SubscriptionCycle,
+            SubscriptionCycleCharge,
+            SubscriptionCycleProduct,
+            SubscriptionProduct,
+            SubscriptionProductModifier,
+        )
+
         self.product_group = ProductGroup.objects.create(
-            name = "Test Group",
+            name="Test Group",
         )
 
         self.other_product_group = ProductGroup.objects.create(
-            name = "Other Group",
+            name="Other Group",
         )
 
         self.product = Product.objects.create(
-            name = "test",
-            component = "test",
-            description = "test product",
-            group = self.product_group,
-            price = 10.00,
-            data = { "foo": "bar" }
+            name="test",
+            component="test",
+            description="test product",
+            group=self.product_group,
+            price=10.00,
+            data={"foo": "bar"},
         )
 
         self.product_sub_fixed = Product.objects.create(
-            name = "test.sub.fixed",
-            component = "test",
-            description = "test product: fixed subscription",
-            group = self.product_group,
-            price = 0.00,
-            data = { "foo": "bar" }
+            name="test.sub.fixed",
+            component="test",
+            description="test product: fixed subscription",
+            group=self.product_group,
+            price=0.00,
+            data={"foo": "bar"},
         )
 
         RecurringProduct.objects.create(
-            prod = self.product_sub_fixed,
-            type = "fixed",
-            price = 125.99,
-            data = { "foo" : "bar" }
+            prod=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
         )
 
         self.product_sub_metered = Product.objects.create(
-            name = "test.sub.metered",
-            component = "test",
-            description = "test product: metered subscription",
-            group = self.product_group,
-            price = 0.00,
-            data = { "foo": "bar" }
+            name="test.sub.metered",
+            component="test",
+            description="test product: metered subscription",
+            group=self.product_group,
+            price=0.00,
+            data={"foo": "bar"},
         )
 
         RecurringProduct.objects.create(
-            prod = self.product_sub_metered,
-            type = "metered",
-            price = 0.50,
-            data = { "foo" : "bar" }
+            prod=self.product_sub_metered,
+            type="metered",
+            price=0.50,
+            data={"foo": "bar"},
         )
 
         reduction_prod_mod = ProductModifier.objects.create(
-            prod = self.product,
-            type = "reduction",
-            value = 10,
-            duration = 30,
-            code = "TESTREDUCTION",
+            prod=self.product,
+            type="reduction",
+            value=10,
+            duration=30,
+            code="TESTREDUCTION",
         )
 
         free_quant_prod_mod = ProductModifier.objects.create(
-            prod = self.product,
-            type = "quantity",
-            value = 2,
-            duration = 30,
-            code = "TESTQUANTITY",
+            prod=self.product,
+            type="quantity",
+            value=2,
+            duration=30,
+            code="TESTQUANTITY",
         )
 
         self.org = Organization.objects.create(name="Subscription Org", slug="sub_org")
 
         self.monthly_subscription = Subscription.objects.create(
-            org= self.org,
+            org=self.org,
             group=self.product_group,
             cycle_interval="month",
-            cycle_start=None, # Set none to start
-            pay=None #Set none to start
+            cycle_start=None,  # Set none to start
+            pay=None,  # Set none to start
         )
 
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
             cycle_interval="year",
-            cycle_start=None, # Set none to start
-            pay=None #Set none to start
+            cycle_start=None,  # Set none to start
+            pay=None,  # Set none to start
         )
 
         self.billing_contact = BillingContact.objects.create(
-            org=self.org,
-            name="William Contact",
-            email="billcon@localhost"
+            org=self.org, name="William Contact", email="billcon@localhost"
         )
 
         self.payment_method = PaymentMethod.objects.create(
             billcon=self.billing_contact,
-            custom_name = "Test Customer",
-            processor = "stripe",
+            custom_name="Test Customer",
+            processor="stripe",
             holder="William Contact",
             country="US",
             city="Chicago",
             address1="3400 Test Ave",
             postal_code="60600",
             state="IL",
-            data={"stripe_card":"5200828282828210"}
+            data={"stripe_card": "5200828282828210"},
         )
 
         self.user = get_user_model().objects.create_user(
@@ -144,11 +142,13 @@ class BillingObjects(object):
         self.client = Client()
         self.client.login(username=self.user.username, password="test")
 
+
 class AccountObjects(object):
     def __init__(self, handle):
         from django.contrib.auth import get_user_model
-        from rest_framework.test import APIClient
         from django_grainy.util import Permissions
+        from rest_framework.test import APIClient
+
         from account.models import Organization, OrganizationUser
 
         self.user = user = get_user_model().objects.create_user(
@@ -172,10 +172,12 @@ class AccountObjects(object):
             name="Other {}".format(handle), slug="other-{}".format(handle)
         )
 
-        self.user_unpermissioned = user_unpermissioned = get_user_model().objects.create_user(
+        self.user_unpermissioned = (
+            user_unpermissioned
+        ) = get_user_model().objects.create_user(
             username="user_{}_unperm".format(handle),
             email="{}_unperm@localhost".format(handle),
-            password="test"
+            password="test",
         )
 
         org.add_user(user_unpermissioned, perms="r")
@@ -184,8 +186,9 @@ class AccountObjects(object):
         self.api_client.login(username=user.username, password="test")
 
         self.api_client_unperm = APIClient()
-        self.api_client_unperm.login(username=user_unpermissioned.username, password="test")
-
+        self.api_client_unperm.login(
+            username=user_unpermissioned.username, password="test"
+        )
 
         self.api_client_anon = APIClient()
 
@@ -204,6 +207,7 @@ def make_account_objects(handle="test"):
 def make_billing_objects():
     return BillingObjects()
 
+
 @pytest.fixture
 def client_anon():
     return Client()
@@ -212,12 +216,14 @@ def client_anon():
 @pytest.fixture
 def api_client_anon():
     from rest_framework.test import APIClient
+
     return APIClient()
 
 
 @pytest.fixture
 def account_objects():
     return make_account_objects()
+
 
 @pytest.fixture
 def billing_objects():
@@ -231,12 +237,13 @@ def account_objects_b():
 
 @pytest.fixture
 def charge_objects(billing_objects, mocker):
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
+
     from billing.models import OrderHistory, SubscriptionCycleProduct
 
     mocker.patch(
-        'billing.payment_processors.stripe.stripe.Charge.create',
-        return_value={"id": 1234}
+        "billing.payment_processors.stripe.stripe.Charge.create",
+        return_value={"id": 1234},
     )
     subscription = billing_objects.monthly_subscription
 
@@ -250,9 +257,7 @@ def charge_objects(billing_objects, mocker):
     subcycle = subscription.cycle_set.first()
 
     fixed_cycleprod = SubscriptionCycleProduct.objects.create(
-        cycle=subcycle,
-        subprod=fixed_subprod,
-        usage=1
+        cycle=subcycle, subprod=fixed_subprod, usage=1
     )
 
     subcycle.charge()
@@ -268,4 +273,3 @@ def charge_objects(billing_objects, mocker):
         "payment_charge": payment_charge,
         "order_history": order_history,
     }
-

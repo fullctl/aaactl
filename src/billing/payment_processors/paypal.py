@@ -1,10 +1,9 @@
 import datetime
 import urllib.parse
 
-from django.utils.translation import gettext as _
-from django.conf import settings
-
 import reversion
+from django.conf import settings
+from django.utils.translation import gettext as _
 
 from billing.payment_processors.processor import PaymentProcessor
 

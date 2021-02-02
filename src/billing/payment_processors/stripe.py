@@ -1,12 +1,12 @@
 import datetime
 import time
 
+import reversion
 import stripe
 from django import forms
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-import reversion
 from billing.payment_processors.processor import PaymentProcessor
 
 

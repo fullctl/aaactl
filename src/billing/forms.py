@@ -2,17 +2,16 @@ from django import forms
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 
+import billing.payment_processors
+from account.models import Organization
 from billing.const import *
 from billing.models import (
+    BillingContact,
+    PaymentMethod,
     Product,
     RecurringProduct,
     Subscription,
-    PaymentMethod,
-    BillingContact,
 )
-import billing.payment_processors
-
-from account.models import Organization
 
 
 class BillingSetupInitForm(forms.Form):

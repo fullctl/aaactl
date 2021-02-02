@@ -2,11 +2,10 @@
 Payment processor interface
 """
 
-from django.urls import reverse
-from django.conf import settings
-from django.utils.translation import gettext as _
-
 import reversion
+from django.conf import settings
+from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from billing.exceptions import BillingError
 

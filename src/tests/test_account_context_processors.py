@@ -1,10 +1,10 @@
-from django.urls import reverse
 import json
 
+from django.urls import reverse
+
+
 def test_permissions(db, account_objects, data_account_ctxp_perms):
-    response = account_objects.client.get(
-        reverse("account:controlpanel")
-    )
+    response = account_objects.client.get(reverse("account:controlpanel"))
 
     permissions = response.context["permissions"]
 

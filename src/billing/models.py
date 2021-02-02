@@ -1,27 +1,22 @@
 import datetime
-import dateutil.relativedelta
-
 import secrets
 
-from django.db import models
-from django.utils.translation import gettext as _
-from django.contrib.postgres.fields import JSONField
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-
+import dateutil.relativedelta
 import reversion
-
+from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
 
-import billing.product_handlers
-import billing.payment_processors
-from billing.const import *
-
-from common.models import HandleRefModel
-
 import account.models
 import applications.models
+import billing.payment_processors
+import billing.product_handlers
+from billing.const import *
+from common.models import HandleRefModel
 
 # Create your models here.
 
@@ -39,7 +34,13 @@ class ProductGroup(HandleRefModel):
     """
 
     name = models.CharField(max_length=255)
-    subscription_cycle_anchor = models.DateField(null=True, blank=True, help_text=_("If specified, sets a day of the month to be used as the anchor point for subscription cycles"))
+    subscription_cycle_anchor = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_(
+            "If specified, sets a day of the month to be used as the anchor point for subscription cycles"
+        ),
+    )
 
     class HandleRef:
         tag = "prodgrp"
@@ -70,7 +71,7 @@ class Product(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        help_text=_("Product belongs to component")
+        help_text=_("Product belongs to component"),
     )
 
     # example: actively monitored prefixes
@@ -536,7 +537,6 @@ class SubscriptionCycleProduct(HandleRefModel):
         else:
             price = recurring.price
 
-
         # apply modifiers
 
         for mod in self.subprod.modifier_set.all():
@@ -589,16 +589,13 @@ class SubscriptionProductModifier(HandleRefModel):
             return 0
 
         if self.type == "quantity":
-            price -= float(unit_price*self.value)
+            price -= float(unit_price * self.value)
         elif self.type == "reduction":
             price -= self.value
         elif self.type == "reduction_p":
-            price -= (price*(self.value/100.0))
-
+            price -= price * (self.value / 100.0)
 
         return max(price, 0)
-
-
 
 
 def unique_order_id():

@@ -4,3 +4,4 @@
 *.sqlite3
 *.sql
 *.egg-info
+.pytest-cache

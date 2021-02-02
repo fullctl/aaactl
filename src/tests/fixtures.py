@@ -1,14 +1,9 @@
 from __future__ import print_function
 
-import json
-import os.path
 
 import pytest
-from django.conf import settings
 from django.test import Client
 
-# lazy init for translations
-_ = lambda s: s
 
 
 class BillingObjects(object):
@@ -78,7 +73,7 @@ class BillingObjects(object):
             data={"foo": "bar"},
         )
 
-        reduction_prod_mod = ProductModifier.objects.create(
+        ProductModifier.objects.create(
             prod=self.product,
             type="reduction",
             value=10,
@@ -86,7 +81,7 @@ class BillingObjects(object):
             code="TESTREDUCTION",
         )
 
-        free_quant_prod_mod = ProductModifier.objects.create(
+        ProductModifier.objects.create(
             prod=self.product,
             type="quantity",
             value=2,
@@ -149,7 +144,7 @@ class AccountObjects(object):
         from django_grainy.util import Permissions
         from rest_framework.test import APIClient
 
-        from account.models import Organization, OrganizationUser
+        from account.models import Organization
 
         self.user = user = get_user_model().objects.create_user(
             username="user_{}".format(handle),
@@ -256,7 +251,7 @@ def charge_objects(billing_objects, mocker):
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    fixed_cycleprod = SubscriptionCycleProduct.objects.create(
+    SubscriptionCycleProduct.objects.create(
         cycle=subcycle, subprod=fixed_subprod, usage=1
     )
 

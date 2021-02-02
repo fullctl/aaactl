@@ -1,7 +1,7 @@
-import pytest
 import pytest_filedata
+import os
 
-from tests.fixtures import *
+from tests.fixtures import *  # noqa: F401, F403
 
 pytest_filedata.setup(os.path.dirname(__file__))
 

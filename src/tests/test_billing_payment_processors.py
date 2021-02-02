@@ -20,7 +20,7 @@ def test_payment_processor_interface(billing_objects):
 def test_stripe_processor(billing_objects):
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     assert "stripe_token" in stripe.form.fields
-    assert stripe.customer == None
+    assert stripe.customer is None
     assert stripe.source == "5200828282828210"
     assert stripe.public_key() == settings.STRIPE_PUBLIC_KEY
 
@@ -32,7 +32,7 @@ def test_stripe_setup_customer(billing_objects, mocker):
         return_value={"id": 1234},
     )
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)
-    assert stripe.customer == None
+    assert stripe.customer is None
     stripe.setup_customer()
     assert stripe.customer == 1234
 

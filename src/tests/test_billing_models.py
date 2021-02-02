@@ -29,9 +29,9 @@ def test_product_group(db, billing_objects):
 
 
 def test_recurring_products(db, billing_objects):
-    assert billing_objects.product.is_recurring == False
-    assert billing_objects.product_sub_fixed.is_recurring == True
-    assert billing_objects.product_sub_metered.is_recurring == True
+    assert billing_objects.product.is_recurring is False
+    assert billing_objects.product_sub_fixed.is_recurring is True
+    assert billing_objects.product_sub_metered.is_recurring is True
 
 
 def test_recurring_product_type(db, billing_objects):
@@ -66,7 +66,7 @@ def test_subscription_cycle_start(db, billing_objects):
     subscription = billing_objects.monthly_subscription
 
     # Test cycle start
-    assert subscription.cycle_start == None
+    assert subscription.cycle_start is None
     subscription.start_cycle()
     assert subscription.cycle_start == datetime.now(timezone.utc).date()
 
@@ -85,7 +85,7 @@ def test_subscription_cycle(db, billing_objects):
     # Start a cycle two months ago
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
     m_subscription.start_cycle(two_months_ago)
-    assert m_subscription.cycle == None
+    assert m_subscription.cycle is None
     assert (
         SubscriptionCycle.objects.first().start.month + 1
         == SubscriptionCycle.objects.first().end.month
@@ -240,4 +240,4 @@ def test_order_history(db, billing_objects, mocker):
 
 def test_billing_contact(db, billing_objects):
     billcon = billing_objects.billing_contact
-    assert billcon.active == False
+    assert billcon.active is False

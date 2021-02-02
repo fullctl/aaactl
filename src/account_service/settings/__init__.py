@@ -253,10 +253,7 @@ DATABASES = {
     }
 }
 
-
-####################### start concat config
-
-
+# START CONCAT CONFIG
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
@@ -423,7 +420,7 @@ REST_FRAMEWORK = {
     },
 }
 
-####################### end concat config
+# END CONCAT CONFIG
 
 # dynamic config starts here
 
@@ -447,7 +444,7 @@ if ENABLE_ALL_LANGUAGES:
 
 API_DOC_INCLUDES = {}
 API_DOC_PATH = os.path.join(BASE_DIR, "docs", "api")
-for _, _, files in os.walk(API_DOC_PATH):
+for i, j, files in os.walk(API_DOC_PATH):
     for file in files:
         base, ext = os.path.splitext(file)
         if ext == ".md":

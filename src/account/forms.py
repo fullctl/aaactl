@@ -2,12 +2,11 @@ import re
 
 from captcha.fields import ReCaptchaField
 from django import forms
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
 
-from account.models import Invitation, Organization
+from account.models import Organization
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service

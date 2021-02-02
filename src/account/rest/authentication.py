@@ -1,5 +1,5 @@
 from django_grainy.util import Permissions
-from rest_framework import authentication, exceptions, permissions
+from rest_framework import authentication, exceptions
 
 from account.models import APIKey
 

@@ -1,5 +1,6 @@
 import reversion
-from django_grainy.decorators import grainy_rest_viewset, grainy_rest_viewset_response
+from django_grainy.decorators import grainy_rest_viewset_response
+from rest_framework.response import Response
 
 
 class user_endpoint(object):

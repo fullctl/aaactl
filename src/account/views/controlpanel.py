@@ -118,7 +118,6 @@ def create_organization(request):
 @org_view(["manage"])
 def edit_organization(request):
     env = {}
-    user = request.user
 
     form = account.forms.EditOrganization(
         request.selected_org,
@@ -134,7 +133,6 @@ def edit_organization(request):
 @org_view(["users"])
 def invite(request):
     env = {}
-    user = request.user
 
     form = account.forms.InviteToOrganization(initial=request.GET)
     env.update(

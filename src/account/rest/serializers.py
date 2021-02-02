@@ -1,8 +1,6 @@
 import logging
 import re
 
-import reversion
-from django.conf import settings
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.translation import gettext as _
 from django_grainy.util import Permissions
@@ -387,8 +385,6 @@ class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
         else:
             logger.warning("No user found connected to email")
             return models.PasswordReset(email=email)
-
-        return instance
 
 
 @register

@@ -216,10 +216,10 @@ class APIKey(HandleRefModel):
             qset = cls.objects.filter(managed=False)
         updated = []
         for api_key in qset:
-            for namespace, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
+            for nsp, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
                 _, created = APIKeyPermission.objects.get_or_create(
                     api_key=api_key,
-                    namespace=namespace,
+                    namespace=nsp,
                     permission=django_grainy.helpers.int_flags(perms),
                 )
                 if created and api_key not in updated:

@@ -1,7 +1,3 @@
-from django.conf import settings
-from django_grainy.helpers import int_flags
-
-
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
     if backend.name != "peeringdb":

@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django_grainy.decorators import grainy_view
 
 

@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django_handleref.admin import VersionAdmin
 from reversion.admin import VersionAdmin as ReversionAdmin
 

@@ -1,5 +1,4 @@
 from django.conf import settings
-from six.moves.urllib_parse import unquote, urlencode
 from social_core.backends.oauth import BaseOAuth2
 from social_core.exceptions import AuthFailed
 
@@ -17,7 +16,7 @@ class PeeringDBOAuth2(BaseOAuth2):
 
     def get_user_details(self, response):
         """Return user details."""
-        if response.get("verified_user") != True:
+        if response.get("verified_user") is not True:
             raise AuthFailed(self, "User is not verified")
 
         return {

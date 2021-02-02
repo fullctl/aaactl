@@ -28,7 +28,7 @@ def valid_redirect(path, fallback):
     parts = urlparse(path)
 
     try:
-        match = resolve(parts.path)
+        resolve(parts.path)
     except Http404:
         return fallback
 
@@ -103,10 +103,6 @@ def register(request):
     env.update(register_form=form)
 
     return render(request, "account/auth/register.html", env)
-
-
-def confirm_email(request):
-    return render(request, "account/not-implemented.html", {})
 
 
 def start_reset_password(request):

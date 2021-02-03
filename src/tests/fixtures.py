@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-
 import pytest
 from django.test import Client
 
@@ -31,7 +30,6 @@ class BillingObjects(object):
 
         self.product = Product.objects.create(
             name="test",
-            component="test",
             description="test product",
             group=self.product_group,
             price=10.00,
@@ -40,7 +38,6 @@ class BillingObjects(object):
 
         self.product_sub_fixed = Product.objects.create(
             name="test.sub.fixed",
-            component="test",
             description="test product: fixed subscription",
             group=self.product_group,
             price=0.00,
@@ -53,7 +50,6 @@ class BillingObjects(object):
 
         self.product_sub_metered = Product.objects.create(
             name="test.sub.metered",
-            component="test",
             description="test product: metered subscription",
             group=self.product_group,
             price=0.00,

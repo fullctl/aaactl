@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import gettext as _
 from django_handleref.admin import VersionAdmin

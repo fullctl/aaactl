@@ -1,20 +1,9 @@
-import datetime
 import logging
 
 import reversion
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
-from billing.models import (
-    PaymentMethod,
-    Product,
-    ProductGroup,
-    RecurringProduct,
-    Subscription,
-    SubscriptionCycleProduct,
-)
-from billing.payment_processors.paypal import PaypalProcessor
+from billing.models import Subscription, SubscriptionCycleProduct  # PaymentMethod,
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        pay = PaymentMethod.objects.get(id=1)
+        # pay = PaymentMethod.objects.get(id=1)
         sub = Subscription.objects.get(id=1)
 
         SubscriptionCycleProduct.objects.get_or_create(

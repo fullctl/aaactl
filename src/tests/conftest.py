@@ -1,5 +1,6 @@
-import pytest_filedata
 import os
+
+import pytest_filedata
 
 from tests.fixtures import *  # noqa: F401, F403
 

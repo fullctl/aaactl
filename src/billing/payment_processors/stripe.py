@@ -1,6 +1,3 @@
-import datetime
-import time
-
 import reversion
 import stripe
 from django import forms

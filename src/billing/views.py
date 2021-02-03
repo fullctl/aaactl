@@ -1,29 +1,19 @@
-import secrets
-import time
-
-import reversion
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse
-from django.shortcuts import redirect, render
+from django.http import Http404
+from django.shortcuts import render
 from django.utils.translation import gettext as _
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 
 from account.decorators import org_view
 from account.forms import ChangeInformation
-from account.models import Organization
-from account.session import set_selected_org
-from billing.exceptions import BillingError
 from billing.forms import (
     BillingAddressForm,
     BillingAgreementsForm,
     BillingContactForm,
     BillingSetupInitForm,
-    CreatePaymentMethodForm,
     SelectPaymentMethodForm,
 )
-from billing.models import BillingContact, CustomerData, OrderHistory, PaymentMethod
+from billing.models import BillingContact, OrderHistory, PaymentMethod
 from billing.payment_processors import PROCESSORS
 
 # Create your views here.
@@ -93,7 +83,6 @@ def billing_contact(request, id):
 @login_required
 @org_view(["billing", "service"])
 def services(request):
-    user = request.user
 
     billing_is_setup = PaymentMethod.objects.filter(
         billcon__org=request.selected_org, status="ok"

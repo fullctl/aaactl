@@ -1,12 +1,10 @@
 import reversion
-from django.conf import settings
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 import billing.forms as forms
 import billing.models as models
 import billing.payment_processors as processors
-from account.models import Organization
 from account.rest.serializers import FormValidationMixin
 
 
@@ -192,7 +190,6 @@ class BillingSetup(serializers.Serializer):
             raise serializers.ValidationError("Payment method not found")
 
     def validate(self, data):
-        user = self.context.get("user")
         org = self.context.get("org")
         if not data.get("payment_method"):
             field_errors = {}

@@ -3,7 +3,6 @@ import secrets
 
 import dateutil.relativedelta
 import reversion
-from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
@@ -13,9 +12,9 @@ from django_grainy.decorators import grainy_model
 
 import account.models
 import applications.models
+import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
-from billing.const import *
 from common.models import HandleRefModel
 
 # Create your models here.
@@ -114,11 +113,7 @@ class Product(HandleRefModel):
 
     @property
     def is_recurring(self):
-        try:
-            if self.recurring.id:
-                return True
-        except:
-            return False
+        return hasattr(self, "recurring") and bool(self.recurring.id)
 
     def __str__(self):
         return f"{self.name}({self.id})"
@@ -140,7 +135,10 @@ class RecurringProduct(HandleRefModel):
 
     # metered or fixed
     type = models.CharField(
-        max_length=255, choices=BILLING_PRODUCT_RECURRING_TYPES, default=None, null=True
+        max_length=255,
+        choices=const.BILLING_PRODUCT_RECURRING_TYPES,
+        default=None,
+        null=True,
     )
 
     price = models.DecimalField(
@@ -220,7 +218,7 @@ class ProductModifier(HandleRefModel):
     prod = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="modifier_set"
     )
-    type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
+    type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
     value = models.PositiveIntegerField(default=0)
     duration = models.IntegerField(default=0, help_text=_("Duration in days"))
     code = models.CharField(
@@ -253,7 +251,7 @@ class Subscription(HandleRefModel):
     )
 
     cycle_interval = models.CharField(
-        max_length=255, choices=BILLING_CYCLE_CHOICES, default="month"
+        max_length=255, choices=const.BILLING_CYCLE_CHOICES, default="month"
     )
     cycle_start = models.DateTimeField(
         help_text=_("Start of billing cycle"), blank=True, null=True
@@ -561,7 +559,7 @@ class SubscriptionProductModifier(HandleRefModel):
     subprod = models.ForeignKey(
         SubscriptionProduct, on_delete=models.CASCADE, related_name="modifier_set"
     )
-    type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
+    type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
     value = models.IntegerField(default=0)
     valid = models.DateTimeField(help_text=_("Valid until"))
     source = models.CharField(

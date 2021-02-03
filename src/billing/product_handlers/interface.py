@@ -4,4 +4,4 @@ class Interface(object):
     name = "Interface"
 
     def get_price(self, product):
-        raise NotImplemented()
+        raise NotImplementedError()

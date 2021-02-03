@@ -6,7 +6,7 @@ from billing.models import (
     OrderHistory,
     SubscriptionCycle,
     SubscriptionCycleProduct,
-    SubscriptionProduct
+    SubscriptionProduct,
 )
 
 

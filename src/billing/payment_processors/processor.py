@@ -4,10 +4,8 @@ Payment processor interface
 
 import reversion
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
-from django.utils.translation import gettext as _
-
-from billing.exceptions import BillingError
 
 MAP = {}
 
@@ -58,7 +56,7 @@ class PaymentProcessor(object):
     def billcon_customer(self):
         try:
             return self.payment_method.billcon.customer
-        except:
+        except ObjectDoesNotExist:
             from billing.models import CustomerData
 
             customer, created = CustomerData.objects.get_or_create(billcon=self.billcon)
@@ -92,7 +90,7 @@ class PaymentProcessor(object):
             try:
                 chg.cyclechg.status = status
                 chg.cyclechg.save()
-            except:
+            except ObjectDoesNotExist:
                 pass
 
         return status

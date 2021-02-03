@@ -1,17 +1,10 @@
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 
 import billing.payment_processors
-from account.models import Organization
-from billing.const import *
-from billing.models import (
-    BillingContact,
-    PaymentMethod,
-    Product,
-    RecurringProduct,
-    Subscription,
-)
+from billing.models import PaymentMethod, Product
 
 
 class BillingSetupInitForm(forms.Form):
@@ -22,7 +15,7 @@ class BillingSetupInitForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         prod_name = cleaned_data.get("prod")
-        cycle = cleaned_data.get("cycle")
+
         try:
             prod = Product.objects.get(name=prod_name)
         except Product.DoesNotExist:
@@ -32,7 +25,7 @@ class BillingSetupInitForm(forms.Form):
 
         try:
             self.recurring_instance = prod.recurring
-        except:
+        except ObjectDoesNotExist:
             self.recurring_instance = None
 
         return cleaned_data

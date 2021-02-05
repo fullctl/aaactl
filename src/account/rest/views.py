@@ -1,22 +1,18 @@
+import reversion
 from django.contrib import messages
 from django.utils.translation import gettext as _
-
 from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from common.rest.decorators import grainy_endpoint, user_endpoint
-
-import reversion
+from rest_framework.response import Response
 
 import account.models as models
-
-from account.session import set_selected_org
-from account.rest.serializers import Serializers
-from account.rest.route import route
 from account.rest.decorators import disable_api_key, set_org
-
+from account.rest.route import route
+from account.rest.serializers import Serializers
+from account.session import set_selected_org
 from applications.models import Service
+from common.rest.decorators import grainy_endpoint, user_endpoint
 
 
 @route
@@ -88,11 +84,11 @@ class UserInformation(viewsets.ViewSet):
         serializer = Serializers.key(queryset, many=True)
         return Response(serializer.data)
 
-
     def get_throttles(self):
-        if self.action in ['resend_confirmation_mail']:
-            self.throttle_scope = 'resend_email'
+        if self.action in ["resend_confirmation_mail"]:
+            self.throttle_scope = "resend_email"
         return super().get_throttles()
+
 
 @route
 class Organization(viewsets.ViewSet):
@@ -115,7 +111,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("org.{org.id}")
     def retrieve(self, request, pk, org):
         org = models.Organization.objects.get(slug=pk)
-        serializer = Serializers.org(org, many=False, context={"user":request.user})
+        serializer = Serializers.org(org, many=False, context={"user": request.user})
         return Response(serializer.data)
 
     @action(detail=False, methods=["POST"])
@@ -246,8 +242,8 @@ class Organization(viewsets.ViewSet):
         return Response(Serializers.inv(inv, many=False).data)
 
     def get_throttles(self):
-        if self.action in ['invite']:
-            self.throttle_scope = 'invite'
+        if self.action in ["invite"]:
+            self.throttle_scope = "invite"
         return super().get_throttles()
 
 
@@ -281,8 +277,6 @@ class PasswordReset(viewsets.ViewSet):
         return Response(Serializers.pwdrst(pwdrst, many=False).data)
 
     def get_throttles(self):
-        if self.action in ['start']:
-            self.throttle_scope = 'password_reset'
+        if self.action in ["start"]:
+            self.throttle_scope = "password_reset"
         return super().get_throttles()
-
-

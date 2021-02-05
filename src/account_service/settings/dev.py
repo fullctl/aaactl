@@ -1,6 +1,4 @@
-import logging
 import secrets
-
 
 set_option("SERVER_EMAIL", "root@localhost")
 

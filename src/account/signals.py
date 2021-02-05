@@ -1,8 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model
 
-from account.models import APIKey, Organization, UserSettings, EmailConfirmation
+from account.models import APIKey, EmailConfirmation, Organization, UserSettings
 
 
 @receiver(post_save, sender=get_user_model())
@@ -21,8 +21,8 @@ def generate_api_key(sender, **kwargs):
         api_key.grainy_permissions.add_permission(f"user.{user.id}", "crud")
 
 
-#@receiver(post_save, sender=get_user_model())
-#def set_initial_permissions(sender, **kwargs):
+# @receiver(post_save, sender=get_user_model())
+# def set_initial_permissions(sender, **kwargs):
 #    if kwargs.get("created"):
 #        user = kwargs.get("instance")
 #        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")

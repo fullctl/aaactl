@@ -1,13 +1,12 @@
 import json
-import pytest
 
+import pytest
+from django.contrib.auth import authenticate
 from django.urls import reverse
 
-from django.contrib.auth import authenticate
-
-from tests.helpers import strip_api_fields, assert_expected
-
 import account.models as models
+from tests.helpers import assert_expected, strip_api_fields
+
 
 def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
 
@@ -15,18 +14,17 @@ def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
     tests api key authentication using the `key` url paramater
     """
 
-    response = account_objects.api_client_anon.get(
-        reverse("account_api:user-list")
-    )
+    response = account_objects.api_client_anon.get(reverse("account_api:user-list"))
 
     assert response.status_code == 403
 
     response = account_objects.api_client_anon.get(
-        reverse("account_api:user-list")+"?key={}".format(account_objects.api_key.key)
+        reverse("account_api:user-list") + "?key={}".format(account_objects.api_key.key)
     )
 
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == data_account_api_user_list.expected
+
 
 def test_api_key_auth_header(db, account_objects, data_account_api_user_list):
 
@@ -34,35 +32,28 @@ def test_api_key_auth_header(db, account_objects, data_account_api_user_list):
     tests api key authentication using the `Authorization` HTTP header
     """
 
-    response = account_objects.api_client_anon.get(
-        reverse("account_api:user-list")
-    )
+    response = account_objects.api_client_anon.get(reverse("account_api:user-list"))
 
     assert response.status_code == 403
 
     response = account_objects.api_client_anon.get(
         reverse("account_api:user-list"),
-        HTTP_AUTHORIZATION="Bearer {}".format(account_objects.api_key.key)
+        HTTP_AUTHORIZATION="Bearer {}".format(account_objects.api_key.key),
     )
-
 
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == data_account_api_user_list.expected
 
 
 def test_user_list(db, account_objects, data_account_api_user_list):
-    response = account_objects.api_client.get(
-        reverse("account_api:user-list")
-    )
+    response = account_objects.api_client.get(reverse("account_api:user-list"))
 
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == data_account_api_user_list.expected
 
     # test unauthenticated user
 
-    response = account_objects.api_client_anon.get(
-        reverse("account_api:user-list")
-    )
+    response = account_objects.api_client_anon.get(reverse("account_api:user-list"))
 
     assert response.status_code == 403
 
@@ -71,7 +62,7 @@ def test_user_put(db, account_objects, data_account_api_user_put):
 
     response = account_objects.api_client.put(
         reverse("account_api:user-list"),
-        data = json.loads(data_account_api_user_put.input)
+        data=json.loads(data_account_api_user_put.input),
     )
 
     assert response.status_code == int(data_account_api_user_put.status)
@@ -81,7 +72,7 @@ def test_user_put(db, account_objects, data_account_api_user_put):
 
     response = account_objects.api_client_anon.put(
         reverse("account_api:user-list"),
-        data = json.loads(data_account_api_user_put.input)
+        data=json.loads(data_account_api_user_put.input),
     )
 
     assert response.status_code == 403
@@ -91,17 +82,19 @@ def test_user_set_password(db, account_objects, data_account_api_user_setpasswor
 
     response = account_objects.api_client.put(
         reverse("account_api:user-set-password"),
-        data = json.loads(data_account_api_user_setpassword.input)
+        data=json.loads(data_account_api_user_setpassword.input),
     )
 
     assert response.status_code == int(data_account_api_user_setpassword.status)
-    assert strip_api_fields(response.json()) == data_account_api_user_setpassword.expected
+    assert (
+        strip_api_fields(response.json()) == data_account_api_user_setpassword.expected
+    )
 
     # test unauthenticated user
 
     response = account_objects.api_client_anon.put(
         reverse("account_api:user-set-password"),
-        data = json.loads(data_account_api_user_setpassword.input)
+        data=json.loads(data_account_api_user_setpassword.input),
     )
 
     assert response.status_code == 403
@@ -133,22 +126,22 @@ def test_user_resend_confirmation_mail(db, account_objects):
 
     assert response.status_code == 403
 
+
 def test_org_list(db, account_objects, data_account_api_org_list):
 
-    response = account_objects.api_client.get(
-        reverse("account_api:org-list")
-    )
+    response = account_objects.api_client.get(reverse("account_api:org-list"))
 
     assert response.status_code == int(data_account_api_org_list.status)
-    assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_list.expected)
+    assert strip_api_fields(response.json()) == strip_api_fields(
+        data_account_api_org_list.expected
+    )
 
     # test unauthenticated user
 
-    response = account_objects.api_client_anon.get(
-        reverse("account_api:org-list")
-    )
+    response = account_objects.api_client_anon.get(reverse("account_api:org-list"))
 
     assert response.status_code == 403
+
 
 def test_org_details(db, account_objects, data_account_api_org_details):
 
@@ -157,7 +150,9 @@ def test_org_details(db, account_objects, data_account_api_org_details):
     )
 
     assert response.status_code == int(data_account_api_org_details.status)
-    assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_details.expected)
+    assert strip_api_fields(response.json()) == strip_api_fields(
+        data_account_api_org_details.expected
+    )
 
     # test unauthenticated user
 
@@ -167,24 +162,28 @@ def test_org_details(db, account_objects, data_account_api_org_details):
 
     assert response.status_code == 403
 
+
 def test_org_create(db, account_objects, data_account_api_org_create):
 
     response = account_objects.api_client.post(
         reverse("account_api:org-list"),
-        data = json.loads(data_account_api_org_create.input)
+        data=json.loads(data_account_api_org_create.input),
     )
 
     assert response.status_code == int(data_account_api_org_create.status)
-    assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_create.expected)
+    assert strip_api_fields(response.json()) == strip_api_fields(
+        data_account_api_org_create.expected
+    )
 
     # test unauthenticated user
 
     response = account_objects.api_client_anon.post(
         reverse("account_api:org-list"),
-        data = json.loads(data_account_api_org_create.input)
+        data=json.loads(data_account_api_org_create.input),
     )
 
     assert response.status_code == 403
+
 
 def test_org_update(db, account_objects, data_account_api_org_update):
 
@@ -195,22 +194,24 @@ def test_org_update(db, account_objects, data_account_api_org_update):
 
     response = account_objects.api_client.put(
         reverse("account_api:org-detail", args=(slug,)),
-        data = json.loads(data_account_api_org_update.input)
+        data=json.loads(data_account_api_org_update.input),
     )
-
 
     assert response.status_code == int(data_account_api_org_update.status)
     if data_account_api_org_update.name != "test_error_permissions":
-        assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_update.expected)
+        assert strip_api_fields(response.json()) == strip_api_fields(
+            data_account_api_org_update.expected
+        )
 
     # test unauthenticated user
 
     response = account_objects.api_client_anon.post(
         reverse("account_api:org-list"),
-        data = json.loads(data_account_api_org_update.input)
+        data=json.loads(data_account_api_org_update.input),
     )
 
     assert response.status_code == 403
+
 
 def test_org_users(db, account_objects, data_account_api_org_users):
 
@@ -221,7 +222,9 @@ def test_org_users(db, account_objects, data_account_api_org_users):
     )
 
     assert response.status_code == int(data_account_api_org_users.status)
-    assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_users.expected)
+    assert strip_api_fields(response.json()) == strip_api_fields(
+        data_account_api_org_users.expected
+    )
 
     # test user not part of org
 
@@ -246,14 +249,16 @@ def test_org_users(db, account_objects, data_account_api_org_users):
 def test_org_userdel(db, account_objects, data_account_api_org_userdel):
 
     slug = account_objects.org.slug
-    
+
     response = account_objects.api_client.delete(
         reverse("account_api:org-user", args=(slug,)),
-        data = json.loads(data_account_api_org_userdel.input)
+        data=json.loads(data_account_api_org_userdel.input),
     )
 
     assert response.status_code == int(data_account_api_org_userdel.status)
-    assert strip_api_fields(response.json()) == strip_api_fields(data_account_api_org_userdel.expected)
+    assert strip_api_fields(response.json()) == strip_api_fields(
+        data_account_api_org_userdel.expected
+    )
 
     if data_account_api_org_userdel.name == "test0":
         assert account_objects.org.user_set.count() == 1
@@ -262,7 +267,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
 
     response = account_objects.api_client_anon.delete(
         reverse("account_api:org-user", args=(account_objects.other_org.slug,)),
-        data = json.loads(data_account_api_org_userdel.input)
+        data=json.loads(data_account_api_org_userdel.input),
     )
 
     assert response.status_code == 403
@@ -271,7 +276,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
 
     response = account_objects.api_client_anon.delete(
         reverse("account_api:org-user", args=(slug,)),
-        data = json.loads(data_account_api_org_userdel.input)
+        data=json.loads(data_account_api_org_userdel.input),
     )
 
     assert response.status_code == 403
@@ -287,11 +292,11 @@ def test_org_set_permissions(db, account_objects, data_account_api_org_setperm):
     slug = input.get("slug", account_objects.org.slug)
 
     response = getattr(account_objects, input["client"]).put(
-        reverse("account_api:org-set-permissions", args=(slug,)),
-        data = input["data"]
+        reverse("account_api:org-set-permissions", args=(slug,)), data=input["data"]
     )
 
     assert_expected(response, expected)
+
 
 def test_org_invite(db, account_objects, data_account_api_org_invite):
 
@@ -300,11 +305,11 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     slug = input.get("slug", account_objects.org.slug)
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:org-invite", args=(slug,)),
-        data = input["data"]
+        reverse("account_api:org-invite", args=(slug,)), data=input["data"]
     )
 
     assert_expected(response, strip_api_fields(expected))
+
 
 def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start):
 
@@ -312,8 +317,7 @@ def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start
     expected = data_account_api_pwdrst_start.expected
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-start"),
-        data = input["data"]
+        reverse("account_api:pwdrst-start"), data=input["data"]
     )
 
     assert_expected(response, expected)
@@ -321,9 +325,7 @@ def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start
 
 def test_password_reset_complete(db, account_objects, data_account_api_pwdrst_complete):
 
-    pwdrst = models.PasswordReset.start(
-        account_objects.user
-    )
+    pwdrst = models.PasswordReset.start(account_objects.user)
 
     input = json.loads(data_account_api_pwdrst_complete.input)
     expected = data_account_api_pwdrst_complete.expected
@@ -332,22 +334,12 @@ def test_password_reset_complete(db, account_objects, data_account_api_pwdrst_co
         data["secret"] = pwdrst.secret
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-complete"),
-        data = data
+        reverse("account_api:pwdrst-complete"), data=data
     )
 
     assert_expected(response, expected)
 
     if expected["status"] == 200:
         assert authenticate(
-            username = account_objects.user.username,
-            password = data["password_new"]
+            username=account_objects.user.username, password=data["password_new"]
         )
-
-
-
-
-
-
-
-

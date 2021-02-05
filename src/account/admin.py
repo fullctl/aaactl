@@ -1,16 +1,15 @@
 from django.contrib import admin
+from django_grainy.forms import UserPermissionForm
 
 from account.models import (
     APIKey,
     APIKeyPermission,
+    EmailConfirmation,
+    Invitation,
     Organization,
     OrganizationUser,
-    Invitation,
-    EmailConfirmation,
     PasswordReset,
 )
-
-from django_grainy.forms import UserPermissionForm
 
 # Register your models here.
 

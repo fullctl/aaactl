@@ -1,9 +1,7 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 
-import account.views.controlpanel
 import account.views.auth
-
+import account.views.controlpanel
 
 urlpatterns = [
     path("auth/o/profile/", account.views.auth.oauth_profile, name="oauth-profile"),

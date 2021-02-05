@@ -1,9 +1,6 @@
-from django_grainy.helpers import int_flags
-from django.conf import settings
-
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
-    if backend.name  != "peeringdb":
+    if backend.name != "peeringdb":
         return
 
     social = kwargs.get("social") or backend.strategy.storage.user.get_social_auth(
@@ -26,9 +23,3 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
         user.grainy_permissions.filter(
             namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
         ).exclude(namespace__in=namespaces).delete()
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-FROM python:3.6-alpine as base
+FROM python:3.9-alpine as base
 
 ARG virtual_env=/venv
 ARG install_to=/srv/service
@@ -20,6 +20,7 @@ ENV RUN_DEPS=$run_deps
 ENV SERVICE_HOME=$install_to
 ENV VIRTUAL_ENV=$virtual_env
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV POETRY_VERSION=1.1.4
 
 
 # build container
@@ -28,14 +29,16 @@ FROM base as builder
 RUN apk --update --no-cache add $BUILD_DEPS
 
 # create venv
-RUN pip install -U pip pipenv
+RUN pip install -U pip
+RUN pip install "poetry==$POETRY_VERSION"
 RUN python3 -m venv "$VIRTUAL_ENV"
 
 WORKDIR /build
 # individual files here instead of COPY . . for caching
-COPY Pipfile* ./
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-root --no-dev
+
 COPY Ctl/VERSION Ctl/
-RUN pipenv install --dev --ignore-pipfile
 
 
 #### final image

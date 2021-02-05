@@ -1,12 +1,12 @@
+from django.contrib.auth import authenticate
 from django_grainy.util import Permissions
 
-from django.contrib.auth import authenticate
-
-from account.models import EmailConfirmation, UserSettings, PasswordReset, Invitation
+from account.models import EmailConfirmation, Invitation, PasswordReset
 
 
 def test_personal_org(db, account_objects):
     assert account_objects.user.personal_org
+
 
 def test_personal_org_user_del(db, account_objects):
     personal_org = account_objects.user.personal_org
@@ -15,7 +15,7 @@ def test_personal_org_user_del(db, account_objects):
     account_objects.user.delete()
     personal_org.refresh_from_db()
 
-    assert personal_org.user == None
+    assert personal_org.user is None
     assert personal_org.label == "PersonalOrgtest"
 
 
@@ -26,7 +26,7 @@ def test_org_user_add(db, account_objects):
 def test_api_key_autocreate(db, account_objects):
     assert account_objects.user.key_set.count() == 1
     key = account_objects.user.key_set.first()
-    assert key.managed == False
+    assert key.managed is False
 
     perms = Permissions(key)
     assert perms.check("user.{user.id}".format(user=account_objects.user), "crud")
@@ -37,7 +37,7 @@ def test_emconf_process(db, account_objects):
     user = account_objects.user
     emconf = EmailConfirmation.start(user)
 
-    assert user.usercfg.email_confirmed == False
+    assert user.usercfg.email_confirmed is False
 
     emconf.complete()
 
@@ -84,7 +84,7 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
 
     account_objects.user.delete()
     inv.refresh_from_db()
-    assert inv.created_by == None
+    assert inv.created_by is None
 
     inv.send()
 
@@ -93,4 +93,3 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
 
     inv.complete(account_objects_b.user)
     assert account_objects.org.user_set.filter(user=account_objects_b.user).exists()
-

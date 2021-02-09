@@ -10,6 +10,7 @@ ARG build_deps=" \
     linux-headers \
     make \
     openssl-dev \
+    rust \
     "
 ARG run_deps=" \
     postgresql-libs \
@@ -20,7 +21,7 @@ ENV RUN_DEPS=$run_deps
 ENV SERVICE_HOME=$install_to
 ENV VIRTUAL_ENV=$virtual_env
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-ENV POETRY_VERSION=1.1.0
+ENV POETRY_VERSION=1.1.4
 
 
 # build container

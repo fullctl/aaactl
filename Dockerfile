@@ -11,6 +11,7 @@ ARG build_deps=" \
     make \
     openssl-dev \
     rust \
+    cargo \
     "
 ARG run_deps=" \
     postgresql-libs \

@@ -30,7 +30,7 @@ django-cors-middleware = "*"
 pytest-filedata = "<1"
 django-grainy = ">1.7,<2" 
 grainy = "<2"
-fullctl = {file = "https://github.com/fullctl/fullctl/archive/master.zip"}
+fullctl = {file = "https://github.com/fullctl/fullctl/archive/service_bridge.zip"}
 
 
 [requires]

@@ -36,7 +36,7 @@ RUN python3 -m venv "$VIRTUAL_ENV"
 WORKDIR /build
 # individual files here instead of COPY . . for caching
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-dev
+RUN poetry install --no-root
 
 COPY Ctl/VERSION Ctl/
 

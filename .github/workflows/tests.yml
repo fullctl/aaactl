@@ -45,10 +45,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Copy .env file
         run: cp Ctl/dev/example.env Ctl/dev/.env
-      - name: Build container
-        run: Ctl/dev/compose.sh build
       - name: Launch database container
-        run: Ctl/dev/compose.sh up postgres
+        run: Ctl/dev/compose.sh up -d postgres
+      - name: Build container
+        run: Ctl/dev/compose.sh build account_django
       - name: Run tests
         run: Ctl/dev/run.sh run_tests
       # upload coverage stats

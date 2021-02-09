@@ -10,8 +10,6 @@ ARG build_deps=" \
     linux-headers \
     make \
     openssl-dev \
-    rust \
-    cargo \
     "
 ARG run_deps=" \
     postgresql-libs \
@@ -23,6 +21,7 @@ ENV SERVICE_HOME=$install_to
 ENV VIRTUAL_ENV=$virtual_env
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV POETRY_VERSION=1.1.4
+ENV CRYPTOGRAPHY_VERSION=2.9.2
 
 
 # build container
@@ -32,6 +31,7 @@ RUN apk --update --no-cache add $BUILD_DEPS
 
 # create venv
 RUN pip install -U pip
+RUN pip install "cryptography==$CRYPTOGRAPHY_VERSION"
 RUN pip install "poetry==$POETRY_VERSION"
 RUN python3 -m venv "$VIRTUAL_ENV"
 

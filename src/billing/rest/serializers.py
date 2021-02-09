@@ -266,4 +266,7 @@ class BillingSetup(serializers.Serializer):
         else:
             sub = None
 
+        models.Subscription.set_payment_method(org, pay_method)
+
+
         processor.setup_billing(**data.get("processor_data"))

@@ -288,6 +288,19 @@ class Subscription(HandleRefModel):
 
         return sub
 
+    @classmethod
+    def set_payment_method(cls, org, pay=None, replace=None):
+        if not pay:
+            pay = PaymentMethod.get_for_org(org).first()
+
+        qset = org.sub_set
+        if replace:
+            qset = qset.filter(pay=replace)
+
+        if pay:
+            qset.update(pay=pay)
+
+
     @property
     def cycle(self):
         return self.get_cycle(datetime.date.today())

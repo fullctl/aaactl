@@ -29,7 +29,7 @@ psycopg2-binary = ">2.8,<3"
 django-crispy-forms = "<2,>=1.8"
 django-recaptcha = "<3,>=2"
 django-handleref = "<1,>=0.5"
-stripe = "*"
+stripe = "^2.55.2"
 python-dateutil = "*"
 django-countries = "*"
 django-oauth-toolkit = "*"
@@ -57,7 +57,3 @@ flake8 = "^3.8.4"
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"

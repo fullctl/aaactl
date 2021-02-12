@@ -1,28 +1,22 @@
-import secrets
 import datetime
-
-from django.db import models
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext as _
-from django.urls import reverse
-from django.shortcuts import render_to_response
-from django.core.exceptions import ValidationError
-
-import reversion
-
-from django_grainy.models import Permission, PermissionManager
-from django_grainy.decorators import grainy_model
-from django_grainy.util import Permissions
+import secrets
 
 import django_grainy.helpers
-from django_grainy.util import namespace
-
-from common.models import HandleRefModel
-from common.email import email_noreply
+import reversion
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.shortcuts import render_to_response
+from django.urls import reverse
+from django.utils.translation import gettext as _
+from django_grainy.decorators import grainy_model
+from django_grainy.models import Permission, PermissionManager
+from django_grainy.util import Permissions, namespace
 
 from applications.models import Service
-
+from common.email import email_noreply
+from common.models import HandleRefModel
 
 # Create your models here.
 
@@ -91,7 +85,7 @@ class Organization(HandleRefModel):
         "billing.contact",
         "billing.service",
         "billing.orderhistory",
-        "manage"
+        "manage",
     ]
 
     class Meta:
@@ -222,10 +216,10 @@ class APIKey(HandleRefModel):
             qset = cls.objects.filter(managed=False)
         updated = []
         for api_key in qset:
-            for namespace, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
+            for nsp, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
                 _, created = APIKeyPermission.objects.get_or_create(
                     api_key=api_key,
-                    namespace=namespace,
+                    namespace=nsp,
                     permission=django_grainy.helpers.int_flags(perms),
                 )
                 if created and api_key not in updated:
@@ -415,7 +409,7 @@ class Invitation(HandleRefModel):
         null=True,
         blank=False,
         on_delete=models.SET_NULL,
-        related_name="inv_set"
+        related_name="inv_set",
     )
     email = models.EmailField()
     service = models.ForeignKey(

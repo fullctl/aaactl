@@ -1,10 +1,9 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 
 import billing.views
 
 urlpatterns = [
-    #path("setup/test/", billing.views.setup_test, name="setup-test"),
+    # path("setup/test/", billing.views.setup_test, name="setup-test"),
     path("setup/", billing.views.setup, name="setup"),
     path("services/", billing.views.services, name="services"),
     path(

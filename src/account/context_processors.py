@@ -15,14 +15,13 @@ def permissions(request):
                 key = "{}_{}_{}".format(
                     name, instance.HandleRef.tag, namespace.replace(".", "__")
                 )
-                context[key] = request.perms.check([instance, namespace], op, ignore_grant_all=True)
+                context[key] = request.perms.check(
+                    [instance, namespace], op, ignore_grant_all=True
+                )
 
     return {"permissions": context}
 
 
 def info(request):
 
-    return {
-        "billing_env": settings.BILLING_ENV,
-        "release_env": settings.RELEASE_ENV
-    }
+    return {"billing_env": settings.BILLING_ENV, "release_env": settings.RELEASE_ENV}

@@ -1,5 +1,6 @@
-from account.models import APIKey, Organization
 from rest_framework import exceptions
+
+from account.models import Organization
 
 
 def set_org(fn):

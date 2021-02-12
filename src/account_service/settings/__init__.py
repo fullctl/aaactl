@@ -14,7 +14,6 @@ import os
 
 from django.utils.translation import gettext_lazy as _
 
-
 _DEFAULT_ARG = object()
 
 
@@ -254,10 +253,7 @@ DATABASES = {
     }
 }
 
-
-####################### start concat config
-
-
+# START CONCAT CONFIG
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
@@ -414,17 +410,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     # FIXME: need to somehow allow different drf settings by app
     "EXCEPTION_HANDLER": "common.rest.exception_handler",
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.ScopedRateThrottle',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'invite': '5/minute',
-        'resend_email': '5/minute',
-        'password_reset': '5/minute'
-    }
+    "DEFAULT_THROTTLE_RATES": {
+        "invite": "5/minute",
+        "resend_email": "5/minute",
+        "password_reset": "5/minute",
+    },
 }
 
-####################### end concat config
+# END CONCAT CONFIG
 
 # dynamic config starts here
 
@@ -448,7 +444,7 @@ if ENABLE_ALL_LANGUAGES:
 
 API_DOC_INCLUDES = {}
 API_DOC_PATH = os.path.join(BASE_DIR, "docs", "api")
-for _, _, files in os.walk(API_DOC_PATH):
+for i, j, files in os.walk(API_DOC_PATH):
     for file in files:
         base, ext = os.path.splitext(file)
         if ext == ".md":

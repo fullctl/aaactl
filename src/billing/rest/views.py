@@ -1,16 +1,13 @@
-from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework.decorators import action
-
 import reversion
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 import billing.models as models
-
-from billing.rest.serializers import Serializers
-from billing.rest.route import route
-
-from common.rest.decorators import grainy_endpoint
 from account.rest.decorators import set_org
+from billing.rest.route import route
+from billing.rest.serializers import Serializers
+from common.rest.decorators import grainy_endpoint
 
 
 @route
@@ -122,7 +119,7 @@ class Organization(viewsets.ViewSet):
         try:
             product = models.Product.objects.get(name=name)
         except models.Product.DoesNotExist:
-            return Response({"product":[f"Unknown product: {name}"]}, status=400)
+            return Response({"product": [f"Unknown product: {name}"]}, status=400)
 
         sub = models.Subscription.get_or_create(org, product.group)
         sub.add_prod(product)
@@ -131,8 +128,6 @@ class Organization(viewsets.ViewSet):
 
         serializer = Serializers.sub(sub)
         return Response(serializer.data)
-
-
 
     @action(detail=True, methods=["GET"])
     @set_org
@@ -143,7 +138,6 @@ class Organization(viewsets.ViewSet):
         queryset = queryset.order_by("-processed")
         serializer = Serializers.order(queryset, many=True)
         return Response(serializer.data)
-
 
 
 @route

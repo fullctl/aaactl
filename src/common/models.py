@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.translation import gettext as _
-
 from django_handleref.models import HandleRefModel as SoftDeleteHandleRefModel
 
 # Create your models here.

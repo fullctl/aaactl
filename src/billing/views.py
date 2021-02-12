@@ -1,33 +1,21 @@
-import time
-import secrets
-
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+from django.http import Http404
+from django.shortcuts import render
 from django.utils.translation import gettext as _
-from django.views import View
 
-import reversion
-
-from billing.payment_processors import PROCESSORS
-from billing.exceptions import BillingError
-from billing.models import PaymentMethod, CustomerData, OrderHistory, BillingContact
+from account.decorators import org_view
+from account.forms import ChangeInformation
 from billing.forms import (
-    BillingSetupInitForm,
-    SelectPaymentMethodForm,
-    CreatePaymentMethodForm,
     BillingAddressForm,
     BillingAgreementsForm,
     BillingContactForm,
+    BillingSetupInitForm,
+    SelectPaymentMethodForm,
 )
+from billing.models import BillingContact, OrderHistory, PaymentMethod
+from billing.payment_processors import PROCESSORS
 
-
-from account.decorators import org_view
-from account.models import Organization
-from account.session import set_selected_org
-from account.forms import ChangeInformation
 # Create your views here.
 
 
@@ -45,15 +33,15 @@ def order_history(request):
 @org_view(["billing", "orderhistory"])
 def order_history_details(request, id):
     user = request.user
-    form =  ChangeInformation(
-                user,
-                initial={
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                }
-            )
+    form = ChangeInformation(
+        user,
+        initial={
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+        },
+    )
     try:
         order_history = OrderHistory.objects.get(
             billcon__org=request.selected_org, order_id=id
@@ -95,14 +83,17 @@ def billing_contact(request, id):
 @login_required
 @org_view(["billing", "service"])
 def services(request):
-    user = request.user
 
     billing_is_setup = PaymentMethod.objects.filter(
         billcon__org=request.selected_org, status="ok"
     ).exists()
 
     services = request.selected_org.sub_set.filter(status="ok")
-    env = dict(services=services, billing_is_setup=billing_is_setup, form=ChangeInformation(None))
+    env = dict(
+        services=services,
+        billing_is_setup=billing_is_setup,
+        form=ChangeInformation(None),
+    )
     return render(request, "billing/controlpanel/services.html", env)
 
 
@@ -124,6 +115,7 @@ def setup_test(request):
 
     return setup(request, test_init=test_init)
 """
+
 
 @login_required
 @org_view(["billing", "contact"])

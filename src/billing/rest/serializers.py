@@ -1,14 +1,10 @@
-from django.utils.translation import gettext as _
-from django.conf import settings
-
 import reversion
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+import billing.forms as forms
 import billing.models as models
 import billing.payment_processors as processors
-import billing.forms as forms
-
-from account.models import Organization
 from account.rest.serializers import FormValidationMixin
 
 
@@ -85,21 +81,12 @@ class OrderHistory(serializers.ModelSerializer):
 
     class Meta:
         model = models.OrderHistory
-        fields = [
-            "order_id",
-            "description",
-            "price",
-            "processed",
-            "items",
-            "billcon"
-        ]
+        fields = ["order_id", "description", "price", "processed", "items", "billcon"]
 
     def get_items(self, order_history):
         return [
-            {
-                "description" : item.description,
-                "price" : item.price
-            } for item in order_history.orderitem_set.all()
+            {"description": item.description, "price": item.price}
+            for item in order_history.orderitem_set.all()
         ]
 
 
@@ -123,13 +110,12 @@ class Subscription(serializers.ModelSerializer):
             "items",
         ]
 
-
     def get_cycle(self, sub):
         if not sub.cycle:
             return None
         return {
-            "start" : sub.cycle.start,
-            "end" :  sub.cycle.end,
+            "start": sub.cycle.start,
+            "end": sub.cycle.end,
         }
 
     def get_items(self, sub):
@@ -144,7 +130,8 @@ class Subscription(serializers.ModelSerializer):
                 "name": subprod.prod.name,
                 "unit_name": subprod.prod.recurring.unit,
                 "unit_name_plural": subprod.prod.recurring.unit_plural,
-            } for subprod in sub.subprod_set.all()
+            }
+            for subprod in sub.subprod_set.all()
         ]
 
 
@@ -203,7 +190,6 @@ class BillingSetup(serializers.Serializer):
             raise serializers.ValidationError("Payment method not found")
 
     def validate(self, data):
-        user = self.context.get("user")
         org = self.context.get("org")
         if not data.get("payment_method"):
             field_errors = {}

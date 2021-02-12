@@ -1,7 +1,5 @@
-from django.contrib import admin
-from reversion.admin import VersionAdmin as ReversionAdmin
-
 from django_handleref.admin import VersionAdmin
+from reversion.admin import VersionAdmin as ReversionAdmin
 
 
 # Register your models here.

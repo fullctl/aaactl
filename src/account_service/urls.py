@@ -13,18 +13,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-
+import oauth2_provider.views as oauth2_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
 from django.views.generic import RedirectView
-
 from django_grainy.remote import ProvideGet, ProvideLoad
 
 from account.grainy_ext import APIKeyAuthenticator
-
-import oauth2_provider.views as oauth2_views
 
 # OAuth2 provider endpoints
 oauth2_endpoint_views = [
@@ -109,11 +106,17 @@ urlpatterns += [
     ),
     # social-auth urls
     path("social/", include("social_django.urls", namespace="social")),
-
     # grainy
-    path("grainy/get/<str:namespace>/", ProvideGet.as_view(authenticator_cls=APIKeyAuthenticator), name="grainy-get"),
-    path("grainy/load/", ProvideLoad.as_view(authenticator_cls=APIKeyAuthenticator), name="grainy-load"),
-
+    path(
+        "grainy/get/<str:namespace>/",
+        ProvideGet.as_view(authenticator_cls=APIKeyAuthenticator),
+        name="grainy-get",
+    ),
+    path(
+        "grainy/load/",
+        ProvideLoad.as_view(authenticator_cls=APIKeyAuthenticator),
+        name="grainy-load",
+    ),
     path(
         "", RedirectView.as_view(pattern_name="account:controlpanel", permanent=False)
     ),

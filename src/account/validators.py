@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 
 
 def validate_password(value):

@@ -1,5 +1,5 @@
-import pytest
 from django.urls import reverse
+
 import account.models as models
 
 
@@ -24,7 +24,7 @@ def test_confirm_email(db, account_objects):
 
     assert (
         models.EmailConfirmation.objects.filter(user=account_objects.user).exists()
-        == False
+        is False
     )
 
     account_objects.user.usercfg.refresh_from_db()

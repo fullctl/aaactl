@@ -1,27 +1,21 @@
 import datetime
-import dateutil.relativedelta
-
 import secrets
 
-from django.db import models
-from django.utils.translation import gettext as _
-from django.contrib.postgres.fields import JSONField
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-
+import dateutil.relativedelta
 import reversion
-
+from django.contrib.postgres.fields import JSONField
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
 
-import billing.product_handlers
-import billing.payment_processors
-from billing.const import *
-
-from common.models import HandleRefModel
-
 import account.models
 import applications.models
+import billing.const as const
+import billing.payment_processors
+import billing.product_handlers
+from common.models import HandleRefModel
 
 # Create your models here.
 
@@ -39,7 +33,13 @@ class ProductGroup(HandleRefModel):
     """
 
     name = models.CharField(max_length=255)
-    subscription_cycle_anchor = models.DateField(null=True, blank=True, help_text=_("If specified, sets a day of the month to be used as the anchor point for subscription cycles"))
+    subscription_cycle_anchor = models.DateField(
+        null=True,
+        blank=True,
+        help_text=_(
+            "If specified, sets a day of the month to be used as the anchor point for subscription cycles"
+        ),
+    )
 
     class HandleRef:
         tag = "prodgrp"
@@ -70,7 +70,7 @@ class Product(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        help_text=_("Product belongs to component")
+        help_text=_("Product belongs to component"),
     )
 
     # example: actively monitored prefixes
@@ -113,11 +113,7 @@ class Product(HandleRefModel):
 
     @property
     def is_recurring(self):
-        try:
-            if self.recurring.id:
-                return True
-        except:
-            return False
+        return hasattr(self, "recurring") and bool(self.recurring.id)
 
     def __str__(self):
         return f"{self.name}({self.id})"
@@ -139,7 +135,10 @@ class RecurringProduct(HandleRefModel):
 
     # metered or fixed
     type = models.CharField(
-        max_length=255, choices=BILLING_PRODUCT_RECURRING_TYPES, default=None, null=True
+        max_length=255,
+        choices=const.BILLING_PRODUCT_RECURRING_TYPES,
+        default=None,
+        null=True,
     )
 
     price = models.DecimalField(
@@ -219,7 +218,7 @@ class ProductModifier(HandleRefModel):
     prod = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="modifier_set"
     )
-    type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
+    type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
     value = models.PositiveIntegerField(default=0)
     duration = models.IntegerField(default=0, help_text=_("Duration in days"))
     code = models.CharField(
@@ -252,7 +251,7 @@ class Subscription(HandleRefModel):
     )
 
     cycle_interval = models.CharField(
-        max_length=255, choices=BILLING_CYCLE_CHOICES, default="month"
+        max_length=255, choices=const.BILLING_CYCLE_CHOICES, default="month"
     )
     cycle_start = models.DateTimeField(
         help_text=_("Start of billing cycle"), blank=True, null=True
@@ -549,7 +548,6 @@ class SubscriptionCycleProduct(HandleRefModel):
         else:
             price = recurring.price
 
-
         # apply modifiers
 
         for mod in self.subprod.modifier_set.all():
@@ -574,7 +572,7 @@ class SubscriptionProductModifier(HandleRefModel):
     subprod = models.ForeignKey(
         SubscriptionProduct, on_delete=models.CASCADE, related_name="modifier_set"
     )
-    type = models.CharField(max_length=255, choices=BILLING_MODIFIER_TYPES)
+    type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
     value = models.IntegerField(default=0)
     valid = models.DateTimeField(help_text=_("Valid until"))
     source = models.CharField(
@@ -602,16 +600,13 @@ class SubscriptionProductModifier(HandleRefModel):
             return 0
 
         if self.type == "quantity":
-            price -= float(unit_price*self.value)
+            price -= float(unit_price * self.value)
         elif self.type == "reduction":
             price -= self.value
         elif self.type == "reduction_p":
-            price -= (price*(self.value/100.0))
-
+            price -= price * (self.value / 100.0)
 
         return max(price, 0)
-
-
 
 
 def unique_order_id():

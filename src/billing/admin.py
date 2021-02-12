@@ -1,34 +1,28 @@
 from django import forms
 from django.contrib import admin
-from django.conf import settings
 from django.utils.translation import gettext as _
-
+from django_handleref.admin import VersionAdmin
 from reversion.admin import VersionAdmin as ReversionAdmin
 
-from django_handleref.admin import VersionAdmin
-
-
+import billing.product_handlers
 from billing.models import (
-    Product,
-    ProductGroup,
-    RecurringProduct,
-    ProductModifier,
-    Subscription,
-    SubscriptionCycle,
-    SubscriptionCycleProduct,
-    SubscriptionCycleCharge,
-    SubscriptionProductModifier,
-    SubscriptionProduct,
+    BillingContact,
+    CustomerData,
     OrderHistory,
     OrderHistoryItem,
-    PaymentMethod,
     PaymentCharge,
-    CustomerData,
-    BillingContact,
+    PaymentMethod,
+    Product,
+    ProductGroup,
+    ProductModifier,
+    RecurringProduct,
+    Subscription,
+    SubscriptionCycle,
+    SubscriptionCycleCharge,
+    SubscriptionCycleProduct,
+    SubscriptionProduct,
+    SubscriptionProductModifier,
 )
-
-import billing.product_handlers
-
 
 # Register your models here.
 

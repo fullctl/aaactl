@@ -1,0 +1,7 @@
+.*.sw*
+*.egg
+*.egg-info
+*.log
+*.py[cod]
+Ctl/.state/
+build/

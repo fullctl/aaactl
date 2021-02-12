@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 
-#from applications.service_bridge import Bridge
+from applications.service_bridge import Bridge
 
 from common.models import HandleRefModel
 
@@ -16,7 +16,7 @@ class Service(HandleRefModel):
     name = models.CharField(max_length=255, unique=True)
 
     invite_redirect = models.URLField(max_length=255, null=True, blank=True)
-    api_url = models.URLField(max_length=255, null=True, blank=True)
+    api_host = models.URLField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "applications_service"

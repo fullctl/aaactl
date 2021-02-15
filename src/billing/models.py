@@ -287,6 +287,18 @@ class Subscription(HandleRefModel):
 
         return sub
 
+    @classmethod
+    def set_payment_method(cls, org, pay=None, replace=None):
+        if not pay:
+            pay = PaymentMethod.get_for_org(org).first()
+
+        qset = org.sub_set
+        if replace:
+            qset = qset.filter(pay=replace)
+
+        if pay:
+            qset.update(pay=pay)
+
     @property
     def cycle(self):
         return self.get_cycle(datetime.date.today())
@@ -309,13 +321,15 @@ class Subscription(HandleRefModel):
 
     @reversion.create_revision()
     def end_cycle(self):
+        """
+        end current subscription cycle prematurely
+        """
+
         if not self.cycle:
             return
         self.cycle.end = datetime.date.today()
         self.cycle.save()
-
         self.cycle.charge()
-
         self.start_cycle()
 
     def start_cycle(self, start=None, force=False):
@@ -440,6 +454,14 @@ class SubscriptionCycle(HandleRefModel):
         return price
 
     @property
+    def ended(self):
+        """
+        Has this cycle ended?
+        """
+
+        return self.end < datetime.date.today()
+
+    @property
     def charged(self):
         """
         Has this cycle been charged already ?
@@ -450,6 +472,20 @@ class SubscriptionCycle(HandleRefModel):
     def __str__(self):
         return f"{self.sub} {self.start} - {self.end}"
 
+    def update_usage(self, subprod, usage):
+
+        """
+        Set the usage for a subscription product in this cycle
+        """
+
+        cycleprod, created = SubscriptionCycleProduct.objects.get_or_create(
+            cycle=self,
+            subprod=subprod,
+        )
+
+        cycleprod.usage = usage
+        cycleprod.save()
+
     def charge(self):
 
         """
@@ -458,6 +494,12 @@ class SubscriptionCycle(HandleRefModel):
 
         if self.charged:
             raise OSError("Cycle was already charged successfully")
+
+        self.status = "expired"
+        self.save()
+
+        if not self.price:
+            return
 
         pending_chg = self.cyclechg_set.filter(chg__status="pending").first()
         if pending_chg:

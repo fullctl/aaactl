@@ -1,6 +1,11 @@
+.*.sw*
+*.egg
+*.egg-info
+*.log
+*.py[cod]
+Ctl/.state/
+build/
 *.pyc
-*.swp
-*.swo
 *.sqlite3
 *.sql
 *.egg-info

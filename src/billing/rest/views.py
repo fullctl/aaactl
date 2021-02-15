@@ -57,16 +57,6 @@ class Organization(viewsets.ViewSet):
             billcon__org=org, id=request.data.get("id")
         )
 
-        if pay.sub_set.filter(status="ok").count():
-            return Response(
-                {
-                    "non_field_errors": [
-                        "Payment method is still linked to one or more subscriptions, please replace it before deleting it"
-                    ]
-                },
-                status=400,
-            )
-
         if pay.billcon.pay_set.filter(status="ok").count() <= 1:
             return Response(
                 {
@@ -78,9 +68,11 @@ class Organization(viewsets.ViewSet):
             )
 
         old_id = pay.id
+        models.Subscription.set_payment_method(org, replace=pay)
         pay.delete()
         pay.id = old_id
         serializer = Serializers.pay(pay, many=False)
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["PUT", "DELETE"])
@@ -100,17 +92,8 @@ class Organization(viewsets.ViewSet):
         elif request.method == "DELETE":
 
             serializer = Serializers.billcon(instance=instance)
-
-            if instance.active:
-                return Response(
-                    {
-                        "non_field_errors": [
-                            "This billing contact is still actively used in one or more subscriptions. Please replace it before removing it."
-                        ]
-                    },
-                    status=400,
-                )
             instance.delete()
+            models.Subscription.set_payment_method(org)
 
         return Response(serializer.data)
 
@@ -135,6 +118,8 @@ class Organization(viewsets.ViewSet):
 
         sub = models.Subscription.get_or_create(org, product.group)
         sub.add_prod(product)
+        if not sub.cycle:
+            sub.start_cycle()
 
         serializer = Serializers.sub(sub)
         return Response(serializer.data)

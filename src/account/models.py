@@ -122,6 +122,17 @@ class Organization(HandleRefModel):
             return _("Your Personal Organization")
         return self.name
 
+    @property
+    def comm_key(self):
+        """
+        Returns the best suitable communications key for
+        internal api communication to services.
+
+        FIXME: this should return org keys once those are
+        implemented
+        """
+        return self.user_set.first().user.key_set.first().key
+
     def __str__(self):
         return self.label
 

@@ -24,7 +24,6 @@ case "$@" in
     cd main
     export DJANGO_SETTINGS_MODULE=account_service.settings
     pytest tests/ -vv --cov-report=term-missing --cov-report=xml --cov=account --cov=billing --cov=common --cov=applications 
-    coverage report
     ;;
   "test_mode" )
     source venv/bin/activate

@@ -5,6 +5,7 @@ from billing.models import (
     Subscription,
 )
 
+
 class Command(BaseCommand):
     help = "Progresses billing cycles"
 

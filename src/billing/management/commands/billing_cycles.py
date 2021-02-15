@@ -1,26 +1,9 @@
-import logging
-import datetime
-
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 import reversion
 
 from billing.models import (
-    Product,
-    ProductGroup,
-    RecurringProduct,
     Subscription,
-    SubscriptionCycle,
-    SubscriptionCycleProduct,
-    PaymentMethod,
 )
-
-from billing.payment_processors.paypal import PaypalProcessor
-
-
-logging.basicConfig(level=logging.INFO)
-
 
 class Command(BaseCommand):
     help = "Progresses billing cycles"

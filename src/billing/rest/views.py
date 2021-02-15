@@ -57,8 +57,6 @@ class Organization(viewsets.ViewSet):
             billcon__org=org, id=request.data.get("id")
         )
 
-        count = models.PaymentMethod.get_for_org(org).count()
-
         if pay.billcon.pay_set.filter(status="ok").count() <= 1:
             return Response(
                 {
@@ -94,8 +92,6 @@ class Organization(viewsets.ViewSet):
         elif request.method == "DELETE":
 
             serializer = Serializers.billcon(instance=instance)
-            count = models.PaymentMethod.get_for_org(org).count()
-
             instance.delete()
             models.Subscription.set_payment_method(org)
 

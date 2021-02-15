@@ -254,7 +254,7 @@ def test_billing_contact(db, billing_objects):
 @pytest.mark.django_db
 def test_create_transactions_from_subcycle(charge_objects, billing_objects):
     subscription_cycle = charge_objects["subcycle"]
-    subscription = charge_objects["subscription"]
+    charge_objects["subscription"]
 
     subscription_cycle.create_transactions(billing_objects.user)
 

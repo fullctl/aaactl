@@ -578,7 +578,7 @@ class SubscriptionCycle(HandleRefModel):
 
     def _create_invoices(self, user, invoice_number):
         for subprod in self.sub.subprod_set.all():
-            invoice = Invoice.objects.create(
+            Invoice.objects.create(
                 # Not sure how we want to access this
                 user=user,
                 amount=self.price,

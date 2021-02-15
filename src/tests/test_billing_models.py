@@ -74,6 +74,7 @@ def test_subscription_cycle(db, billing_objects):
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
     m_subscription.start_cycle(two_months_ago)
     assert m_subscription.cycle is None
+
     assert (
         SubscriptionCycle.objects.first().start.month + 1
         == SubscriptionCycle.objects.first().end.month
@@ -118,6 +119,11 @@ def test_subcycle_charge(db, billing_objects, mocker):
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
+
+    subcycle.update_usage(subscription.subprod_set.first(), 1)
+
+    assert subcycle.price > 0
+
     subcycle.charge()
     subcycle_charge = subcycle.cyclechg_set.first()
     payment_charge = subcycle_charge.chg
@@ -138,6 +144,11 @@ def test_subcycle_charge_exists(db, billing_objects, mocker):
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
+
+    subcycle.update_usage(subscription.subprod_set.first(), 1)
+
+    assert subcycle.price > 0
+
     subcycle.charge()
 
     subcycle_charge = subcycle.cyclechg_set.first()
@@ -214,6 +225,11 @@ def test_order_history(db, billing_objects, mocker):
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
+
+    subcycle.update_usage(subscription.subprod_set.first(), 1)
+
+    assert subcycle.price > 0
+
     subcycle.charge()
 
     subcycle_charge = subcycle.cyclechg_set.first()

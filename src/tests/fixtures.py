@@ -89,6 +89,8 @@ class BillingObjects(object):
             pay=None,  # Set none to start
         )
 
+        self.monthly_subscription.add_prod(self.product_sub_metered)
+
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
@@ -96,6 +98,8 @@ class BillingObjects(object):
             cycle_start=None,  # Set none to start
             pay=None,  # Set none to start
         )
+
+        self.yearly_subscription.add_prod(self.product_sub_metered)
 
         self.billing_contact = BillingContact.objects.create(
             org=self.org, name="William Contact", email="billcon@localhost"

@@ -162,12 +162,8 @@ def test_delete_active_billing_contact(billing_objects):
     }
 
     response = billing_objects.api_client.delete(url, data=data)
-    assert response.status_code == 400
-    error_message = "This billing contact is still actively used in one or more subscriptions. Please replace it before removing it."
-    assert (
-        error_message in json.loads(response.content)["errors"]["non_field_errors"][0]
-    )
-    assert models.BillingContact.objects.count() == 1
+    assert response.status_code == 200
+    assert models.BillingContact.objects.count() == 0
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

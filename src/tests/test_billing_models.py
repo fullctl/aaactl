@@ -43,7 +43,7 @@ def test_subscription_products(db, billing_objects):
     subscription = billing_objects.monthly_subscription
     product_sub_fixed = billing_objects.product_sub_fixed
     subscription.add_prod(product_sub_fixed)
-    assert SubscriptionProduct.objects.filter(sub=subscription).count() == 1
+    assert SubscriptionProduct.objects.filter(sub=subscription).count() == 2
 
 
 def test_subscription_cycle_start(db, billing_objects):

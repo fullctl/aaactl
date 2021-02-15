@@ -257,8 +257,95 @@ def charge_objects(billing_objects, mocker):
     order_history = OrderHistory.create_from_chg(payment_charge)
 
     return {
+        "subscription": subscription,
         "subcycle": subcycle,
         "subcycle_charge": subcycle_charge,
         "payment_charge": payment_charge,
         "order_history": order_history,
     }
+
+
+def create_transaction_data(billing_objects):
+    return {
+        "user": billing_objects.user,
+        "amount": 1200.99,
+    }
+
+
+def create_money_transaction_data(billing_objects):
+    return {
+        "user": billing_objects.user,
+        "amount": 1200.99,
+        "billing_contact": billing_objects.billing_contact,
+        "payment_method": billing_objects.payment_method,
+    }
+
+
+@pytest.fixture
+def order(billing_objects):
+    from billing.models import Order
+
+    data = create_transaction_data(billing_objects)
+    data.update(
+        {
+            "product": billing_objects.product,
+            "description": "This product is helpful",
+            "order_number": 132,
+        }
+    )
+    order = Order.objects.create(**data)
+    return order
+
+
+@pytest.fixture
+def invoice(billing_objects):
+    from billing.models import Invoice
+
+    data = create_transaction_data(billing_objects)
+    data.update(
+        {
+            "subscription": billing_objects.monthly_subscription,
+            "description": "This subscription is helpful",
+            "invoice_number": 312,
+        }
+    )
+    invoice = Invoice.objects.create(**data)
+    return invoice
+
+
+@pytest.fixture
+def payment(billing_objects):
+    from billing.models import Payment
+
+    data = create_money_transaction_data(billing_objects)
+    data.update({"invoice_number": 1231})
+    payment = Payment.objects.create(**data)
+    return payment
+
+
+@pytest.fixture
+def deposit(billing_objects):
+    from billing.models import Deposit
+
+    data = create_money_transaction_data(billing_objects)
+    deposit = Deposit.objects.create(**data)
+    return deposit
+
+
+@pytest.fixture
+def withdrawal(billing_objects):
+    from billing.models import Withdrawal
+
+    data = create_money_transaction_data(billing_objects)
+    withdrawal = Withdrawal.objects.create(**data)
+    return withdrawal
+
+
+@pytest.fixture
+def ledger(withdrawal, order, invoice):
+    import billing.models
+
+    withdrawal = billing.models.Ledger(content_object=withdrawal).save()
+    order = billing.models.Ledger(content_object=order).save()
+    invoice = billing.models.Ledger(content_object=invoice).save()
+    return [withdrawal, order, invoice]

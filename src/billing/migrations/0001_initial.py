@@ -120,7 +120,7 @@ class Migration(migrations.Migration):
                 (
                     "order_id",
                     models.CharField(
-                        default=billing.models.unique_order_id,
+                        default=billing.models.unique_order_history_id,
                         max_length=16,
                         unique=True,
                     ),

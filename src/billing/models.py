@@ -1,8 +1,12 @@
 import datetime
 import secrets
+import uuid
 
 import dateutil.relativedelta
 import reversion
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
@@ -117,6 +121,45 @@ class Product(HandleRefModel):
 
     def __str__(self):
         return f"{self.name}({self.id})"
+
+    def create_transactions(self, user):
+        order_number = "ORDER_" + unique_order_id()
+        self._create_order(user, order_number)
+
+        invoice_number = "INVOICE_" + unique_invoice_id()
+        self._create_invoice(user, invoice_number)
+        self._create_payment(user, invoice_number)
+
+    def _create_order(self, user, order_number):
+        order = Order.objects.create(
+            user=user,
+            amount=self.price,
+            product=self,
+            description=self.description,
+            order_number=order_number,
+        )
+        return order
+
+    def _create_invoice(self, user, invoice_number):
+        invoice = Invoice.objects.create(
+            # Not sure how we want to access this
+            user=user,
+            amount=self.price,
+            product=self,
+            description=self.description,
+            invoice_number=invoice_number,
+        )
+        return invoice
+
+    def _create_payment(self, user, invoice_number):
+        payment = Payment.objects.create(
+            user=user,
+            amount=self.price,
+            # billing_contact=None,
+            # payment_method=None,
+            invoice_number=invoice_number,
+        )
+        return payment
 
 
 @reversion.register()
@@ -514,6 +557,47 @@ class SubscriptionCycle(HandleRefModel):
             cycle=self, chg=chg, status="pending"
         )
 
+    def create_transactions(self, user):
+        order_number = "ORDER_" + unique_order_id()
+        self._create_orders(user, order_number)
+
+        invoice_number = "INVOICE_" + unique_invoice_id()
+        self._create_invoices(user, invoice_number)
+        self._create_payment(user, invoice_number)
+
+    def _create_orders(self, user, order_number):
+        for subprod in self.sub.subprod_set.all():
+            Order.objects.create(
+                user=user,
+                amount=self.price,
+                subscription=self.sub,
+                product=subprod.prod,
+                description=self.sub.charge_description,
+                order_number=order_number,
+            )
+
+    def _create_invoices(self, user, invoice_number):
+        for subprod in self.sub.subprod_set.all():
+            invoice = Invoice.objects.create(
+                # Not sure how we want to access this
+                user=user,
+                amount=self.price,
+                subscription=self.sub,
+                product=subprod.prod,
+                description=self.sub.charge_description,
+                invoice_number=invoice_number,
+            )
+
+    def _create_payment(self, user, invoice_number):
+        payment = Payment.objects.create(
+            user=user,
+            amount=self.price,
+            billing_contact=self.sub.pay.billcon,
+            payment_method=self.sub.pay,
+            invoice_number=invoice_number,
+        )
+        return payment
+
 
 @reversion.register()
 class SubscriptionCycleCharge(HandleRefModel):
@@ -638,15 +722,27 @@ class SubscriptionProductModifier(HandleRefModel):
         return max(price, 0)
 
 
-def unique_order_id():
+def unique_id(Model, field):
     i = 0
     while i < 1000:
-        order_id = "{}".format(secrets.token_urlsafe(10))
+        unique_id = "{}".format(secrets.token_urlsafe(10))
 
-        if not OrderHistory.objects.filter(order_id=order_id).exists():
-            return order_id
+        if not Model.objects.filter(**{field: unique_id}).exists():
+            return unique_id
         i += 1
-    raise OSError("Could not generate a unique order id")
+    raise OSError(f"Could not generate a unique {Model} id")
+
+
+def unique_order_history_id():
+    return unique_id(OrderHistory, "order_id")
+
+
+def unique_order_id():
+    return unique_id(Order, "order_number")
+
+
+def unique_invoice_id():
+    return unique_id(Invoice, "invoice_number")
 
 
 @reversion.register()
@@ -683,7 +779,9 @@ class OrderHistory(HandleRefModel):
 
     processed = models.DateTimeField(help_text=("When was this order processed"))
 
-    order_id = models.CharField(max_length=16, default=unique_order_id, unique=True)
+    order_id = models.CharField(
+        max_length=16, default=unique_order_history_id, unique=True
+    )
 
     class HandleRef:
         tag = "order"
@@ -700,7 +798,7 @@ class OrderHistory(HandleRefModel):
             billcon=chg.pay.billcon,
             billed_to=chg.pay.name,
             processed=datetime.datetime.now(),
-            order_id=unique_order_id(),
+            order_id=unique_order_history_id(),
         )
         order.save()
 
@@ -911,3 +1009,151 @@ class PaymentCharge(HandleRefModel):
                 self.capture()
 
         return self.status
+
+
+class Transaction(HandleRefModel):
+
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name="%(class)s_transaction_set",
+    )
+
+    # Should this be auto_now_add ? Or is default=now better.
+    created = models.DateTimeField(
+        help_text=_("When transaction was created."), default=timezone.now
+    )
+    currency = models.CharField(
+        max_length=255, choices=const.CURRENCY_TYPES, default="USD"
+    )
+    amount = models.DecimalField(max_digits=8, decimal_places=2, blank=False)
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class MoneyTransaction(Transaction):
+
+    billing_contact = models.ForeignKey(
+        "billing.BillingContact",
+        on_delete=models.CASCADE,
+        related_name="%(class)s_money_transaction_set",
+        null=True,
+    )
+    payment_method = models.ForeignKey(
+        "billing.PaymentMethod",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="%(class)s_payment_method",
+        help_text=_("User payment option that will be charged by this transaction"),
+    )
+
+    payment_processor_txn_id = models.CharField(blank=True, max_length=255)
+
+    class Meta:
+        abstract = True
+
+
+@reversion.register()
+class Order(Transaction):
+    product = models.ForeignKey(
+        "billing.Product", on_delete=models.CASCADE, related_name="order_set", null=True
+    )
+    subscription = models.ForeignKey(
+        "billing.Subscription",
+        on_delete=models.CASCADE,
+        related_name="order_set",
+        null=True,
+    )
+
+    description = models.TextField(blank=True)
+    order_number = models.CharField(blank=True, max_length=255)
+
+    class HandleRef:
+        # Doing ord for now because "order" is taken
+        tag = "ord"
+
+    class Meta:
+        db_table = "billing_order"
+        verbose_name = _("Order")
+        verbose_name_plural = _("Orders")
+
+
+@reversion.register()
+class Invoice(Transaction):
+
+    product = models.ForeignKey(
+        "billing.Product",
+        on_delete=models.CASCADE,
+        related_name="invoice_set",
+        null=True,
+    )
+    subscription = models.ForeignKey(
+        "billing.Subscription",
+        on_delete=models.CASCADE,
+        related_name="invoice_set",
+        null=True,
+    )
+    description = models.TextField(blank=True)
+    invoice_number = models.CharField(blank=True, max_length=255)
+
+    class HandleRef:
+        tag = "invoice"
+
+    class Meta:
+        db_table = "billing_invoice"
+        verbose_name = _("Invoice")
+        verbose_name_plural = _("Invoices")
+
+
+@reversion.register()
+class Payment(MoneyTransaction):
+
+    invoice_number = models.CharField(blank=True, max_length=255)
+
+    class HandleRef:
+        tag = "payment"
+
+    class Meta:
+        db_table = "billing_payment"
+        verbose_name = _("Payment")
+        verbose_name_plural = _("Payments")
+
+
+@reversion.register()
+class Deposit(MoneyTransaction):
+    class HandleRef:
+        tag = "deposit"
+
+    class Meta:
+        db_table = "billing_deposit"
+        verbose_name = _("Deposit")
+        verbose_name_plural = _("Deposits")
+
+
+@reversion.register()
+class Withdrawal(MoneyTransaction):
+    class HandleRef:
+        tag = "withdrawal"
+
+    class Meta:
+        db_table = "billing_withdrawal"
+        verbose_name = _("Withdrawal")
+        verbose_name_plural = _("Withdrawals")
+
+
+@reversion.register()
+class Ledger(models.Model):
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    class HandleRef:
+        tag = "ledger"
+
+    class Meta:
+        db_table = "billing_ledgers"
+        verbose_name = _("Ledger")
+        verbose_name_plural = _("Ledgers")

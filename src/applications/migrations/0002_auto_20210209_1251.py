@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0001_initial'),
+        ("applications", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='service',
-            name='usage_url',
+            model_name="service",
+            name="usage_url",
             field=models.URLField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='service',
-            name='invite_redirect',
+            model_name="service",
+            name="invite_redirect",
             field=models.URLField(blank=True, max_length=255, null=True),
         ),
     ]

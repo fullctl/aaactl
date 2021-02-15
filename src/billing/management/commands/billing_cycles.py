@@ -31,11 +31,9 @@ class Command(BaseCommand):
     def log(self, msg):
         self.stdout.write(f"{msg}")
 
-
     @reversion.create_revision()
     def handle(self, *args, **options):
         self.progress_cycles()
-
 
     def progress_cycles(self):
         qset = Subscription.objects.filter(status="ok")
@@ -56,7 +54,9 @@ class Command(BaseCommand):
                 if not sub.pay_id:
                     Subscription.set_payment_method(sub.org)
                 if not sub.pay_id:
-                    self.log(f"-- no payment method set, unable to charge previous cycle for org {sub.org}")
+                    self.log(
+                        f"-- no payment method set, unable to charge previous cycle for org {sub.org}"
+                    )
                     break
                 if not cycle.charged:
                     self.log(f"-- charging previous cycle: {cycle}")
@@ -65,9 +65,6 @@ class Command(BaseCommand):
 
                     with reversion.create_revision():
                         cyclechg.chg.sync_status()
-
-
-
 
     def collect(self, subprod, cycle):
 
@@ -83,10 +80,3 @@ class Command(BaseCommand):
             cycle.update_usage(subprod, usage)
         except KeyError as exc:
             self.log(f"{exc}")
-
-
-
-
-
-
-

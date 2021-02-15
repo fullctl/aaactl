@@ -70,11 +70,10 @@ class Organization(viewsets.ViewSet):
             )
 
         old_id = pay.id
-        models.Subscription.set_payment_method(org, replace=pay);
+        models.Subscription.set_payment_method(org, replace=pay)
         pay.delete()
         pay.id = old_id
         serializer = Serializers.pay(pay, many=False)
-
 
         return Response(serializer.data)
 

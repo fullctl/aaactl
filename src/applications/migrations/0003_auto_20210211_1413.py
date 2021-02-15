@@ -9,34 +9,64 @@ import django_handleref.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0002_auto_20210209_1251'),
+        ("applications", "0002_auto_20210209_1251"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='service',
-            old_name='usage_url',
-            new_name='api_url',
+            model_name="service",
+            old_name="usage_url",
+            new_name="api_url",
         ),
         migrations.CreateModel(
-            name='ServiceAPIEndpoint',
+            name="ServiceAPIEndpoint",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('created', django_handleref.models.CreatedDateTimeField(auto_now_add=True, verbose_name='Created')),
-                ('updated', django_handleref.models.UpdatedDateTimeField(auto_now=True, verbose_name='Updated')),
-                ('version', models.IntegerField(default=0)),
-                ('status', models.CharField(choices=[('ok', 'Ok'), ('pending', 'Pending'), ('deactivated', 'Deactivated'), ('failed', 'Failed'), ('expired', 'Expired')], default='ok', max_length=12)),
-                ('name', models.CharField(max_length=24)),
-                ('path', models.CharField(max_length=255)),
-                ('svcapp', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='api_endpoint_set', to='applications.Service')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "created",
+                    django_handleref.models.CreatedDateTimeField(
+                        auto_now_add=True, verbose_name="Created"
+                    ),
+                ),
+                (
+                    "updated",
+                    django_handleref.models.UpdatedDateTimeField(
+                        auto_now=True, verbose_name="Updated"
+                    ),
+                ),
+                ("version", models.IntegerField(default=0)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("ok", "Ok"),
+                            ("pending", "Pending"),
+                            ("deactivated", "Deactivated"),
+                            ("failed", "Failed"),
+                            ("expired", "Expired"),
+                        ],
+                        default="ok",
+                        max_length=12,
+                    ),
+                ),
+                ("name", models.CharField(max_length=24)),
+                ("path", models.CharField(max_length=255)),
+                (
+                    "svcapp",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="api_endpoint_set",
+                        to="applications.Service",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'API Endpoint',
-                'verbose_name_plural': 'API Endpoints',
-                'db_table': 'applications_service_api_endpoint',
+                "verbose_name": "API Endpoint",
+                "verbose_name_plural": "API Endpoints",
+                "db_table": "applications_service_api_endpoint",
             },
             managers=[
-                ('handleref', django.db.models.manager.Manager()),
+                ("handleref", django.db.models.manager.Manager()),
             ],
         ),
     ]

@@ -254,5 +254,4 @@ class BillingSetup(serializers.Serializer):
 
         models.Subscription.set_payment_method(org, pay_method)
 
-
         processor.setup_billing(**data.get("processor_data"))

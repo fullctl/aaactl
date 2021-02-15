@@ -133,7 +133,6 @@ class Organization(HandleRefModel):
         """
         return self.user_set.first().user.key_set.first().key
 
-
     def __str__(self):
         return self.label
 

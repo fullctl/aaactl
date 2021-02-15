@@ -299,7 +299,6 @@ class Subscription(HandleRefModel):
         if pay:
             qset.update(pay=pay)
 
-
     @property
     def cycle(self):
         return self.get_cycle(datetime.date.today())
@@ -460,7 +459,7 @@ class SubscriptionCycle(HandleRefModel):
         Has this cycle ended?
         """
 
-        return (self.end < datetime.date.today())
+        return self.end < datetime.date.today()
 
     @property
     def charged(self):
@@ -480,8 +479,8 @@ class SubscriptionCycle(HandleRefModel):
         """
 
         cycleprod, created = SubscriptionCycleProduct.objects.get_or_create(
-            cycle = self,
-            subprod = subprod,
+            cycle=self,
+            subprod=subprod,
         )
 
         cycleprod.usage = usage
@@ -501,7 +500,6 @@ class SubscriptionCycle(HandleRefModel):
 
         if not self.price:
             return
-
 
         pending_chg = self.cyclechg_set.filter(chg__status="pending").first()
         if pending_chg:

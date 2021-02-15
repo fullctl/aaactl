@@ -33,7 +33,6 @@ class Service(HandleRefModel):
         return Bridge(self, org)
 
 
-
 @grainy_model("svc")
 class ServiceAPIEndpoint(HandleRefModel):
 
@@ -51,7 +50,5 @@ class ServiceAPIEndpoint(HandleRefModel):
         verbose_name = _("API Endpoint")
         verbose_name_plural = _("API Endpoints")
 
-
     class HandleRef:
         tag = "svcapp_api"
-

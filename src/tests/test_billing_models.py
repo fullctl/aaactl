@@ -82,10 +82,12 @@ def test_subscription_cycle(db, billing_objects):
     m_subscription.start_cycle(two_months_ago)
     assert m_subscription.cycle is None
 
-    assert (
-        SubscriptionCycle.objects.first().start.month + 1
-        == SubscriptionCycle.objects.first().end.month
-    )
+    # Need to address January rollover
+    expected_end = SubscriptionCycle.objects.first().start.month + 1
+    if expected_end > 12:
+        expected_end -= 12
+
+    assert expected_end == SubscriptionCycle.objects.first().end.month
 
     # now start a cycle two weeks ago
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()

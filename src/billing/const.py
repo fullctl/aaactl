@@ -13,3 +13,5 @@ BILLING_PRODUCT_RECURRING_TYPES = (
     ("fixed", _("Recurring: Fixed Price")),
     ("metered", _("Recurring: Metered Price")),
 )
+
+CURRENCY_TYPES = (("USD", _("USD")),)

@@ -1,12 +1,19 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from django.contrib.contenttypes.models import ContentType
 
 from billing.models import (
+    Invoice,
+    Ledger,
+    Order,
     OrderHistory,
+    Payment,
     SubscriptionCycle,
     SubscriptionCycleProduct,
     SubscriptionProduct,
+    Withdrawal,
 )
 
 
@@ -75,10 +82,12 @@ def test_subscription_cycle(db, billing_objects):
     m_subscription.start_cycle(two_months_ago)
     assert m_subscription.cycle is None
 
-    assert (
-        SubscriptionCycle.objects.first().start.month + 1
-        == SubscriptionCycle.objects.first().end.month
-    )
+    # Need to address January rollover
+    expected_end = SubscriptionCycle.objects.first().start.month + 1
+    if expected_end > 12:
+        expected_end -= 12
+
+    assert expected_end == SubscriptionCycle.objects.first().end.month
 
     # now start a cycle two weeks ago
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
@@ -239,9 +248,100 @@ def test_order_history(db, billing_objects, mocker):
     assert order_history
 
 
-# test_order_history_create_from_chg():
-
-
 def test_billing_contact(db, billing_objects):
     billcon = billing_objects.billing_contact
     assert billcon.active is False
+
+
+@pytest.mark.django_db
+def test_create_transactions_from_subcycle(charge_objects, billing_objects):
+    subscription_cycle = charge_objects["subcycle"]
+    charge_objects["subscription"]
+
+    subscription_cycle.create_transactions(billing_objects.user)
+
+    assert Order.objects.count() == 2
+
+    assert Invoice.objects.count() == 2
+    assert Payment.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_transactions_from_product(billing_objects):
+    product = billing_objects.product
+    product.create_transactions(billing_objects.user)
+
+    assert Invoice.objects.count() == 1
+    assert Order.objects.count() == 1
+    assert Payment.objects.count() == 1
+
+
+# New billing-ledger models
+
+
+@pytest.mark.django_db
+def test_order_init(order, billing_objects):
+    assert order.user == billing_objects.user
+    assert order.amount == 1200.99
+    assert order.currency == "USD"
+    assert type(order.transaction_id) == uuid.UUID
+
+    assert order.product == billing_objects.product
+    assert order.description == "This product is helpful"
+    assert order.order_number == 132
+
+
+@pytest.mark.django_db
+def test_invoice_init(invoice, billing_objects):
+    assert invoice.user == billing_objects.user
+    assert invoice.amount == 1200.99
+    assert invoice.currency == "USD"
+    assert type(invoice.transaction_id) == uuid.UUID
+
+    assert invoice.subscription == billing_objects.monthly_subscription
+    assert invoice.description == "This subscription is helpful"
+    assert invoice.invoice_number == 312
+
+
+@pytest.mark.django_db
+def test_payment_init(payment, billing_objects):
+    assert payment.invoice_number == 1231
+    assert payment.billing_contact == billing_objects.billing_contact
+    assert payment.payment_method == billing_objects.payment_method
+
+
+@pytest.mark.django_db
+def test_deposit_init(deposit, billing_objects):
+    assert deposit.billing_contact == billing_objects.billing_contact
+    assert deposit.payment_method == billing_objects.payment_method
+
+
+@pytest.mark.django_db
+def test_withdrawal_init(withdrawal, billing_objects):
+    assert withdrawal.billing_contact == billing_objects.billing_contact
+    assert withdrawal.payment_method == billing_objects.payment_method
+
+
+@pytest.mark.django_db
+def test_ledger_init(ledger):
+
+    assert (
+        Ledger.objects.filter(
+            content_type=ContentType.objects.get_for_model(Withdrawal)
+        ).count()
+        == 1
+    )
+
+    assert (
+        Ledger.objects.filter(
+            content_type=ContentType.objects.get_for_model(Order)
+        ).count()
+        == 1
+    )
+
+    assert (
+        Ledger.objects.filter(
+            content_type=ContentType.objects.get_for_model(Invoice)
+        ).count()
+        == 1
+    )

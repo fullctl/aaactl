@@ -1,9 +1,7 @@
-from django.core.management.base import BaseCommand
 import reversion
+from django.core.management.base import BaseCommand
 
-from billing.models import (
-    Subscription,
-)
+from billing.models import Subscription
 
 
 class Command(BaseCommand):

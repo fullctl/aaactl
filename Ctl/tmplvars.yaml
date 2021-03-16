@@ -1,0 +1,6 @@
+project_name: "aaactl"
+service_home: "/src/service"
+virtual_env: "venv"
+database_name: "aaactl"
+database_user: "aaactl"
+database_password: "devPASSWORD"

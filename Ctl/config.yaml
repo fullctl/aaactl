@@ -2,7 +2,7 @@ ctl:
   plugins:
 
     # command to see if jinja is installed
-    
+
     - type: command
       name: printenv
       config:
@@ -23,10 +23,11 @@ ctl:
       type: git
       config:
         repo_url: git@github.com:20c/ctl-tmpl-django
+        branch: main
 
     # template for copying template assets
 
-    - name: template
+    - name: django_template
       type: template
       config:
         # template root directory (path)
@@ -65,8 +66,8 @@ ctl:
             action:
               name: pull
 
-          - stage: template
-            plugin: template
+          - stage: django_template
+            plugin: django_template
 
           - stage: clean
             plugin: clean

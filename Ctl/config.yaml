@@ -23,7 +23,7 @@ ctl:
       type: git
       config:
         repo_url: git@github.com:20c/ctl-tmpl-django
-        branch: main
+        branch: origin/gh_1
 
     # template for copying template assets
 
@@ -31,7 +31,7 @@ ctl:
       type: template
       config:
         # template root directory (path)
-        source: "{{ ctx.cachedir }}/github.com:20c/ctl-tmpl-django"
+        source: "{{ ctx.cachedir }}/github.com/20c/ctl-tmpl-django"
         # template output directory (path)
         output: "{{ ctx.home }}/.."
         walk_dirs:
@@ -69,8 +69,6 @@ ctl:
           - stage: django_template
             plugin: django_template
 
-          - stage: clean
-            plugin: clean
 
     # git repo for versioning and deploying
 

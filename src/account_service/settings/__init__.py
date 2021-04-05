@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+from confu.util import SettingsManager
 from django.utils.translation import gettext_lazy as _
 
 _DEFAULT_ARG = object()
@@ -35,49 +36,6 @@ def get_locale_name(code):
     return language_map.get(language, code)
 
 
-def set_default(name, value):
-    """ Sets the default value for the option if it's not already set. """
-    if name not in globals():
-        globals()[name] = value
-
-
-def set_from_env(name, default=_DEFAULT_ARG):
-    """
-    Sets a global variable from a environment variable of the same name.
-    This is useful to leave the option unset and use Django's default (which may change).
-    """
-    if default is _DEFAULT_ARG and name not in os.environ:
-        return
-
-    globals()[name] = os.environ.get(name, default)
-
-
-def set_option(name, value):
-    """ Sets an option, first checking for env vars, then checking for value already set, then going to the default value if passed. """
-    if name in os.environ:
-        globals()[name] = os.environ.get(name)
-
-    if name not in globals():
-        globals()[name] = value
-
-
-def set_bool(name, value):
-    """ Sets and option, first checking for env vars, then checking for value already set, then going to the default value if passed. """
-    if name in os.environ:
-        envval = os.environ.get(name).lower()
-        if envval in ["1", "true", "y", "yes"]:
-            globals()[name] = True
-        elif envval in ["0", "false", "n", "no"]:
-            globals()[name] = False
-        else:
-            raise ValueError(
-                "{} is a boolean, cannot match '{}'".format(name, os.environ[name])
-            )
-
-    if name not in globals():
-        globals()[name] = value
-
-
 def try_include(filename):
     """ Tries to include another file from the settings directory. """
     print_debug("including {} {}".format(filename, RELEASE_ENV))
@@ -99,16 +57,21 @@ def read_file(name):
         return fh.read()
 
 
+# Intialize settings manager with global variable
+
+settings_manager = SettingsManager(globals())
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 # set RELEASE_ENV, usually one of dev, beta, tutor, prod
-set_option("RELEASE_ENV", "dev")
+settings_manager.set_option("RELEASE_ENV", "dev")
 
 if RELEASE_ENV == "dev":
-    set_bool("DEBUG", True)
+    settings_manager.set_bool("DEBUG", True)
 else:
-    set_bool("DEBUG", False)
+    settings_manager.set_bool("DEBUG", False)
 
 # look for mainsite/settings/${RELEASE_ENV}.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), "{}.py".format(RELEASE_ENV))
@@ -118,37 +81,37 @@ try_include(env_file)
 print_debug("Release env is '{}'".format(RELEASE_ENV))
 
 # set version, default from /srv/service/etc/VERSION
-set_option("PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip())
+settings_manager.set_option("PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip())
 
 # Contact email, from address, support email
-set_from_env("SERVER_EMAIL")
+settings_manager.set_from_env("SERVER_EMAIL")
 
 # django secret key
-set_from_env("SECRET_KEY")
+settings_manager.set_from_env("SECRET_KEY")
 
 
 # database
 
-set_option("DATABASE_ENGINE", "postgresql_psycopg2")
-set_option("DATABASE_HOST", "127.0.0.1")
-set_option("DATABASE_PORT", "")
-set_option("DATABASE_NAME", "account_service")
-set_option("DATABASE_USER", "account_service")
-set_option("DATABASE_PASSWORD", "")
+settings_manager.set_option("DATABASE_ENGINE", "postgresql_psycopg2")
+settings_manager.set_option("DATABASE_HOST", "127.0.0.1")
+settings_manager.set_option("DATABASE_PORT", "")
+settings_manager.set_option("DATABASE_NAME", "account_service")
+settings_manager.set_option("DATABASE_USER", "account_service")
+settings_manager.set_option("DATABASE_PASSWORD", "")
 
 
 # Keys
 
-set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
-set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
-set_from_env("SOCIAL_AUTH_PEERINGDB_KEY")
-set_from_env("SOCIAL_AUTH_PEERINGDB_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_SECRET")
 
-set_option("RECAPTCHA_PUBLIC_KEY", "...")
-set_option("RECAPTCHA_SECRET_KEY", "...")
+settings_manager.set_option("RECAPTCHA_PUBLIC_KEY", "...")
+settings_manager.set_option("RECAPTCHA_SECRET_KEY", "...")
 
-set_from_env("STRIPE_PUBLIC_KEY")
-set_from_env("STRIPE_SECRET_KEY")
+settings_manager.set_from_env("STRIPE_PUBLIC_KEY")
+settings_manager.set_from_env("STRIPE_SECRET_KEY")
 
 
 # Django config
@@ -166,19 +129,19 @@ USE_L10N = True
 ADMINS = ("Support", SERVER_EMAIL)
 MANAGERS = ADMINS
 
-set_option("HOST_URL", "https://localhost:8000")
+settings_manager.set_option("HOST_URL", "https://localhost:8000")
 
-set_option("MEDIA_ROOT", os.path.abspath(os.path.join(BASE_DIR, "media")))
-set_option("MEDIA_URL", f"/m/{PACKAGE_VERSION}/")
+settings_manager.set_option("MEDIA_ROOT", os.path.abspath(os.path.join(BASE_DIR, "media")))
+settings_manager.set_option("MEDIA_URL", f"/m/{PACKAGE_VERSION}/")
 
-set_option("STATIC_ROOT", os.path.abspath(os.path.join(BASE_DIR, "static")))
-set_option("STATIC_URL", f"/s/{PACKAGE_VERSION}/")
+settings_manager.set_option("STATIC_ROOT", os.path.abspath(os.path.join(BASE_DIR, "static")))
+settings_manager.set_option("STATIC_URL", f"/s/{PACKAGE_VERSION}/")
 
-set_option("SESSION_COOKIE_NAME", "tcacctsid")
-# set_from_env("SESSION_COOKIE_DOMAIN")
-# set_from_env("SESSION_COOKIE_SECURE")
+settings_manager.set_option("SESSION_COOKIE_NAME", "tcacctsid")
+# settings_manager.set_from_env("SESSION_COOKIE_DOMAIN")
+# settings_manager.set_from_env("SESSION_COOKIE_SECURE")
 
-set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
+settings_manager.set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
 
 # TODO - normalize to either use the host or not (preferably not)
 LOGIN_URL = "/account/auth/login/"
@@ -318,7 +281,7 @@ BILLING_AGREEMENT_DESCRIPTION = BILLING_AGREEMENT_NAME
 
 BILLING_DEFAULT_CURRENCY = "USD"
 
-set_option("BILLING_ENV", "test")
+settings_manager.set_option("BILLING_ENV", "test")
 print_debug("Billing env is '{}'".format(BILLING_ENV))
 
 # OAUTH PROVIDER
@@ -386,7 +349,7 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 
 # BACKEND: PeeringDB
 
-set_option("PDB_ENDPOINT", "https://peeringdb.com")
+settings_manager.set_option("PDB_ENDPOINT", "https://peeringdb.com")
 PDB_OAUTH_ACCESS_TOKEN_URL = "{}/oauth2/token/".format(PDB_ENDPOINT)
 PDB_OAUTH_AUTHORIZE_URL = "{}/oauth2/authorize/".format(PDB_ENDPOINT)
 PDB_OAUTH_PROFILE_URL = "{}/profile/v1".format(PDB_ENDPOINT)
@@ -425,7 +388,7 @@ REST_FRAMEWORK = {
 # dynamic config starts here
 
 # enable all languages available in the locale directory
-set_option("ENABLE_ALL_LANGUAGES", False)
+settings_manager.set_option("ENABLE_ALL_LANGUAGES", False)
 
 if ENABLE_ALL_LANGUAGES:
     language_dict = dict(LANGUAGES)

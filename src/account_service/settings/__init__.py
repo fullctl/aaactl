@@ -81,7 +81,9 @@ try_include(env_file)
 print_debug("Release env is '{}'".format(RELEASE_ENV))
 
 # set version, default from /srv/service/etc/VERSION
-settings_manager.set_option("PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip())
+settings_manager.set_option(
+    "PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip()
+)
 
 # Contact email, from address, support email
 settings_manager.set_from_env("SERVER_EMAIL")
@@ -131,10 +133,14 @@ MANAGERS = ADMINS
 
 settings_manager.set_option("HOST_URL", "https://localhost:8000")
 
-settings_manager.set_option("MEDIA_ROOT", os.path.abspath(os.path.join(BASE_DIR, "media")))
+settings_manager.set_option(
+    "MEDIA_ROOT", os.path.abspath(os.path.join(BASE_DIR, "media"))
+)
 settings_manager.set_option("MEDIA_URL", f"/m/{PACKAGE_VERSION}/")
 
-settings_manager.set_option("STATIC_ROOT", os.path.abspath(os.path.join(BASE_DIR, "static")))
+settings_manager.set_option(
+    "STATIC_ROOT", os.path.abspath(os.path.join(BASE_DIR, "static"))
+)
 settings_manager.set_option("STATIC_URL", f"/s/{PACKAGE_VERSION}/")
 
 settings_manager.set_option("SESSION_COOKIE_NAME", "tcacctsid")

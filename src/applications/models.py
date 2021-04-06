@@ -3,7 +3,6 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 
 from applications.service_bridge import Bridge
-
 from common.models import HandleRefModel
 
 # Create your models here.

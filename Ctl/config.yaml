@@ -256,6 +256,22 @@ ctl:
                 source: "{{ plugin.deploy_venv.build_path }}/venv"
                 pipfile: "{{ plugin.deploy_venv.source_path }}/Pipfile"
 
+    - name: build
+      type: command
+      config:
+        shell: true
+        command:
+          - "docker build -t $(basename $(pwd)):$(cat Ctl/VERSION) ."
+
+    - name: deploy
+      type: command
+      config:
+        shell: true
+        command:
+          - "docker tag $(basename $(pwd)):$(cat Ctl/VERSION) $REGISTRY/fullctl/$(basename $(pwd)):`cat Ctl/VERSION`"
+          - "docker push $REGISTRY/fullctl/$(basename $(pwd)):`cat Ctl/VERSION`"
+
+
 
   # PERMISSION CONFIG
 

@@ -15,8 +15,22 @@ from account.models import (
     PasswordReset,
 )
 
-# Register your models here.
+class AdminSite(admin.AdminSite):
+     def get_urls(self):
+         from django.urls import path
+         urls = super().get_urls()
+         urls += [
+             path('diag/', self.admin_view(self.diag))
+         ]
+         return urls
 
+     def diag(self, request):
+        return HttpResponse(str(request.META), content_type="text/plain")
+
+admin_site = AdminSite()
+
+
+# registered models
 
 class InlineAPIKeyPermission(admin.TabularInline):
     model = APIKeyPermission
@@ -24,7 +38,7 @@ class InlineAPIKeyPermission(admin.TabularInline):
     form = UserPermissionForm
 
 
-@admin.register(APIKey)
+@admin.register(APIKey, site=admin_site)
 class APIKeyAdmin(admin.ModelAdmin):
     list_display = ("key", "user", "managed", "created")
     search_fields = ("user__username", "user__email", "key")
@@ -97,17 +111,3 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
 
 
 
-class AdminSite(admin.AdminSite):
-
-     def get_urls(self):
-         from django.urls import path
-         urls = super().get_urls()
-         urls += [
-             path('diag/', self.admin_view(self.diag))
-         ]
-         return urls
-
-     def diag(self, request):
-         return HttpResponse(str(request))
-
-admin_site = AdminSite()

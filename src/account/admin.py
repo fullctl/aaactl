@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+
 from django import forms
 from django.contrib import admin
 from django_grainy.forms import UserPermissionForm, PermissionFormField, BitmaskSelect, PERM_CHOICES_FOR_FIELD
@@ -93,3 +95,19 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
             return ("namespace",)
         return super().get_readonly_fields(request, obj)
 
+
+
+class AdminSite(admin.AdminSite):
+
+     def get_urls(self):
+         from django.urls import path
+         urls = super().get_urls()
+         urls += [
+             path('diag/', self.admin_view(self.diag))
+         ]
+         return urls
+
+     def diag(self, request):
+         return HttpResponse(str(request))
+
+admin_site = AdminSite()

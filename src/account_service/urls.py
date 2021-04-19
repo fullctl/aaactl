@@ -21,6 +21,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django_grainy.remote import ProvideGet, ProvideLoad
 
+from account.admin import admin_site
 from account.grainy_ext import APIKeyAuthenticator
 
 # OAuth2 provider endpoints
@@ -78,7 +79,7 @@ urlpatterns = []
 
 if settings.EXPOSE_ADMIN:
     urlpatterns += [
-        path("admin/", admin.site.urls),
+        path("admin/", admin_site.urls),
     ]
 
 urlpatterns += [

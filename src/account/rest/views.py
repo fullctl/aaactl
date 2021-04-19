@@ -169,7 +169,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("org.{org.id}.users", explicit=False)
+    @grainy_endpoint("user.{org.id}", explicit=False)
     def users(self, request, pk, org):
         serializer = Serializers.orguser(
             org.user_set.all(),
@@ -184,7 +184,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["DELETE"])
     @set_org
-    @grainy_endpoint("org.{org.id}.users", explicit=False)
+    @grainy_endpoint("user.{org.id}", explicit=False)
     def user(self, request, pk, org):
         orguser = models.OrganizationUser.objects.get(
             id=request.data.get("id"), org=org
@@ -206,7 +206,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["PUT"])
     @set_org
-    @grainy_endpoint("org.{org.id}.users", explicit=False)
+    @grainy_endpoint("user.{org.id}", explicit=False)
     def set_permissions(self, request, pk, org):
         serializer = Serializers.orguserperm(
             data={
@@ -224,7 +224,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("org.{org.id}.users", explicit=False)
+    @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)
         serializer = Serializers.inv(invitations, many=True)
@@ -232,7 +232,7 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["POST"])
     @set_org
-    @grainy_endpoint("org.{org.id}.users", explicit=False)
+    @grainy_endpoint("user.{org.id}", explicit=False)
     def invite(self, request, pk, org):
         context = {"user": request.user, "org": org}
         serializer = Serializers.inv(data=request.data, many=False, context=context)

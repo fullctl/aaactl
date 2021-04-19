@@ -76,11 +76,7 @@ if settings.DEBUG:
 
 urlpatterns = []
 
-if settings.RELEASE_ENV != "prod":
-
-    # we only expose admin on non-production
-    # environments
-
+if settings.EXPOSE_ADMIN:
     urlpatterns += [
         path("admin/", admin.site.urls),
     ]

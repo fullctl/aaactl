@@ -96,6 +96,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "
 # set RELEASE_ENV, usually one of dev, beta, tutor, prod
 set_option("RELEASE_ENV", "dev")
 
+# set DEBUG first, print_debug() depends on it
 if RELEASE_ENV == "dev":
     set_bool("DEBUG", True)
 else:
@@ -105,8 +106,13 @@ else:
 env_file = os.path.join(os.path.dirname(__file__), "{}.py".format(RELEASE_ENV))
 try_include(env_file)
 
-
 print_debug("Release env is '{}'".format(RELEASE_ENV))
+
+if RELEASE_ENV == "prod":
+    # we only expose admin on non-production environments
+    set_bool("EXPOSE_ADMIN", False)
+else:
+    set_bool("EXPOSE_ADMIN", True)
 
 # set version, default from /srv/service/etc/VERSION
 set_option("PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip())

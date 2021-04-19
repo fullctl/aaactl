@@ -168,7 +168,7 @@ twentyc.rest.Response = twentyc.cls.define(
       if(this.status == 429){
         if (this.content.errors.detail) return this.content.errors.detail;
         return "Request is rate limited";
-      } 
+      }
       if(this.status == 500) return "Internal Error";
       return "Http Error "+this.status;
     },
@@ -1117,7 +1117,15 @@ twentyc.rest.PermissionsForm = twentyc.cls.extend(
       var form = this;
       this.element.find('input[data-permission-flag]').each(function() {
         var flag_name = $(this).data("permission-flag")
-        var value = (flags.indexOf(flag_name) > -1)
+        if(flag_name.length == 1) {
+          var value = (flags.perms.indexOf(flag_name) > -1)
+        } else {
+          var i, value = true;
+          for(i = 0; i < flag_name.length; i++) {
+            if(flags.perms.indexOf(flag_name.charAt(i)) == -1)
+              value = false;
+          }
+        }
         $(this).prop("checked", value)
       });
     },

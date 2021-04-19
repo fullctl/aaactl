@@ -44,8 +44,24 @@ class FormValidationMixin(object):
         return data
 
 
+class PermissionNamespacesMixin(object):
+    @property
+    def permission_namespaces(self):
+        if not hasattr(self, "_permission_namespaces"):
+            mperms = models.ManagedPermission.objects.filter(status="ok", managable=True).order_by("group", "description")
+            r = []
+            for mperm in mperms:
+                r.append( (mperm.namespace, mperm.description) )
+            self._permission_namespaces = r
+
+
+        return self._permission_namespaces
+
+
+
+
 @register
-class OrganizationUser(serializers.ModelSerializer):
+class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
     ref_tag = "orguser"
 
     name = serializers.SerializerMethodField()
@@ -53,14 +69,6 @@ class OrganizationUser(serializers.ModelSerializer):
     you = serializers.SerializerMethodField()
     manageable = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
-
-    permission_namespaces = [
-        "users",
-        "billing.contact",
-        "billing.service",
-        "billing.orderhistory",
-        "manage",
-    ]
 
     class Meta:
         model = models.OrganizationUser
@@ -78,15 +86,15 @@ class OrganizationUser(serializers.ModelSerializer):
     def get_manageable(self, obj):
         perms = self.context.get("perms")
         if perms:
-            return perms.get([obj.org, "users"], as_string=True)
+            return perms.get(f"user.{obj.org.id}", as_string=True)
         return "r"
 
     def get_permissions(self, obj):
         perms = Permissions(obj.user)
         rv = dict(
             [
-                (ns, perms.get([obj.org, ns], as_string=True))
-                for ns in self.permission_namespaces
+                (ns, {"perms": perms.get(ns.format(org_id=obj.org.id), as_string=True), "label": label})
+                for ns, label in self.permission_namespaces
             ]
         )
 
@@ -96,10 +104,8 @@ class OrganizationUser(serializers.ModelSerializer):
 
 
 @register
-class OrganizationUserPermissions(serializers.Serializer):
+class OrganizationUserPermissions(PermissionNamespacesMixin, serializers.Serializer):
     ref_tag = "orguserperm"
-
-    permission_namespaces = models.Organization.permission_namespaces
 
     org = serializers.PrimaryKeyRelatedField(queryset=models.Organization.objects.all())
     orguser = serializers.PrimaryKeyRelatedField(
@@ -110,7 +116,7 @@ class OrganizationUserPermissions(serializers.Serializer):
 
     def validate_component(self, value):
         value = value.lower()
-        if value not in self.permission_namespaces:
+        if value not in dict(self.permission_namespaces):
             raise serializers.ValidationError(_("Not a valid permissioning component"))
 
         return value
@@ -137,7 +143,7 @@ class OrganizationUserPermissions(serializers.Serializer):
         component = data["component"]
         permissions = data["permissions"]
 
-        orguser.user.grainy_permissions.add_permission([org, component], permissions)
+        orguser.user.grainy_permissions.add_permission(component.format(org_id=org.id), permissions)
 
         return orguser
 

@@ -20,6 +20,11 @@ This will run a postgres database and the account service in containers and moun
 
 Any container commands can then be run from `Ctl/dev/run.sh`
 
+Create managed  permissions
+```sh
+Ctl/dev/run.sh loaddata fixtures/fixture.perms.json
+```
+
 First time running, create a new superuser to use to login:
 ```sh
 Ctl/dev/run.sh createsuperuser

@@ -18,7 +18,7 @@ account.ControlPanel = twentyc.cls.define(
       this.editOrganization();
 
       this.changePassword();
-      
+
       this.elements.order_history = $('.order-history');
       this.order_history_list = new twentyc.rest.List(this.elements.order_history);
       this.buildOrderHistory();
@@ -66,7 +66,7 @@ account.ControlPanel = twentyc.cls.define(
             .append('<tr><td>No entries</td></tr>')
         }
       })
-      this.order_history_list.load();      
+      this.order_history_list.load();
     },
 
     loadDropDown: function(){
@@ -134,7 +134,7 @@ account.ControlPanel = twentyc.cls.define(
         })
       }
 
-      
+
     },
 
     initializeForm: function(form_class){
@@ -241,7 +241,8 @@ account.UsersList = twentyc.cls.define(
         var component, editor, widget, container = $('<div>');
         for(component in value) {
           editor = this.template("permissions")
-          editor.find('[data-field="component"]').text(component);
+          var label = value[component].label
+          editor.find('[data-field="component"]').text(label);
           widget = new twentyc.rest.PermissionsForm(editor);
           widget.fill(data);
           widget.fill({component:component});
@@ -396,7 +397,7 @@ account.Services = twentyc.cls.define(
 
       this.formattedCost = () => {
         return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right')
-      } 
+      }
     }
 });
 
@@ -464,7 +465,7 @@ account.PendingUsers = twentyc.cls.define(
       this.elements = {}
       this.elements.pending_user_listing = $('.pending-user-listing');
       this.rest_api_list = new twentyc.rest.List(this.elements.pending_user_listing);
-      
+
 
       this.rest_api_list.formatters.created = function(value, data){
         var d = new Date(value);

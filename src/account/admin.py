@@ -1,11 +1,13 @@
+from django import forms
 from django.contrib import admin
-from django_grainy.forms import UserPermissionForm
+from django_grainy.forms import UserPermissionForm, PermissionFormField, BitmaskSelect, PERM_CHOICES_FOR_FIELD
 
 from account.models import (
     APIKey,
     APIKeyPermission,
     EmailConfirmation,
     Invitation,
+    ManagedPermission,
     Organization,
     OrganizationUser,
     PasswordReset,
@@ -38,6 +40,15 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ("user_set__last_name", "name")
     inlines = (OrganizationUserInline,)
 
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=True)
+        for obj in formset.deleted_objects:
+            for mperm in ManagedPermission.objects.all():
+                mperm.revoke_user(obj.org, obj.user)
+        for instance in instances:
+            for mperm in ManagedPermission.objects.all():
+                mperm.auto_grant_user(instance.org, instance.user)
+
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
@@ -57,3 +68,28 @@ class PasswordResetAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__last_name", "email")
 
     fields = ("version", "status", "user", "email")
+
+class ManagedPermissionForm(forms.ModelForm):
+
+    auto_grant_admins = PermissionFormField(
+        initial=15,
+        widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
+    )
+
+    auto_grant_users = PermissionFormField(
+        initial=1,
+        widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
+    )
+
+
+@admin.register(ManagedPermission)
+class ManagedPermissionAdmin(admin.ModelAdmin):
+    list_display = ("description", "namespace", "group", "managable", "auto_grant_admins", "auto_grant_users", "created", "updated")
+    search_fields = ("group", "description", "namespace")
+    form = ManagedPermissionForm
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ("namespace",)
+        return super().get_readonly_fields(request, obj)
+

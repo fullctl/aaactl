@@ -13,11 +13,13 @@ def permissions(request):
         for namespace in instance.permission_namespaces:
             for op, name in ops:
                 key = "{}_{}_{}".format(
-                    name, instance.HandleRef.tag, namespace.replace(".", "__")
+                    name, instance.HandleRef.tag, namespace.replace(".{org_id}","").replace(".", "__")
                 )
                 context[key] = request.perms.check(
-                    [instance, namespace], op, ignore_grant_all=True
+                    namespace.format(org_id=instance.id), op, ignore_grant_all=True
                 )
+
+    print(context)
 
     return {"permissions": context}
 

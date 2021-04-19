@@ -11,8 +11,8 @@ from django.shortcuts import render_to_response
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, PermissionManager
-from django_grainy.util import Permissions, namespace
+from django_grainy.models import Permission, PermissionManager, PermissionField
+from django_grainy.util import Permissions, namespace, check_permissions
 
 from applications.models import Service
 from common.email import email_noreply
@@ -80,14 +80,6 @@ class Organization(HandleRefModel):
         ),
     )
 
-    permission_namespaces = [
-        "users",
-        "billing.contact",
-        "billing.service",
-        "billing.orderhistory",
-        "manage",
-    ]
-
     class Meta:
         db_table = "account_organization"
         verbose_name = _("Organization")
@@ -109,6 +101,24 @@ class Organization(HandleRefModel):
     @classmethod
     def get_for_user(cls, user, perms="r"):
         return Permissions(user).instances(cls, perms, ignore_grant_all=True)
+
+    @property
+    def permission_namespaces(self):
+        if not hasattr(self, "_permission_namespaces"):
+            mperms = ManagedPermission.objects.filter(status="ok", group="aaactl")
+            r = []
+            for mperm in mperms:
+                r.append( mperm.namespace )
+            self._permission_namespaces = r
+
+        return self._permission_namespaces
+
+
+
+    @property
+    def users(self):
+        for orguser in self.user_set.all():
+            yield orguser.user
 
     @property
     def label(self):
@@ -140,18 +150,20 @@ class Organization(HandleRefModel):
     def add_user(self, user, perms="r"):
         orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
-            user.grainy_permissions.add_permission(self, perms)
+            for mperm in ManagedPermission.objects.all():
+                if perms == "r":
+                    mperm.auto_grant_user(self, user)
+                else:
+                    mperm.auto_grant_admin(self, user)
+
+
         return orguser
 
     @reversion.create_revision()
     def remove_user(self, user):
         self.user_set.filter(user=user).delete()
-        user.grainy_permissions.get_queryset().filter(
-            namespace__startswith=namespace([self, ""])
-        ).delete()
-        user.grainy_permissions.get_queryset().filter(
-            namespace=namespace(self)
-        ).delete()
+        for mperm in ManagedPermission.objects.all():
+            mperm.revoke_user(self, user)
 
     def clean_slug(self, value):
         value = value.lower()
@@ -159,6 +171,13 @@ class Organization(HandleRefModel):
         if value in protected_values:
             raise ValidationError(_("Protected value: {}").format(value))
         return value
+
+    def is_admin_user(self, user):
+        if self.user == user:
+            return True
+        elif self.user_set.count() == 1 and self.user_set.filter(user=user).exists():
+            return True
+        return check_permissions(user, self, "c")
 
 
 @reversion.register
@@ -407,6 +426,86 @@ def generate_invite_secret():
             return secret
         i += 1
     raise OSError(_("Unable to generate unique invitation secret"))
+
+
+@reversion.register
+class ManagedPermission(HandleRefModel):
+
+    """
+    Describes a custom permission definition, allowing
+    to add app / service specific permissions to be managed
+    through aaactl
+    """
+
+    namespace = models.CharField(
+        max_length=255, help_text=_("The permission namespace. The following variables are available for formatting: {org_id}")
+    )
+
+    group = models.CharField(
+        max_length=255, help_text=_("Belongs to this group of permissions")
+    )
+
+    description = models.CharField(
+        max_length=255, help_text=_("What is this permission namespace used for?")
+    )
+
+    managable = models.BooleanField(
+        default=True, help_text=_("Can organization admins manage this permission?")
+    )
+
+    auto_grant_admins = PermissionField(
+        help_text=_("Auto grants the permission at the following level to organization admins")
+    )
+
+    auto_grant_users = PermissionField(
+        help_text=_("Auto grants the permission at the following level to organization members")
+    )
+
+
+    class Meta:
+        db_table = "account_managed_permission"
+        verbose_name = _("Managed permission")
+        verbose_name_plural = _("Managed permissions")
+
+
+    class HandleRef:
+        tag = "mperm"
+
+    def __str__(self):
+        return f"{self.namespace}"
+
+
+    def auto_grant(self, org):
+
+        for user in org.users:
+            self.auto_grant_admin(org, user)
+            self.auto_grant_user(org, user)
+
+    def revoke(self, org):
+        for user in org.users:
+            self.revoke_user(org, user)
+
+    def revoke_user(self, org, user):
+        ns = self.namespace.format(org_id=org.pk)
+        print(f"Revoke {ns} from {user}")
+        user.grainy_permissions.delete_permission(ns)
+
+
+
+    def auto_grant_admin(self, org, user):
+        if not org.is_admin_user(user):
+            return
+        ns = self.namespace.format(org_id=org.pk)
+        print(f"Granting {ns} to {user}: {self.auto_grant_admins} (admin)")
+        user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
+
+    def auto_grant_user(self, org, user):
+        if org.is_admin_user(user):
+            return
+        ns = self.namespace.format(org_id=org.pk)
+        print(f"Granting {ns} to {user}: {self.auto_grant_users} (user)")
+        user.grainy_permissions.add_permission(ns, self.auto_grant_users)
+
 
 
 @reversion.register

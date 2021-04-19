@@ -3,7 +3,7 @@
   "client": "api_client",
   "data": {
     "id": 4,
-    "component": "billing.contact",
+    "component": "billing.{org_id}",
     "permissions": "crud"
   }
 }

@@ -268,8 +268,10 @@ ctl:
       config:
         shell: true
         command:
-          - "docker tag $(basename $(pwd)):$(cat Ctl/VERSION) $REGISTRY/fullctl/$(basename $(pwd)):`cat Ctl/VERSION`"
-          - "docker push $REGISTRY/fullctl/$(basename $(pwd)):`cat Ctl/VERSION`"
+          - "docker build -t $(basename $(pwd)):$(cat Ctl/VERSION) ."
+          - "docker tag $(basename $(pwd)):$(cat Ctl/VERSION) $REGISTRY/fullctl/$(basename $(pwd)):$(cat Ctl/VERSION)"
+          - "docker push $REGISTRY/fullctl/$(basename $(pwd)):$(cat Ctl/VERSION)"
+
 
 
 

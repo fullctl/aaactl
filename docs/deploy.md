@@ -82,7 +82,7 @@ https://fullctl.dev8.20c.com/complete/twentyc/
 
 * client type: confidential
 * authoriozation grant type: authorization code
-* name: FullCTL
+* name: fullctl
 * skip authorization: true
 * client id: generated or if fullctl already set up use the client id set up there
 * secret: generated or if fullctl already set up use the secret setup there

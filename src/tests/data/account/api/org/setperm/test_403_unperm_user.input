@@ -2,7 +2,7 @@
   "client": "api_client_unperm",
   "data": {
     "id": 4,
-    "component": "billing.status",
+    "component": "billing.{org_id}",
     "permissions": "crud"
   }
 }

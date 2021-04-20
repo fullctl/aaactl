@@ -2,6 +2,16 @@
 {% block sidebar %}
 {{ block.super }}
 {% if request.GET.diag %}
-<div>{{ request.META }}</div>
+<hr />
+<div><pre>
+{{ request.path }}
+{{ request.get_full_path }}
+
+<hr />
+{% for k,v in request.META.items %}
+{{ k }}: {{ v }}
+{% endfor %}
+{{ request.META }}
+</pre></div>
 {% endif %}
 {% endblock %}

@@ -181,8 +181,6 @@ class Organization(HandleRefModel):
     def is_admin_user(self, user):
         if self.user == user:
             return True
-        elif self.user_set.count() == 1 and self.user_set.filter(user=user).exists():
-            return True
         return check_permissions(user, self, "c")
 
 

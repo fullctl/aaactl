@@ -42,6 +42,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ("user_set__last_name", "name")
     inlines = (OrganizationUserInline,)
 
+
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=True)
         for obj in formset.deleted_objects:
@@ -49,7 +50,10 @@ class OrganizationAdmin(admin.ModelAdmin):
                 mperm.revoke_user(obj.org, obj.user)
         for instance in instances:
             for mperm in ManagedPermission.objects.all():
-                mperm.auto_grant_user(instance.org, instance.user)
+                if instance.org.user == instance.user:
+                    mperm.auto_grant_admin(instance.org, instance.user)
+                else:
+                    mperm.auto_grant_user(instance.org, instance.user)
 
 
 @admin.register(Invitation)

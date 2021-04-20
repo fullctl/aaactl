@@ -91,7 +91,13 @@ class Organization(HandleRefModel):
     @classmethod
     def personal_org(cls, user):
 
-        org, created = cls.objects.get_or_create(user=user)
+        if not cls.objects.filter(slug=user.username).exists():
+            slug = user.username
+        else:
+            slug = generate_org_slug()
+
+
+        org, created = cls.objects.get_or_create(user=user, slug=slug)
 
         if created:
             org.add_user(user, "crud")

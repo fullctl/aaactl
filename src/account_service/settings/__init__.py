@@ -73,9 +73,9 @@ print_debug("Release env is '{}'".format(RELEASE_ENV))
 
 if RELEASE_ENV == "prod":
     # we only expose admin on non-production environments
-    set_bool("EXPOSE_ADMIN", False)
+    settings_manager.set_bool("EXPOSE_ADMIN", False)
 else:
-    set_bool("EXPOSE_ADMIN", True)
+    settings_manager.set_bool("EXPOSE_ADMIN", True)
 
 # set version, default from /srv/service/etc/VERSION
 settings_manager.set_option(
@@ -165,7 +165,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 ]
 
-set_default("MIDDLEWARE", [])
+settings_manager.set_default("MIDDLEWARE", [])
 MIDDLEWARE += [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

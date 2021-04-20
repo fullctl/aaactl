@@ -1,6 +1,7 @@
 import secrets
 
 set_option("SERVER_EMAIL", "root@localhost")
+set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 
 set_from_env("SECRET_KEY", None)
 if not SECRET_KEY:

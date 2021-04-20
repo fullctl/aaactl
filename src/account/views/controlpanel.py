@@ -55,6 +55,7 @@ def index(request):
         can_invite=request.perms.check([request.selected_org, "users"], "c"),
     )
 
+
     return render(request, "account/controlpanel/index.html", env)
 
 

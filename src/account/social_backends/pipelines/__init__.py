@@ -22,6 +22,9 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
         namespaces = []
 
+        social.extra_data["email"] = details["email"]
+        social.save()
+
         for network in social.extra_data.get("networks", []):
             asn = network["asn"]
             perms = network["perms"]

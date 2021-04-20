@@ -36,6 +36,16 @@ account.ControlPanel = twentyc.cls.define(
 
     },
 
+    postFromLink: function(url) {
+      $.ajax({
+        method: "post",
+        url: url,
+        headers : {
+          "X-CSRFToken": twentyc.rest.config.csrf
+        }
+      }).done(() => { window.document.location.href = window.document.location.href })
+    },
+
     buildOrderHistory: function() {
       this.order_history_list.formatters.description = function(value, data) {
         return $('<span>').append(

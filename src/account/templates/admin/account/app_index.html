@@ -1,0 +1,7 @@
+{% extends "admin/app_index.html" %}
+{% block sidebar %}
+{{ block.super }}
+{% if request.GET.diag %}
+<div>{{ request.META }}</div>
+{% endif %}
+{% endblock %}

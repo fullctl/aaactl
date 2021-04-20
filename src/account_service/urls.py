@@ -21,6 +21,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django_grainy.remote import ProvideGet, ProvideLoad
 
+from account.views.diag import diag
 from account.grainy_ext import APIKeyAuthenticator
 
 # OAuth2 provider endpoints
@@ -82,6 +83,7 @@ if settings.EXPOSE_ADMIN:
     ]
 
 urlpatterns += [
+    path("_diag/", diag),
     # account
     path(
         "account/auth/o/",

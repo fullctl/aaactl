@@ -200,6 +200,7 @@ def oauth_profile(request):
 
     data = dict(
         id=user.id,
+        user_name=user.username,
         given_name=user.first_name,
         family_name=user.last_name,
         name="{} {}".format(user.first_name, user.last_name),

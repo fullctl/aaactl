@@ -16,6 +16,10 @@ class Login(forms.Form):
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
 
+    def clean_username(self):
+        username = self.cleaned_data["username"].lower()
+        return username
+
 
 class UserInformationBase(forms.Form):
     username = forms.CharField(validators=[UnicodeUsernameValidator])
@@ -24,7 +28,7 @@ class UserInformationBase(forms.Form):
     email = forms.EmailField()
 
     def clean_username(self):
-        username = self.cleaned_data["username"]
+        username = self.cleaned_data["username"].lower()
 
         User = get_user_model()
 

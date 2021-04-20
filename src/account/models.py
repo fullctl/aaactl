@@ -181,7 +181,7 @@ class Organization(HandleRefModel):
     def is_admin_user(self, user):
         if self.user == user:
             return True
-        return check_permissions(user, self, "c")
+        return check_permissions(user, self, "c", ignore_grant_all=True)
 
 
 @reversion.register

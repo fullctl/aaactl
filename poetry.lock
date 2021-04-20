@@ -609,7 +609,7 @@ whitenoise = ">=5.2.0,<6.0.0"
 
 [package.source]
 type = "url"
-url = "https://github.com/fullctl/fullctl/archive/refs/heads/whitenoise.zip"
+url = "https://github.com/fullctl/fullctl/archive/refs/heads/prep_prod.zip"
 [[package]]
 name = "future"
 version = "0.18.2"
@@ -1419,7 +1419,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "e48fa7a9cedc3f8bd8734e4fd30ec1af9bd20d103498c12e9c15456f29289a88"
+content-hash = "fc47998336b81b7a95164ca1adf0911c409a73160abe2dbce0dd02545341334f"
 
 [metadata.files]
 amqp = [

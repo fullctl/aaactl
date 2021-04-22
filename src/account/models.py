@@ -240,6 +240,9 @@ class APIKeyBase(HandleRefModel):
 
         return updated
 
+    @property
+    def is_authenticated(self):
+        return True
 
 
 @reversion.register

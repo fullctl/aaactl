@@ -290,6 +290,113 @@ account.UsersList = twentyc.cls.define(
   }
 );
 
+account.OrgKeysList = twentyc.cls.define(
+  "OrgKeysList",
+  {
+    OrgKeysList : function() {
+      this.elements = {}
+      this.elements.orgkey_listing = $('.orgkey-listing')
+
+      this.rest_api_list = new twentyc.rest.List(this.elements.orgkey_listing);
+
+      this.rest_api_list.formatters.permissions = function(value, data) {
+        if(!data.manageable.match(/ud/))
+          return;
+        var component, editor, widget, container = $('<div>');
+        for(component in value) {
+          editor = this.template("permissions")
+          var label = value[component].label
+          editor.find('[data-field="component"]').text(label);
+          widget = new twentyc.rest.PermissionsForm(editor);
+          widget.fill(data);
+          widget.fill({component:component});
+          widget.set_flag_values(value[component]);
+          container.append(editor)
+        }
+        return container;
+      }.bind(this.rest_api_list)
+
+      this.rest_api_list.formatters.row = function(row,data) {
+        var manage_container = row.filter('.manage')
+        if(data.you) {
+          row.find('.btn.manage').attr('disabled', true);
+          row.find('.btn.manage')
+            .text('You')
+            .removeClass('btn-manage')
+            .addClass('btn-disabled')
+        }
+        else if(!data.manageable.match(/[ud]/)) {
+          row.find('.btn.manage').hide();
+        }
+        else {
+          row.find('.btn.manage').click(function() {
+            if(manage_container.is(':visible'))
+              manage_container.hide();
+            else
+              manage_container.show();
+          });
+        }
+        manage_container.hide();
+      }
+
+      $(this.rest_api_list).on("insert:after", (e, row, data) => {
+        this.enableShowButton(row, data);
+        this.enableCopyButton(row);
+      })
+
+      // Modal
+      this.elements.orgkey_form = $('form.create_orgkey');
+      if ( this.elements.orgkey_form.length ){
+        this.rest_orgkey_form = new twentyc.rest.Form(this.elements.orgkey_form);
+        $(this.rest_orgkey_form).on("api-write:success", function() {
+          $('#orgApiKeyModal').modal('toggle');
+          this.rest_api_list.load();
+        }.bind(this));
+      }
+
+
+      this.rest_api_list.load();
+    },
+    enableShowButton: function(row, data) {
+      var key = data.key;
+      var redacted_key = key.replace(key.slice(2,-2), '*'.repeat(key.length-4));
+      var keybox_redacted = row.find('.org-key-box-redacted');
+      var keybox_display = row.find('.org-key-box');
+      var show_button = row.find('.show-button');
+
+      keybox_redacted.val(redacted_key);
+      keybox_display.val(key);
+
+      show_button.click(() => {
+        keybox_redacted.toggleClass('d-none');
+        keybox_display.toggleClass('d-none');
+      })
+    },
+    enableCopyButton: function(row) {
+      var copy_button = row.find('.copy-button');
+      var keybox_redacted = row.find('.org-key-box-redacted');
+      var keybox_display = row.find('.org-key-box');
+      copy_button.click(() => {
+          if ( keybox_display.hasClass('d-none') ){
+            keybox_redacted.addClass('d-none');
+            keybox_display.removeClass('d-none');
+            keybox_display.select();
+            document.execCommand("copy");
+            keybox_redacted.removeClass('d-none');
+            keybox_display.addClass('d-none');
+            keybox_redacted.select();
+          } else {
+            keybox_display.select();
+            document.execCommand("copy");
+          }
+      })
+    }
+
+  }
+
+);
+
+
 
 account.PasswordReset = twentyc.cls.define(
   "PasswordReset",

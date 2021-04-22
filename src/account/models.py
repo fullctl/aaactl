@@ -212,37 +212,16 @@ def generate_api_key():
     raise OSError(_("Unable to generate unique api key"))
 
 
-@reversion.register
-class APIKey(HandleRefModel):
-    """
-    Describes an APIKey
-    """
+class APIKeyBase(HandleRefModel):
 
+    name = models.CharField(max_length=255, blank=True, null=True)
     key = models.CharField(max_length=255, default=generate_api_key, unique=True)
-    user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="key_set"
-    )
     managed = models.BooleanField(
-        default=True, help_text=_("Is the API Key managed by the user")
+        default=True, help_text=_("Is the API Key managed by the owner")
     )
-
-    objects = PermissionManager()
 
     class Meta:
-        db_table = "account_api_key"
-        verbose_name = _("API Key")
-        verbose_name_plural = _("API Keys")
-
-    class HandleRef:
-        tag = "key"
-
-    @classmethod
-    def new_key(cls, user, managed=False):
-        instance = cls.objects.create(user=user, managed=managed)
-
-        if not managed:
-            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
-        return instance
+        abstract = True
 
     @classmethod
     def sync_internal_perms(cls, qset=None):
@@ -260,6 +239,36 @@ class APIKey(HandleRefModel):
                     updated.append(api_key)
 
         return updated
+
+
+
+@reversion.register
+@grainy_model(namespace="key")
+class APIKey(APIKeyBase):
+    """
+    Describes a personal APIKey
+    """
+
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="key_set"
+    )
+    readonly = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "account_api_key"
+        verbose_name = _("API Key")
+        verbose_name_plural = _("API Keys")
+
+    class HandleRef:
+        tag = "key"
+
+    @classmethod
+    def new_key(cls, user, managed=False):
+        instance = cls.objects.create(user=user, managed=managed)
+
+        if not managed:
+            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
+        return instance
 
 
 @reversion.register
@@ -281,6 +290,56 @@ class APIKeyPermission(HandleRefModel, Permission):
 
     class HandleRef:
         tag = "keyperm"
+
+@reversion.register
+@grainy_model(namespace="orgkey", namespace_instance="{namespace}.{instance.org_id}")
+class OrganizationAPIKey(APIKeyBase):
+    """
+    Describes a organization APIKey
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="orgkey_set"
+    )
+    email = models.EmailField()
+
+    class Meta:
+        db_table = "account_org_api_key"
+        verbose_name = _("Organization API Key")
+        verbose_name_plural = _("Organization API Keys")
+
+    class HandleRef:
+        tag = "orgkey"
+
+    @classmethod
+    def new_key(cls, org, managed=False):
+        instance = cls.objects.create(org=org, managed=managed)
+
+        if not managed:
+            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
+        return instance
+
+
+@reversion.register
+class OrganizationAPIKeyPermission(HandleRefModel, Permission):
+    """
+    Describes organization API key permissions
+    """
+
+    api_key = models.ForeignKey(
+        OrganizationAPIKey, on_delete=models.CASCADE, related_name="grainy_permissions"
+    )
+
+    objects = PermissionManager()
+
+    class Meta:
+        db_table = "account_org_api_key_permission"
+        verbose_name = _("Organization API Key Permission")
+        verbose_name_plural = _("Organization API Key Permissions")
+
+    class HandleRef:
+        tag = "orgkeyperm"
+
 
 
 def generate_emconf_secret():
@@ -462,9 +521,8 @@ class ManagedPermission(HandleRefModel):
     )
 
     auto_grant_users = PermissionField(
-        help_text=_("Auto grants the permission at the following level to organization members")
+        help_text=_("Auto grants the permission at the following level to organization members and api keys")
     )
-
 
     class Meta:
         db_table = "account_managed_permission"
@@ -485,30 +543,41 @@ class ManagedPermission(HandleRefModel):
             self.auto_grant_admin(org, user)
             self.auto_grant_user(org, user)
 
+        for key in org.orgkey_set.all():
+            self.auto_grant_key(org, key)
+
     def revoke(self, org):
         for user in org.users:
             self.revoke_user(org, user)
 
+        for key in org.orgkey_set.all():
+            self.revoke_key(org, key)
+
     def revoke_user(self, org, user):
         ns = self.namespace.format(org_id=org.pk)
-        print(f"Revoke {ns} from {user}")
         user.grainy_permissions.delete_permission(ns)
 
+    def revoke_key(sef, org, key):
+        ns = self.namespace.format(org_id=org.pk)
+        key.grainy_permissions.delete_permission(ns)
 
 
     def auto_grant_admin(self, org, user):
         if not org.is_admin_user(user):
             return
         ns = self.namespace.format(org_id=org.pk)
-        print(f"Granting {ns} to {user}: {self.auto_grant_admins} (admin)")
         user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
 
     def auto_grant_user(self, org, user):
         if org.is_admin_user(user):
             return
         ns = self.namespace.format(org_id=org.pk)
-        print(f"Granting {ns} to {user}: {self.auto_grant_users} (user)")
         user.grainy_permissions.add_permission(ns, self.auto_grant_users)
+
+    def auto_grant_key(self, org, key):
+        ns = self.namespace.format(org_id=org.pk)
+        key.grainy_permissions.add_permission(ns, self.auto_grant_users)
+
 
 
 

@@ -7,6 +7,8 @@ from django_grainy.forms import UserPermissionForm, PermissionFormField, Bitmask
 from account.models import (
     APIKey,
     APIKeyPermission,
+    OrganizationAPIKey,
+    OrganizationAPIKeyPermission,
     EmailConfirmation,
     Invitation,
     ManagedPermission,
@@ -26,9 +28,23 @@ class InlineAPIKeyPermission(admin.TabularInline):
 
 @admin.register(APIKey)
 class APIKeyAdmin(admin.ModelAdmin):
-    list_display = ("key", "user", "managed", "created")
+    list_display = ("key", "user", "name", "managed", "created")
     search_fields = ("user__username", "user__email", "key")
     inlines = (InlineAPIKeyPermission,)
+
+
+class InlineOrganizationAPIKeyPermission(admin.TabularInline):
+    model = OrganizationAPIKeyPermission
+    extra = 1
+    form = UserPermissionForm
+
+
+@admin.register(OrganizationAPIKey)
+class OrganizationAPIKeyAdmin(admin.ModelAdmin):
+    list_display = ("key", "org", "name", "managed", "created")
+    search_fields = ("org__name", "org__slug", "email", "key")
+    inlines = (InlineOrganizationAPIKeyPermission,)
+
 
 
 class OrganizationUserInline(admin.TabularInline):

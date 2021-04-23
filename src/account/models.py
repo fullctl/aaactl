@@ -14,7 +14,6 @@ from django_grainy.decorators import grainy_model
 from django_grainy.models import Permission, PermissionManager, PermissionField
 from django_grainy.util import Permissions, namespace, check_permissions
 
-from applications.models import Service
 from common.email import email_noreply
 from common.models import HandleRefModel
 
@@ -120,7 +119,6 @@ class Organization(HandleRefModel):
         return self._permission_namespaces
 
 
-
     @property
     def users(self):
         for orguser in self.user_set.all():
@@ -137,17 +135,6 @@ class Organization(HandleRefModel):
         if self.user_id:
             return _("Your Personal Organization")
         return self.name
-
-    @property
-    def comm_key(self):
-        """
-        Returns the best suitable communications key for
-        internal api communication to services.
-
-        FIXME: this should return org keys once those are
-        implemented
-        """
-        return self.user_set.first().user.key_set.first().key
 
     def __str__(self):
         return self.label
@@ -223,23 +210,6 @@ class APIKeyBase(HandleRefModel):
     class Meta:
         abstract = True
 
-    @classmethod
-    def sync_internal_perms(cls, qset=None):
-        if not qset:
-            qset = cls.objects.filter(managed=False)
-        updated = []
-        for api_key in qset:
-            for nsp, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
-                _, created = APIKeyPermission.objects.get_or_create(
-                    api_key=api_key,
-                    namespace=nsp,
-                    permission=django_grainy.helpers.int_flags(perms),
-                )
-                if created and api_key not in updated:
-                    updated.append(api_key)
-
-        return updated
-
     @property
     def is_authenticated(self):
         return True
@@ -259,20 +229,11 @@ class APIKey(APIKeyBase):
 
     class Meta:
         db_table = "account_api_key"
-        verbose_name = _("API Key")
-        verbose_name_plural = _("API Keys")
+        verbose_name = _("Personal API Key")
+        verbose_name_plural = _("Personal API Keys")
 
     class HandleRef:
         tag = "key"
-
-    @classmethod
-    def new_key(cls, user, managed=False):
-        instance = cls.objects.create(user=user, managed=managed)
-
-        if not managed:
-            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
-        return instance
-
 
 @reversion.register
 class APIKeyPermission(HandleRefModel, Permission):
@@ -295,6 +256,42 @@ class APIKeyPermission(HandleRefModel, Permission):
         tag = "keyperm"
 
 @reversion.register
+@grainy_model(namespace="_key_")
+class InternalAPIKey(APIKeyBase):
+    """
+    Describes internal APIKey
+    """
+
+    class Meta:
+        db_table = "account_internal_api_key"
+        verbose_name = _("Internal API Key")
+        verbose_name_plural = _("Internal API Keys")
+
+    class HandleRef:
+        tag = "_key_"
+
+@reversion.register
+class InternalAPIKeyPermission(HandleRefModel, Permission):
+    """
+    Describes API key permissions
+    """
+
+    api_key = models.ForeignKey(
+        InternalAPIKey, on_delete=models.CASCADE, related_name="grainy_permissions"
+    )
+
+    objects = PermissionManager()
+
+    class Meta:
+        db_table = "account_internal_api_key_permission"
+        verbose_name = _("Internal API Key Permission")
+        verbose_name_plural = _("Internal API Key Permissions")
+
+    class HandleRef:
+        tag = "keyperm"
+
+
+@reversion.register
 @grainy_model(namespace="orgkey", namespace_instance="{namespace}.{instance.org_id}")
 class OrganizationAPIKey(APIKeyBase):
     """
@@ -313,14 +310,6 @@ class OrganizationAPIKey(APIKeyBase):
 
     class HandleRef:
         tag = "orgkey"
-
-    @classmethod
-    def new_key(cls, org, managed=False):
-        instance = cls.objects.create(org=org, managed=managed)
-
-        if not managed:
-            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
-        return instance
 
 
 @reversion.register
@@ -536,8 +525,36 @@ class ManagedPermission(HandleRefModel):
     class HandleRef:
         tag = "mperm"
 
+    @classmethod
+    def grant_all_key(cls, orgkey, admin=False):
+        for mperm in cls.objects.all():
+            mperm.auto_grant_key(orgkey, admin=admin)
+
+
+    @classmethod
+    def grant_all_user(cls, user, admin=False):
+        mperms = [mperm for mperm in cls.objects.all()]
+        for orguser in user.org_set.all():
+            for mperm in mperms:
+                if admin:
+                    mperm.auto_grant_admin(orguser.org, orguser.user)
+                else:
+                    mperm.auto_grant_user(orguser.org, orguser.user)
+
+    @classmethod
+    def revoke_all_key(cls, orgkey):
+        for mperm in cls.objects.all():
+            mperm.revoke_key(orgkey)
+
+    @classmethod
+    def revoke_all_user(cls, user):
+        mperms = [mperm for mperm in cls.objects.all()]
+        for orguser in user.org_set.all():
+            for mperm in mperms:
+                mperm.revoke_user(orguser.org, orguser.user)
+
     def __str__(self):
-        return f"{self.namespace}"
+        return f"{self.group} - {self.description}"
 
 
     def auto_grant(self, org):
@@ -560,9 +577,10 @@ class ManagedPermission(HandleRefModel):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.delete_permission(ns)
 
-    def revoke_key(sef, org, key):
+    def revoke_key(sef, orgkey):
+        org = orgkey.org
         ns = self.namespace.format(org_id=org.pk)
-        key.grainy_permissions.delete_permission(ns)
+        orgkey.grainy_permissions.delete_permission(ns)
 
 
     def auto_grant_admin(self, org, user):
@@ -577,10 +595,16 @@ class ManagedPermission(HandleRefModel):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.add_permission(ns, self.auto_grant_users)
 
-    def auto_grant_key(self, org, key):
+    def auto_grant_key(self, orgkey, admin=False):
+        org = orgkey.org
         ns = self.namespace.format(org_id=org.pk)
-        key.grainy_permissions.add_permission(ns, self.auto_grant_users)
 
+        if admin:
+            perms = self.auto_grant_admins
+        else:
+            perms = self.auto_grant_users
+
+        orgkey.grainy_permissions.add_permission(ns, perms)
 
 
 
@@ -599,7 +623,7 @@ class Invitation(HandleRefModel):
     )
     email = models.EmailField()
     service = models.ForeignKey(
-        Service,
+        "applications.Service",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

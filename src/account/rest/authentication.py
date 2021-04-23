@@ -1,8 +1,7 @@
 from django_grainy.util import Permissions
-from django.contrib.auth import get_user_model
 from rest_framework import authentication, exceptions
 
-from account.models import APIKey, OrganizationAPIKey
+from account.models import APIKey, OrganizationAPIKey, InternalAPIKey
 
 class APIKeyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
@@ -17,31 +16,27 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
 
         api_key = None
 
-        try:
-            if key:
-                api_key = APIKey.objects.get(key=key)
-                request.api_key = api_key
-                if not api_key.managed:
-                    request.perms = Permissions(api_key)
-                return (api_key.user, None)
-            else:
-                return None
-        except APIKey.DoesNotExist:
-            pass
+        key_models = [APIKey, OrganizationAPIKey, InternalAPIKey]
 
+        for model in key_models:
 
-        try:
-            if key:
-                api_key = OrganizationAPIKey.objects.get(key=key)
-                request.api_key = api_key
-                request.perms = Permissions(api_key)
-                User = get_user_model()
-                return (api_key, None)
-            else:
-                return None
-        except OrganizationAPIKey.DoesNotExist:
-            pass
-
+            try:
+                if key:
+                    api_key = model.objects.get(key=key)
+                    request.api_key = api_key
+                    if model == APIKey:
+                        if not api_key.managed:
+                            request.perms = Permissions(api_key)
+                        return (api_key.user, None)
+                    if model == OrganizationAPIKey:
+                        request.perms = Permissions(api_key)
+                        return (api_key, None)
+                    if model == InternalAPIKey:
+                        return (api_key, None)
+                else:
+                    return None
+            except model.DoesNotExist:
+                pass
 
 
 

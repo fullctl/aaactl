@@ -227,7 +227,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("orgkey.{org.id}", explicit=False)
     def keys(self, request, pk, org):
         serializer = Serializers.orgkey(
-            org.orgkey_set.all(),
+            org.orgkey_set.filter(managed=True),
             many=True,
             context={
                 "user": request.user,
@@ -251,6 +251,10 @@ class Organization(viewsets.ViewSet):
             },
             many=False,
         )
+
+        if not serializer.instance.orgkey.managed:
+            return Response({"id": ["not a managed key"]}, status=400)
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         serializer.save()

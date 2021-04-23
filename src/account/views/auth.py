@@ -173,7 +173,7 @@ def confirm_email(request, secret):
 oauth_profile_scopes = ["profile", "api_keys", "provider:peeringdb"]
 
 
-@protected_resource(scopes=oauth_profile_scopes)
+#@protected_resource(scopes=oauth_profile_scopes)
 def oauth_profile(request):
 
     from account.rest.serializers import Serializers
@@ -214,26 +214,6 @@ def oauth_profile(request):
 
     if oauth_email:
         data.update(dict(email=user.email))
-
-    if oauth_api_keys:
-        api_keys = []
-        referer = request.GET.get("referer")
-        referer_namespace = grainy.core.Namespace(referer)
-
-        for api_key in user.key_set.all():
-            matched = False
-            row = {"key": api_key.key, "perms": {}}
-            for perms in api_key.grainy_permissions.all():
-                namespace = grainy.core.Namespace(perms.namespace)
-                row["perms"][perms.namespace] = django_grainy.helpers.str_flags(
-                    perms.permission
-                )
-                if matched or namespace.match(referer_namespace, partial=True):
-                    matched = True
-            if matched:
-                api_keys.append(row)
-
-        data.update(api_keys=api_keys)
 
     for social_auth in oauth_provider_passthru:
         provider = social_auth.provider

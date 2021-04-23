@@ -17,8 +17,7 @@ def create_user_config(sender, **kwargs):
 def generate_api_key(sender, **kwargs):
     if kwargs.get("created"):
         user = kwargs.get("instance")
-        api_key = APIKey.new_key(user, managed=False)
-        api_key.grainy_permissions.add_permission(f"user.{user.id}", "crud")
+        APIKey.objects.create(user=user, managed=True, internal=False)
 
 
 # @receiver(post_save, sender=get_user_model())
@@ -26,7 +25,6 @@ def generate_api_key(sender, **kwargs):
 #    if kwargs.get("created"):
 #        user = kwargs.get("instance")
 #        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")
-
 
 @receiver(post_save, sender=get_user_model())
 def create_personal_org(sender, **kwargs):

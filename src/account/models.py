@@ -270,6 +270,13 @@ class InternalAPIKey(APIKeyBase):
     class HandleRef:
         tag = "_key_"
 
+    @classmethod
+    def require(cls):
+        if not cls.objects.all().count():
+            key = cls.objects.create()
+            key.grainy_permissions.add_permission("*.*", "crud")
+
+
 @reversion.register
 class InternalAPIKeyPermission(HandleRefModel, Permission):
     """
@@ -289,6 +296,7 @@ class InternalAPIKeyPermission(HandleRefModel, Permission):
 
     class HandleRef:
         tag = "keyperm"
+
 
 
 @reversion.register

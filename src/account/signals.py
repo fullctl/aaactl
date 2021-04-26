@@ -17,7 +17,7 @@ def create_user_config(sender, **kwargs):
 def generate_api_key(sender, **kwargs):
     if kwargs.get("created"):
         user = kwargs.get("instance")
-        APIKey.objects.create(user=user, managed=True, internal=False)
+        APIKey.objects.create(user=user, managed=True)
 
 
 # @receiver(post_save, sender=get_user_model())

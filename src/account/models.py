@@ -166,8 +166,10 @@ class Organization(HandleRefModel):
         return value
 
     def is_admin_user(self, user):
+
         if self.user == user:
             return True
+
         return check_permissions(user, self, "c", ignore_grant_all=True)
 
 
@@ -568,8 +570,10 @@ class ManagedPermission(HandleRefModel):
     def auto_grant(self, org):
 
         for user in org.users:
-            self.auto_grant_admin(org, user)
-            self.auto_grant_user(org, user)
+            if org.is_admin_user(user):
+                self.auto_grant_admin(org, user)
+            else:
+                self.auto_grant_user(org, user)
 
         for key in org.orgkey_set.all():
             self.auto_grant_key(org, key)
@@ -590,16 +594,11 @@ class ManagedPermission(HandleRefModel):
         ns = self.namespace.format(org_id=org.pk)
         orgkey.grainy_permissions.delete_permission(ns)
 
-
     def auto_grant_admin(self, org, user):
-        if not org.is_admin_user(user):
-            return
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
 
     def auto_grant_user(self, org, user):
-        if org.is_admin_user(user):
-            return
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.add_permission(ns, self.auto_grant_users)
 

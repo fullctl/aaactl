@@ -197,4 +197,4 @@ class CreateOrgAPIKey(forms.Form):
 
 class CreateAPIKey(forms.Form):
     name = forms.CharField(label=_("Name / Description"))
-    readonly = forms.BooleanField(label=_("Read only"))
+    readonly = forms.BooleanField(label=_("Read only"), required=False)

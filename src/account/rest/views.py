@@ -78,11 +78,37 @@ class UserInformation(viewsets.ViewSet):
     @action(detail=False)
     @user_endpoint()
     @disable_api_key
-    def api_keys(self, request):
+    def keys(self, request):
         user = request.user
         queryset = models.APIKey.objects.filter(user__id=user.id)
         serializer = Serializers.key(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["POST"])
+    @user_endpoint()
+    @disable_api_key
+    def create_key(self, request):
+        context = {"user": request.user}
+        data = dict(request.data)
+        data.update(user=request.user.id)
+        serializer = Serializers.key(data=data, many=False, context=context)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        key = serializer.save()
+        return Response(Serializers.key(key, many=False).data)
+
+
+    @action(detail=False, methods=["DELETE"])
+    @user_endpoint()
+    @disable_api_key
+    def key(self, request):
+        key = models.APIKey.objects.get(
+            id=request.data.get("id"), user=request.user
+        )
+        response =  Response(Serializers.key(instance=key, many=False).data)
+        key.delete()
+        return response
+
 
     def get_throttles(self):
         if self.action in ["resend_confirmation_mail"]:

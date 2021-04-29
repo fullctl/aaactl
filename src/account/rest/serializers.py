@@ -424,10 +424,17 @@ class PasswordReset(FormValidationMixin, serializers.Serializer):
 
 
 @register
-class APIKey(serializers.ModelSerializer):
+class APIKey(FormValidationMixin, serializers.ModelSerializer):
     class Meta:
         model = models.APIKey
-        fields = ["key", "created", "status", "name", "readonly"]
+        fields = ["user", "key", "created", "status", "name", "readonly"]
+
+    form = forms.CreateAPIKey
+    required_contet = ["user"]
+
+    def save(self):
+        self.validated_data.pop("form_data", None)
+        return super().save()
 
 
 @register

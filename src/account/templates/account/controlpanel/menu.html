@@ -116,6 +116,8 @@
   <a href="{% url "account:auth-logout" %}" class="btn btn-secondary">{% trans "Logout" %}</a>
   </div>
 </div>
+
+          {% include "account/controlpanel/personal-apikey-modal.html" %}
 <script>
 $(document).ready(function() {
   var change_information = new account.ChangeInformation();

@@ -536,6 +536,25 @@ account.PersonalAPIKeys = twentyc.cls.define(
         this.enableShowButton(row, data);
         this.enableCopyButton(row);
       })
+
+      this.rest_api_list.formatters.readonly = function(value) {
+
+        if(value)
+          return "read-only"
+        return ""
+      };
+
+      // Modal
+      var key_form = $('form.create_key');
+      if ( key_form.length ){
+        this.rest_key_form = new twentyc.rest.Form(key_form);
+        $(this.rest_key_form).on("api-write:success", function() {
+          $('#personalApiKeyModal').modal('toggle');
+          this.rest_api_list.load();
+        }.bind(this));
+      }
+
+
       this.rest_api_list.load();
     },
     enableShowButton: function(row, data) {

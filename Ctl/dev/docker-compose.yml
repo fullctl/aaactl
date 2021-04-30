@@ -37,7 +37,6 @@ services:
       - "${DJANGO_PORT:-8000}:8000"
     volumes:
       - ../../src:/srv/service/main
-      - ../../../fullctl:/srv/service/fullctl-lib
 
 volumes:
   postgres_data:

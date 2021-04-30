@@ -26,6 +26,9 @@ def index(request):
 
     invitation_form = account.forms.InviteToOrganization(initial=request.GET)
     create_org_form = account.forms.CreateOrganization()
+    create_orgkey_form = account.forms.CreateOrgAPIKey()
+    create_key_form = account.forms.CreateAPIKey()
+
     if user.has_usable_password():
         change_pwd_form = account.forms.ChangePassword(user)
         edit_org_form = account.forms.EditOrganizationPasswordProtected(
@@ -52,6 +55,8 @@ def index(request):
         create_org_form=create_org_form,
         edit_org_form=edit_org_form,
         invitation_form=invitation_form,
+        create_orgkey_form=create_orgkey_form,
+        create_key_form=create_key_form,
         can_invite=request.perms.check([request.selected_org, "users"], "c"),
     )
 

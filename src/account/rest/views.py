@@ -78,11 +78,37 @@ class UserInformation(viewsets.ViewSet):
     @action(detail=False)
     @user_endpoint()
     @disable_api_key
-    def api_keys(self, request):
+    def keys(self, request):
         user = request.user
         queryset = models.APIKey.objects.filter(user__id=user.id)
         serializer = Serializers.key(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["POST"])
+    @user_endpoint()
+    @disable_api_key
+    def create_key(self, request):
+        context = {"user": request.user}
+        data = dict(request.data)
+        data.update(user=request.user.id)
+        serializer = Serializers.key(data=data, many=False, context=context)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        key = serializer.save()
+        return Response(Serializers.key(key, many=False).data)
+
+
+    @action(detail=False, methods=["DELETE"])
+    @user_endpoint()
+    @disable_api_key
+    def key(self, request):
+        key = models.APIKey.objects.get(
+            id=request.data.get("id"), user=request.user
+        )
+        response =  Response(Serializers.key(instance=key, many=False).data)
+        key.delete()
+        return response
+
 
     def get_throttles(self):
         if self.action in ["resend_confirmation_mail"]:
@@ -221,6 +247,73 @@ class Organization(viewsets.ViewSet):
             return Response(serializer.errors, status=400)
         serializer.save()
         return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    def keys(self, request, pk, org):
+        serializer = Serializers.orgkey(
+            org.orgkey_set.filter(managed=True),
+            many=True,
+            context={
+                "user": request.user,
+                "services": [svc for svc in Service.objects.all()],
+                "perms": request.perms,
+            },
+        )
+        return Response(serializer.data)
+
+
+    @action(detail=True, methods=["PUT"])
+    @set_org
+    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    def set_key_permissions(self, request, pk, org):
+        serializer = Serializers.orgkeyperm(
+            data={
+                "org": org.id,
+                "orgkey": request.data.get("id"),
+                "component": request.data.get("component"),
+                "permissions": request.data.get("permissions"),
+            },
+            many=False,
+        )
+
+        if not serializer.instance.orgkey.managed:
+            return Response({"id": ["not a managed key"]}, status=400)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    def key(self, request, pk, org):
+        orgkey = models.OrganizationAPIKey.objects.get(
+            id=request.data.get("id"), org=org
+        )
+        response =  Response(Serializers.orgkey(instance=orgkey, many=False).data)
+        orgkey.delete()
+        return response
+
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    def create_key(self, request, pk, org):
+        context = {"user": request.user, "org": org}
+        data = dict(request.data)
+        data.update(org=org.id)
+        serializer = Serializers.orgkey(data=data, many=False, context=context)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        orgkey = serializer.save()
+        for mperm in models.ManagedPermission.objects.all():
+            mperm.auto_grant_key(org, orgkey)
+        return Response(Serializers.orgkey(orgkey, many=False).data)
+
+
 
     @action(detail=True, methods=["GET"])
     @set_org

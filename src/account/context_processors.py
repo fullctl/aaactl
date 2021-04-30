@@ -19,8 +19,6 @@ def permissions(request):
                     namespace.format(org_id=instance.id), op, ignore_grant_all=True
                 )
 
-    print(context)
-
     return {"permissions": context}
 
 

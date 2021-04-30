@@ -82,6 +82,24 @@
       </div>
     </div>
     {% endif %}
+    {% if permissions.read_org_orgkey %}
+    <div class="row key-container">
+      <div class="col-12 pl-0">
+        {% block orgkeys %}
+        {% include "account/controlpanel/org-apikey-list.html" %}
+        {% if permissions.create_org_orgkey %}
+          <div class="text-center">
+            <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#orgApiKeyModal">
+              {% trans "+ Create API Key" %}
+            </button>
+          </div>
+          {% include "account/controlpanel/org-apikey-modal.html" %}
+        {% endif %}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+
     {% if permissions.read_org_billing %}
     <div class="row service-container">
       <div class="col-12 pl-0">

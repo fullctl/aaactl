@@ -263,8 +263,6 @@ AUTHENTICATION_BACKENDS = ["django_grainy.backends.GrainyBackend"]
 VALIDATE_PASSWORD_LENGTH = 8
 
 
-INTERNAL_API_KEY_PERMS = {"account_service": "crud", "fullctl": "crud"}
-
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.permissions",
     "account.context_processors.info",

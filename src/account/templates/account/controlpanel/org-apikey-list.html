@@ -1,0 +1,90 @@
+{% load i18n static %}
+<h5>{% trans "API Keys" %}</h5>
+<div
+  class="orgkey-listing"
+  data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+  data-api-action="keys">
+  <div class="templates" style="display:none">
+    <div
+      data-template="permissions"
+      data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+      data-api-action="set_key_permissions"
+      data-api-method="PUT">
+      <div class="row" style="margin-bottom: 3px;">
+        <div style="display:none" data-api-submit="yes">
+          <input type="text" name="id" type="hidden">
+          <input type="text" name="component" type="hidden">
+        </div>
+
+        <div class="col-md-7" data-field="component"></div>
+        <div class="col-md-4">
+          <span style="white-space: nowrap"><input data-permission-flag="r" type="checkbox"> read</span>
+          <span style="white-space: nowrap"><input data-permission-flag="cud" type="checkbox"> write</span>
+        </div>
+      </div>
+    </div>
+
+    <table>
+    <tr data-template="row" class="large-table-row">
+      <td scope="col" data-field="name" class="name-column table-text-bold dark-grey"></td>
+      <td scope="col" data-field="email" class="light-grey"></td>
+      <td scope="col" class="manage-column right">
+        <button class="btn btn-slim btn-manage manage">{% trans "Manage" %}</button>
+      </td>
+    </tr>
+    <tr data-template="row" class="manage">
+      <td colspan="3" scope="col">
+        <div class="row">
+          <div class="col-6">
+        <div class="form-group">
+          <input readonly class="form-control org-key-box-redacted">
+          <input readonly class="form-control org-key-box d-none">
+        </div>
+          </div>
+          <div class="col-6">
+                  <button class="btn btn-square show-button">
+                    <img
+                      alt="show icon"
+                      title="show icon"
+                      src="{% static "account/icons/show.svg" %}"/>
+                    <span class="ml-1"><u>Show</u></span>
+                  </button>
+                  <button class="btn btn-square copy-button">
+                    <img
+                    alt="copy icon"
+                    title="copy icon"
+                    src="{% static "account/icons/copy.svg" %}"/>
+                    <span class="ml-1"><u>Copy</u></span>
+                  </button>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr data-template="row" class="manage">
+      <td colspan="3" scope="col">
+        <div class="row">
+          <div class="col-xs-12 col-md-9 col-lg-10">
+            <div data-field="permissions"></div>
+          </div>
+          <div class="col-xs-12 col-md-3 col-lg-2 right">
+            <button class="btn btn-slim btn-danger" data-api-action="key" data-api-method="DELETE" data-api-callback="remove" data-confirm="{% trans "Remove API key from organization?" %}">{% trans "Remove" %}</button>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+    </table>
+  </div>
+
+  <table class="table table-sm">
+    <tbody class="list-body">
+    </tbody>
+  </table>
+</div>
+
+
+<script>
+$(document).ready(function() {
+  var orgkey_list = new account.OrgKeysList();
+});
+</script>

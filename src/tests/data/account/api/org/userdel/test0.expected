@@ -1,1 +1,1 @@
-{"data": [{"id": 4, "name": " ", "email": "test_unperm@localhost", "you": false, "manageable": "r", "permissions": {"users": "", "billing.contact": "", "billing.service": "", "billing.orderhistory": "", "manage": ""}}], "errors": {}, "profiling": {"queries": 0}}
+{"data": [{"name": " ", "email": "test_unperm@localhost", "you": false, "manageable": "r", "permissions": {"org.{org_id}": {"perms": "", "label": ""}, "user.{org_id}": {"perms": "", "label": ""}, "billing.{org_id}": {"perms": "", "label": ""}}}], "errors": {}, "profiling": {"queries": 0}}

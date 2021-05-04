@@ -21,6 +21,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django_grainy.remote import ProvideGet, ProvideLoad
 
+from account.views.diag import diag
 from account.grainy_ext import APIKeyAuthenticator
 
 # OAuth2 provider endpoints
@@ -76,16 +77,13 @@ if settings.DEBUG:
 
 urlpatterns = []
 
-if settings.RELEASE_ENV != "prod":
-
-    # we only expose admin on non-production
-    # environments
-
+if settings.EXPOSE_ADMIN:
     urlpatterns += [
         path("admin/", admin.site.urls),
     ]
 
 urlpatterns += [
+    path("_diag/", diag),
     # account
     path(
         "account/auth/o/",

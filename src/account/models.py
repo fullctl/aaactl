@@ -11,10 +11,9 @@ from django.shortcuts import render_to_response
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, PermissionManager
-from django_grainy.util import Permissions, namespace
+from django_grainy.models import Permission, PermissionManager, PermissionField
+from django_grainy.util import Permissions, namespace, check_permissions
 
-from applications.models import Service
 from common.email import email_noreply
 from common.models import HandleRefModel
 
@@ -80,14 +79,6 @@ class Organization(HandleRefModel):
         ),
     )
 
-    permission_namespaces = [
-        "users",
-        "billing.contact",
-        "billing.service",
-        "billing.orderhistory",
-        "manage",
-    ]
-
     class Meta:
         db_table = "account_organization"
         verbose_name = _("Organization")
@@ -99,7 +90,13 @@ class Organization(HandleRefModel):
     @classmethod
     def personal_org(cls, user):
 
-        org, created = cls.objects.get_or_create(user=user)
+        if not cls.objects.filter(slug=user.username).exists():
+            slug = user.username
+        else:
+            slug = generate_org_slug()
+
+
+        org, created = cls.objects.get_or_create(user=user, slug=slug)
 
         if created:
             org.add_user(user, "crud")
@@ -109,6 +106,23 @@ class Organization(HandleRefModel):
     @classmethod
     def get_for_user(cls, user, perms="r"):
         return Permissions(user).instances(cls, perms, ignore_grant_all=True)
+
+    @property
+    def permission_namespaces(self):
+        if not hasattr(self, "_permission_namespaces"):
+            mperms = ManagedPermission.objects.filter(status="ok", group="aaactl")
+            r = []
+            for mperm in mperms:
+                r.append( mperm.namespace )
+            self._permission_namespaces = r
+
+        return self._permission_namespaces
+
+
+    @property
+    def users(self):
+        for orguser in self.user_set.all():
+            yield orguser.user
 
     @property
     def label(self):
@@ -122,17 +136,6 @@ class Organization(HandleRefModel):
             return _("Your Personal Organization")
         return self.name
 
-    @property
-    def comm_key(self):
-        """
-        Returns the best suitable communications key for
-        internal api communication to services.
-
-        FIXME: this should return org keys once those are
-        implemented
-        """
-        return self.user_set.first().user.key_set.first().key
-
     def __str__(self):
         return self.label
 
@@ -140,18 +143,20 @@ class Organization(HandleRefModel):
     def add_user(self, user, perms="r"):
         orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
-            user.grainy_permissions.add_permission(self, perms)
+            for mperm in ManagedPermission.objects.all():
+                if perms == "r":
+                    mperm.auto_grant_user(self, user)
+                else:
+                    mperm.auto_grant_admin(self, user)
+
+
         return orguser
 
     @reversion.create_revision()
     def remove_user(self, user):
         self.user_set.filter(user=user).delete()
-        user.grainy_permissions.get_queryset().filter(
-            namespace__startswith=namespace([self, ""])
-        ).delete()
-        user.grainy_permissions.get_queryset().filter(
-            namespace=namespace(self)
-        ).delete()
+        for mperm in ManagedPermission.objects.all():
+            mperm.revoke_user(self, user)
 
     def clean_slug(self, value):
         value = value.lower()
@@ -159,6 +164,13 @@ class Organization(HandleRefModel):
         if value in protected_values:
             raise ValidationError(_("Protected value: {}").format(value))
         return value
+
+    def is_admin_user(self, user):
+
+        if self.user == user:
+            return True
+
+        return check_permissions(user, self, "c", ignore_grant_all=True)
 
 
 @reversion.register
@@ -189,55 +201,41 @@ def generate_api_key():
     raise OSError(_("Unable to generate unique api key"))
 
 
+class APIKeyBase(HandleRefModel):
+
+    name = models.CharField(max_length=255, blank=True, null=True)
+    key = models.CharField(max_length=255, default=generate_api_key, unique=True)
+    managed = models.BooleanField(
+        default=True, help_text=_("Is the API Key managed by the owner")
+    )
+
+    class Meta:
+        abstract = True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+
 @reversion.register
-class APIKey(HandleRefModel):
+@grainy_model(namespace="key")
+class APIKey(APIKeyBase):
     """
-    Describes an APIKey
+    Describes a personal APIKey
     """
 
-    key = models.CharField(max_length=255, default=generate_api_key, unique=True)
     user = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, related_name="key_set"
     )
-    managed = models.BooleanField(
-        default=True, help_text=_("Is the API Key managed by the user")
-    )
-
-    objects = PermissionManager()
+    readonly = models.BooleanField(default=False)
 
     class Meta:
         db_table = "account_api_key"
-        verbose_name = _("API Key")
-        verbose_name_plural = _("API Keys")
+        verbose_name = _("Personal API Key")
+        verbose_name_plural = _("Personal API Keys")
 
     class HandleRef:
         tag = "key"
-
-    @classmethod
-    def new_key(cls, user, managed=False):
-        instance = cls.objects.create(user=user, managed=managed)
-
-        if not managed:
-            cls.sync_internal_perms(qset=cls.objects.filter(id=instance.id))
-        return instance
-
-    @classmethod
-    def sync_internal_perms(cls, qset=None):
-        if not qset:
-            qset = cls.objects.filter(managed=False)
-        updated = []
-        for api_key in qset:
-            for nsp, perms in list(settings.INTERNAL_API_KEY_PERMS.items()):
-                _, created = APIKeyPermission.objects.get_or_create(
-                    api_key=api_key,
-                    namespace=nsp,
-                    permission=django_grainy.helpers.int_flags(perms),
-                )
-                if created and api_key not in updated:
-                    updated.append(api_key)
-
-        return updated
-
 
 @reversion.register
 class APIKeyPermission(HandleRefModel, Permission):
@@ -258,6 +256,92 @@ class APIKeyPermission(HandleRefModel, Permission):
 
     class HandleRef:
         tag = "keyperm"
+
+@reversion.register
+@grainy_model(namespace="_key_")
+class InternalAPIKey(APIKeyBase):
+    """
+    Describes internal APIKey
+    """
+
+    class Meta:
+        db_table = "account_internal_api_key"
+        verbose_name = _("Internal API Key")
+        verbose_name_plural = _("Internal API Keys")
+
+    class HandleRef:
+        tag = "_key_"
+
+    @classmethod
+    def require(cls):
+        if not cls.objects.all().count():
+            key = cls.objects.create()
+            key.grainy_permissions.add_permission("*.*", "crud")
+
+
+@reversion.register
+class InternalAPIKeyPermission(HandleRefModel, Permission):
+    """
+    Describes API key permissions
+    """
+
+    api_key = models.ForeignKey(
+        InternalAPIKey, on_delete=models.CASCADE, related_name="grainy_permissions"
+    )
+
+    objects = PermissionManager()
+
+    class Meta:
+        db_table = "account_internal_api_key_permission"
+        verbose_name = _("Internal API Key Permission")
+        verbose_name_plural = _("Internal API Key Permissions")
+
+    class HandleRef:
+        tag = "keyperm"
+
+
+
+@reversion.register
+@grainy_model(namespace="orgkey", namespace_instance="{namespace}.{instance.org_id}")
+class OrganizationAPIKey(APIKeyBase):
+    """
+    Describes a organization APIKey
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="orgkey_set"
+    )
+    email = models.EmailField()
+
+    class Meta:
+        db_table = "account_org_api_key"
+        verbose_name = _("Organization API Key")
+        verbose_name_plural = _("Organization API Keys")
+
+    class HandleRef:
+        tag = "orgkey"
+
+
+@reversion.register
+class OrganizationAPIKeyPermission(HandleRefModel, Permission):
+    """
+    Describes organization API key permissions
+    """
+
+    api_key = models.ForeignKey(
+        OrganizationAPIKey, on_delete=models.CASCADE, related_name="grainy_permissions"
+    )
+
+    objects = PermissionManager()
+
+    class Meta:
+        db_table = "account_org_api_key_permission"
+        verbose_name = _("Organization API Key Permission")
+        verbose_name_plural = _("Organization API Key Permissions")
+
+    class HandleRef:
+        tag = "orgkeyperm"
+
 
 
 def generate_emconf_secret():
@@ -410,6 +494,128 @@ def generate_invite_secret():
 
 
 @reversion.register
+class ManagedPermission(HandleRefModel):
+
+    """
+    Describes a custom permission definition, allowing
+    to add app / service specific permissions to be managed
+    through aaactl
+    """
+
+    namespace = models.CharField(
+        max_length=255, help_text=_("The permission namespace. The following variables are available for formatting: {org_id}")
+    )
+
+    group = models.CharField(
+        max_length=255, help_text=_("Belongs to this group of permissions")
+    )
+
+    description = models.CharField(
+        max_length=255, help_text=_("What is this permission namespace used for?")
+    )
+
+    managable = models.BooleanField(
+        default=True, help_text=_("Can organization admins manage this permission?")
+    )
+
+    auto_grant_admins = PermissionField(
+        help_text=_("Auto grants the permission at the following level to organization admins")
+    )
+
+    auto_grant_users = PermissionField(
+        help_text=_("Auto grants the permission at the following level to organization members and api keys")
+    )
+
+    class Meta:
+        db_table = "account_managed_permission"
+        verbose_name = _("Managed permission")
+        verbose_name_plural = _("Managed permissions")
+
+
+    class HandleRef:
+        tag = "mperm"
+
+    @classmethod
+    def grant_all_key(cls, orgkey, admin=False):
+        for mperm in cls.objects.all():
+            mperm.auto_grant_key(orgkey, admin=admin)
+
+
+    @classmethod
+    def grant_all_user(cls, user, admin=False):
+        mperms = [mperm for mperm in cls.objects.all()]
+        for orguser in user.org_set.all():
+            for mperm in mperms:
+                if admin:
+                    mperm.auto_grant_admin(orguser.org, orguser.user)
+                else:
+                    mperm.auto_grant_user(orguser.org, orguser.user)
+
+    @classmethod
+    def revoke_all_key(cls, orgkey):
+        for mperm in cls.objects.all():
+            mperm.revoke_key(orgkey)
+
+    @classmethod
+    def revoke_all_user(cls, user):
+        mperms = [mperm for mperm in cls.objects.all()]
+        for orguser in user.org_set.all():
+            for mperm in mperms:
+                mperm.revoke_user(orguser.org, orguser.user)
+
+    def __str__(self):
+        return f"{self.group} - {self.description}"
+
+
+    def auto_grant(self, org):
+
+        for user in org.users:
+            if org.is_admin_user(user):
+                self.auto_grant_admin(org, user)
+            else:
+                self.auto_grant_user(org, user)
+
+        for key in org.orgkey_set.all():
+            self.auto_grant_key(org, key)
+
+    def revoke(self, org):
+        for user in org.users:
+            self.revoke_user(org, user)
+
+        for key in org.orgkey_set.all():
+            self.revoke_key(org, key)
+
+    def revoke_user(self, org, user):
+        ns = self.namespace.format(org_id=org.pk)
+        user.grainy_permissions.delete_permission(ns)
+
+    def revoke_key(sef, orgkey):
+        org = orgkey.org
+        ns = self.namespace.format(org_id=org.pk)
+        orgkey.grainy_permissions.delete_permission(ns)
+
+    def auto_grant_admin(self, org, user):
+        ns = self.namespace.format(org_id=org.pk)
+        user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
+
+    def auto_grant_user(self, org, user):
+        ns = self.namespace.format(org_id=org.pk)
+        user.grainy_permissions.add_permission(ns, self.auto_grant_users)
+
+    def auto_grant_key(self, orgkey, admin=False):
+        org = orgkey.org
+        ns = self.namespace.format(org_id=org.pk)
+
+        if admin:
+            perms = self.auto_grant_admins
+        else:
+            perms = self.auto_grant_users
+
+        orgkey.grainy_permissions.add_permission(ns, perms)
+
+
+
+@reversion.register
 class Invitation(HandleRefModel):
     secret = models.CharField(max_length=255, default=generate_invite_secret)
     org = models.ForeignKey(
@@ -424,7 +630,7 @@ class Invitation(HandleRefModel):
     )
     email = models.EmailField()
     service = models.ForeignKey(
-        Service,
+        "applications.Service",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

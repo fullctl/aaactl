@@ -1,10 +1,29 @@
+from django.contrib.auth import get_user_model
 from django_grainy.remote import Authenticator
 
-from account.rest.authentication import APIKeyAuthentication
-
+from account.rest.authentication import Permissions, APIKeyAuthentication, APIKey, InternalAPIKey
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):
-        APIKeyAuthentication.authenticate(self, request)
-        if getattr(request, "api_key", None):
-            request.user = request.api_key.user
+
+        permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
+
+        # personal api key, grab permissions for owning user
+
+        if isinstance(permission_holder, APIKey):
+            request.user = permission_holder.user
+
+        # internal api keys can be used to grab permission definitions
+        # for a specific user
+        #
+        # user is identified via id through the `Grainy` http header
+
+        if isinstance(permission_holder, InternalAPIKey):
+            userid = request.headers.get("Grainy")
+            if userid:
+                user = get_user_model().objects.get(id=userid)
+                request.user = user
+                request.perms = Permissions(user)
+            else:
+                request.user = permission_holder
+                request.perms = Permissions(permission_holder)

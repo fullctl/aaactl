@@ -1,23 +1,41 @@
-{% load i18n static %}
+{% load i18n static aaactl %}
 
 {% if backends.associated %}
+
 <div class="row">
   <div class="col">
-    <span class="small-label pb-2">{% trans "Linked social apps" %}:</span>
+    <span class="small-label pb-2">{% trans "Linked providers" %}:</span>
     {% for socialauth in backends.associated %}
       <div class="pt-2 pb-2 row justify-content-between align-items-center">
         <div class="ml-3 oauth-backend {{ backend }} linked-auth" title="{{ backend }}">
           {% include "account/auth/oauth-badge.html" with backend=socialauth.provider associated=True %}
         </div>
+        {% if request.user.has_usable_password %}
+        <a href="javascript: controlpanel.postFromLink('{% url 'social:disconnect_individual' socialauth.provider socialauth.id %}?next={{ request.GET.next }}')" >
+          <button class="mr-3 btn btn-slim btn-manage manage">{% trans "Unlink " %}{{ request.user|social_id:socialauth.provider }}</button>
+        </a>
+        {% else %}
+        <a>
+          <button class="mr-3 btn btn-slim btn-manage manage">{{ request.user|social_id:socialauth.provider }}</button>
+        </a>
+
+        {% endif %}
       </div>
     {% endfor %}
   </div>
 </div>
+{% if not request.user.has_usable_password %}
+<div>
+{% trans "You cannot unlink providers until you set a password." %}
+</div>
+{% endif %}
+
+
 {% endif %}
 {% if backends.not_associated %}
 <div class="row">
   <div class="col">
-    <span class="small-label pb-2">{% trans "Available Social apps" %}:</span>    {% for backend in backends.not_associated %}
+    <span class="small-label pb-2">{% trans "Available providers" %}:</span>    {% for backend in backends.not_associated %}
     <div class="pt-2 pb-2 row justify-content-between align-items-center">
         <div class="ml-3 oauth-backend {{ backend }} available-apps" title="{{ backend }}">
           {% include "account/auth/oauth-badge.html" with backend=backend %}
@@ -30,4 +48,4 @@
   </div>
 </div>
 {% endif %}
-  
+

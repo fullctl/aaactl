@@ -46,7 +46,8 @@ class Command(BaseCommand):
                         cyclechg = cycle.charge()
 
                     with reversion.create_revision():
-                        cyclechg.chg.sync_status()
+                        if cyclechg:
+                            cyclechg.chg.sync_status()
 
     def collect(self, subprod, cycle):
 

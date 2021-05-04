@@ -18,7 +18,7 @@ account.ControlPanel = twentyc.cls.define(
       this.editOrganization();
 
       this.changePassword();
-      
+
       this.elements.order_history = $('.order-history');
       this.order_history_list = new twentyc.rest.List(this.elements.order_history);
       this.buildOrderHistory();
@@ -34,6 +34,16 @@ account.ControlPanel = twentyc.cls.define(
         console.log(response.content);
       }.bind(this));
 
+    },
+
+    postFromLink: function(url) {
+      $.ajax({
+        method: "post",
+        url: url,
+        headers : {
+          "X-CSRFToken": twentyc.rest.config.csrf
+        }
+      }).done(() => { window.document.location.href = window.document.location.href })
     },
 
     buildOrderHistory: function() {
@@ -66,7 +76,7 @@ account.ControlPanel = twentyc.cls.define(
             .append('<tr><td>No entries</td></tr>')
         }
       })
-      this.order_history_list.load();      
+      this.order_history_list.load();
     },
 
     loadDropDown: function(){
@@ -134,7 +144,7 @@ account.ControlPanel = twentyc.cls.define(
         })
       }
 
-      
+
     },
 
     initializeForm: function(form_class){
@@ -241,7 +251,8 @@ account.UsersList = twentyc.cls.define(
         var component, editor, widget, container = $('<div>');
         for(component in value) {
           editor = this.template("permissions")
-          editor.find('[data-field="component"]').text(component);
+          var label = value[component].label
+          editor.find('[data-field="component"]').text(label);
           widget = new twentyc.rest.PermissionsForm(editor);
           widget.fill(data);
           widget.fill({component:component});
@@ -278,6 +289,113 @@ account.UsersList = twentyc.cls.define(
     }
   }
 );
+
+account.OrgKeysList = twentyc.cls.define(
+  "OrgKeysList",
+  {
+    OrgKeysList : function() {
+      this.elements = {}
+      this.elements.orgkey_listing = $('.orgkey-listing')
+
+      this.rest_api_list = new twentyc.rest.List(this.elements.orgkey_listing);
+
+      this.rest_api_list.formatters.permissions = function(value, data) {
+        if(!data.manageable.match(/ud/))
+          return;
+        var component, editor, widget, container = $('<div>');
+        for(component in value) {
+          editor = this.template("permissions")
+          var label = value[component].label
+          editor.find('[data-field="component"]').text(label);
+          widget = new twentyc.rest.PermissionsForm(editor);
+          widget.fill(data);
+          widget.fill({component:component});
+          widget.set_flag_values(value[component]);
+          container.append(editor)
+        }
+        return container;
+      }.bind(this.rest_api_list)
+
+      this.rest_api_list.formatters.row = function(row,data) {
+        var manage_container = row.filter('.manage')
+        if(data.you) {
+          row.find('.btn.manage').attr('disabled', true);
+          row.find('.btn.manage')
+            .text('You')
+            .removeClass('btn-manage')
+            .addClass('btn-disabled')
+        }
+        else if(!data.manageable.match(/[ud]/)) {
+          row.find('.btn.manage').hide();
+        }
+        else {
+          row.find('.btn.manage').click(function() {
+            if(manage_container.is(':visible'))
+              manage_container.hide();
+            else
+              manage_container.show();
+          });
+        }
+        manage_container.hide();
+      }
+
+      $(this.rest_api_list).on("insert:after", (e, row, data) => {
+        this.enableShowButton(row, data);
+        this.enableCopyButton(row);
+      })
+
+      // Modal
+      this.elements.orgkey_form = $('form.create_orgkey');
+      if ( this.elements.orgkey_form.length ){
+        this.rest_orgkey_form = new twentyc.rest.Form(this.elements.orgkey_form);
+        $(this.rest_orgkey_form).on("api-write:success", function() {
+          $('#orgApiKeyModal').modal('toggle');
+          this.rest_api_list.load();
+        }.bind(this));
+      }
+
+
+      this.rest_api_list.load();
+    },
+    enableShowButton: function(row, data) {
+      var key = data.key;
+      var redacted_key = key.replace(key.slice(2,-2), '*'.repeat(key.length-4));
+      var keybox_redacted = row.find('.org-key-box-redacted');
+      var keybox_display = row.find('.org-key-box');
+      var show_button = row.find('.show-button');
+
+      keybox_redacted.val(redacted_key);
+      keybox_display.val(key);
+
+      show_button.click(() => {
+        keybox_redacted.toggleClass('d-none');
+        keybox_display.toggleClass('d-none');
+      })
+    },
+    enableCopyButton: function(row) {
+      var copy_button = row.find('.copy-button');
+      var keybox_redacted = row.find('.org-key-box-redacted');
+      var keybox_display = row.find('.org-key-box');
+      copy_button.click(() => {
+          if ( keybox_display.hasClass('d-none') ){
+            keybox_redacted.addClass('d-none');
+            keybox_display.removeClass('d-none');
+            keybox_display.select();
+            document.execCommand("copy");
+            keybox_redacted.removeClass('d-none');
+            keybox_display.addClass('d-none');
+            keybox_redacted.select();
+          } else {
+            keybox_display.select();
+            document.execCommand("copy");
+          }
+      })
+    }
+
+  }
+
+);
+
 
 
 account.PasswordReset = twentyc.cls.define(
@@ -396,7 +514,7 @@ account.Services = twentyc.cls.define(
 
       this.formattedCost = () => {
         return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right')
-      } 
+      }
     }
 });
 
@@ -418,6 +536,25 @@ account.PersonalAPIKeys = twentyc.cls.define(
         this.enableShowButton(row, data);
         this.enableCopyButton(row);
       })
+
+      this.rest_api_list.formatters.readonly = function(value) {
+
+        if(value)
+          return "read-only"
+        return ""
+      };
+
+      // Modal
+      var key_form = $('form.create_key');
+      if ( key_form.length ){
+        this.rest_key_form = new twentyc.rest.Form(key_form);
+        $(this.rest_key_form).on("api-write:success", function() {
+          $('#personalApiKeyModal').modal('toggle');
+          this.rest_api_list.load();
+        }.bind(this));
+      }
+
+
       this.rest_api_list.load();
     },
     enableShowButton: function(row, data) {
@@ -464,7 +601,7 @@ account.PendingUsers = twentyc.cls.define(
       this.elements = {}
       this.elements.pending_user_listing = $('.pending-user-listing');
       this.rest_api_list = new twentyc.rest.List(this.elements.pending_user_listing);
-      
+
 
       this.rest_api_list.formatters.created = function(value, data){
         var d = new Date(value);

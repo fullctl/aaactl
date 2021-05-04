@@ -15,7 +15,7 @@
       </tr>
     </thead>
     <tbody>
-    {% if permissions.create_org_billing__contact %}
+    {% if permissions.create_org_billing %}
       <tr>
         <td>{% trans "Add a new billing contact ..." %}</td>
         <td class="right">
@@ -27,7 +27,7 @@
       <tr>
         <td>{{ billcon.name }}</td>
         <td class="right">
-          {% if permissions.update_org_billing__contact %}
+          {% if permissions.update_org_billing %}
           <a href="{% url "billing:billing-contact" billcon.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
           {% endif %}
         </td>

@@ -1,10 +1,17 @@
 import fullctl.service_bridge.client as client
 
+from account.models import InternalAPIKey
+
 
 class Bridge(client.Bridge):
     def __init__(self, service, org):
 
-        super().__init__(service.api_host, org.comm_key, org.slug)
+        api_key = InternalAPIKey.objects.first()
+
+        if not api_key:
+            raise KeyError("No internal api key")
+
+        super().__init__(service.api_host, api_key.key, org.slug)
 
         self.service = service
 

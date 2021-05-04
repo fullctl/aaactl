@@ -9,7 +9,7 @@ class BillingObjects(object):
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
 
-        from account.models import Organization
+        from account.models import Organization, ManagedPermission
         from billing.models import (
             BillingContact,
             PaymentMethod,
@@ -19,6 +19,31 @@ class BillingObjects(object):
             RecurringProduct,
             Subscription,
         )
+
+        ManagedPermission.objects.get_or_create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
+        ManagedPermission.objects.get_or_create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
+        ManagedPermission.objects.get_or_create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
 
         self.product_group = ProductGroup.objects.create(
             name="Test Group",
@@ -138,7 +163,33 @@ class AccountObjects(object):
         from django_grainy.util import Permissions
         from rest_framework.test import APIClient
 
-        from account.models import Organization
+        from account.models import Organization, ManagedPermission
+
+        ManagedPermission.objects.get_or_create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
+        ManagedPermission.objects.get_or_create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
+        ManagedPermission.objects.get_or_create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+            auto_grant_admins=15,
+            auto_grant_users=1
+        )
+
+
 
         self.user = user = get_user_model().objects.create_user(
             username="user_{}".format(handle),

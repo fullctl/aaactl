@@ -34,7 +34,7 @@ You have not used any services
       <h6 class="organization">{{ sub.group.name }} - {{ sub.organization_name }}<small>{{ sub.cycle.start }} to {{ sub.cycle.end }}</small></h6>
     </div>
     <div class="col-6 right">
-    {% if permissions.read_org_billing__contact %}
+    {% if permissions.read_org_billing %}
       <h6>{% trans "Billed to " %} <small>{{ sub.pay.name }}</small></h6>
     {% endif %}
     </div>

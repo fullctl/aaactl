@@ -1,3 +1,14 @@
+import social_core.pipeline.user
+
+def get_username(strategy, details, backend, user=None, *args, **kwargs):
+
+    if "username" in details:
+        details["username"] = details["username"].lower()
+
+    return social_core.pipeline.user.get_username(
+        strategy, details, backend, user=user, *args, **kwargs
+    )
+
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
     if backend.name != "peeringdb":
@@ -10,6 +21,9 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
     if social:
 
         namespaces = []
+
+        social.extra_data["email"] = details["email"]
+        social.save()
 
         for network in social.extra_data.get("networks", []):
             asn = network["asn"]

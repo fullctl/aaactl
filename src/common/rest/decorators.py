@@ -1,4 +1,5 @@
 import reversion
+from django.contrib.auth import get_user_model
 from django_grainy.decorators import grainy_rest_viewset_response
 from rest_framework.response import Response
 
@@ -36,7 +37,12 @@ class grainy_endpoint(object):
                 return Response(status=401)
 
             with reversion.create_revision():
-                reversion.set_user(request.user)
+                if isinstance(request.user, get_user_model()):
+                    reversion.set_user(request.user)
+                else:
+                    reversion.set_comment(f"{request.user}")
+
+
                 return fn(self, request, *args, **kwargs)
 
         wrapped.__name__ = fn.__name__

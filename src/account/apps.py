@@ -1,3 +1,4 @@
+import sys
 from django.apps import AppConfig
 
 
@@ -10,4 +11,5 @@ class AccountConfig(AppConfig):
 
     def require_internal_api_key(self):
         from account.models import InternalAPIKey
-        InternalAPIKey.require()
+        if "migrate" not in sys.argv:
+            InternalAPIKey.require()

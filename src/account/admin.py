@@ -70,7 +70,7 @@ class OrganizationUserInline(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
-    search_fields = ("user_set__last_name", "name")
+    search_fields = ("orguser_set__last_name", "name")
     inlines = (OrganizationUserInline,)
 
 

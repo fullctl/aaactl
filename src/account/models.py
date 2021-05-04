@@ -121,7 +121,7 @@ class Organization(HandleRefModel):
 
     @property
     def users(self):
-        for orguser in self.user_set.all():
+        for orguser in self.orguser_set.all():
             yield orguser.user
 
     @property
@@ -154,7 +154,7 @@ class Organization(HandleRefModel):
 
     @reversion.create_revision()
     def remove_user(self, user):
-        self.user_set.filter(user=user).delete()
+        self.orguser_set.filter(user=user).delete()
         for mperm in ManagedPermission.objects.all():
             mperm.revoke_user(self, user)
 
@@ -176,10 +176,10 @@ class Organization(HandleRefModel):
 @reversion.register
 class OrganizationUser(HandleRefModel):
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="org_set"
+        get_user_model(), on_delete=models.CASCADE, related_name="orguser_set"
     )
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="user_set"
+        Organization, on_delete=models.CASCADE, related_name="orguser_set"
     )
 
     class Meta:
@@ -544,7 +544,7 @@ class ManagedPermission(HandleRefModel):
     @classmethod
     def grant_all_user(cls, user, admin=False):
         mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.org_set.all():
+        for orguser in user.orguser_set.all():
             for mperm in mperms:
                 if admin:
                     mperm.auto_grant_admin(orguser.org, orguser.user)
@@ -559,7 +559,7 @@ class ManagedPermission(HandleRefModel):
     @classmethod
     def revoke_all_user(cls, user):
         mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.org_set.all():
+        for orguser in user.orguser_set.all():
             for mperm in mperms:
                 mperm.revoke_user(orguser.org, orguser.user)
 
@@ -680,6 +680,6 @@ class Invitation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self, user):
-        if not self.expired and not self.org.user_set.filter(user=user).exists():
+        if not self.expired and not self.org.orguser_set.filter(user=user).exists():
             self.org.add_user(user, "r")
         Invitation.objects.filter(org=self.org, email=self.email).delete()

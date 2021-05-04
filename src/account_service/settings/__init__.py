@@ -269,7 +269,10 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 ]
 
 
-# INTERNAL
+INSTALLED_APPS += (
+    "fullctl.django.apps.DjangoFullctlConfig",
+)
+
 
 BILLING_COMPONENTS = ["fullctl.prefixctl"]
 

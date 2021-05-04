@@ -198,7 +198,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("user.{org.id}", explicit=False)
     def users(self, request, pk, org):
         serializer = Serializers.orguser(
-            org.user_set.all(),
+            org.orguser_set.all(),
             many=True,
             context={
                 "user": request.user,

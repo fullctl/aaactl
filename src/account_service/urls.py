@@ -83,7 +83,7 @@ if settings.EXPOSE_ADMIN:
     ]
 
 urlpatterns += [
-    path("_diag/", diag),
+#    path("_diag/", diag),
     # account
     path(
         "account/auth/o/",
@@ -118,4 +118,5 @@ urlpatterns += [
     path(
         "", RedirectView.as_view(pattern_name="account:controlpanel", permanent=False)
     ),
+    path("", include("fullctl.django.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

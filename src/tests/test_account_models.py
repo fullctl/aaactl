@@ -20,7 +20,7 @@ def test_personal_org_user_del(db, account_objects):
 
 
 def test_org_user_add(db, account_objects):
-    assert account_objects.org.user_set.filter(user=account_objects.user).exists()
+    assert account_objects.org.orguser_set.filter(user=account_objects.user).exists()
 
 
 def test_api_key_autocreate(db, account_objects):
@@ -69,7 +69,7 @@ def test_inv_process(db, account_objects, account_objects_b):
 
     inv.complete(account_objects_b.user)
 
-    assert account_objects.org.user_set.filter(user=account_objects_b.user).exists()
+    assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()
 
 
 def test_inv_user_del(db, account_objects, account_objects_b, capsys):
@@ -89,4 +89,4 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
     assert "[Deleted user]" in stdout
 
     inv.complete(account_objects_b.user)
-    assert account_objects.org.user_set.filter(user=account_objects_b.user).exists()
+    assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()

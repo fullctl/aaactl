@@ -60,7 +60,7 @@ def test_accept_invite(db, account_objects, account_objects_b):
     assert response.status_code == 200
 
     account_objects_b.user.refresh_from_db()
-    assert account_objects_b.user.org_set.filter(org=account_objects.org).exists()
+    assert account_objects_b.user.orguser_set.filter(org=account_objects.org).exists()
 
 
 def test_change_password(db, account_objects, client_anon):

@@ -27,8 +27,12 @@ account.ControlPanel = twentyc.cls.define(
       if(this.elements.resend_confirmation_email.length  > 0)
         this.resend_confirmation_email = new twentyc.rest.Form(this.elements.resend_confirmation_email);
       $(this.resend_confirmation_email).on("api-post:success", function() {
-        alert("Email has been sent");
-      });
+        this.popoverAlert(
+          this.resend_confirmation_email.element.find('button.submit'),
+          "Confirmation email has been sent"
+        );
+
+      }.bind(this));
 
       $(this.resend_confirmation_email).on("api-post:error", function(event, endpoint, data, response) {
         console.log(response.content);
@@ -151,6 +155,18 @@ account.ControlPanel = twentyc.cls.define(
       var form_name = form_class.replace('-','_');
       this.elements[form_name] = $(`form.${form_class}`);
       this.forms[form_name] = new twentyc.rest.Form(this.elements[form_name]);
+    },
+
+    popoverAlert : function(anchor, text) {
+      anchor.popover({
+        trigger: 'manual',
+        content: text
+      })
+      anchor.popover('show');
+      setTimeout(() => {
+        anchor.popover('hide');
+        anchor.popover('dispose');
+      }, 2000);
     }
 });
 
@@ -195,7 +211,6 @@ account.ChangePassword = twentyc.cls.define(
         if(this.rest_api_form.redirect) {
           document.location.href = this.rest_api_form.redirect;
         } else {
-          alert("User password updated!")
           document.location.href = "/"
         }
       }.bind(this));
@@ -216,21 +231,6 @@ account.CreateOrganization = twentyc.cls.define(
         if(this.rest_api_form.redirect) {
           document.location.href = this.rest_api_form.redirect;
         }
-      }.bind(this));
-    }
-  }
-);
-
-account.EditOrganization = twentyc.cls.define(
-  "EditOrganization",
-  {
-    EditOrganization : function() {
-      this.elements = {}
-      this.elements.form = $('form.edit-organization');
-
-      this.rest_api_form = new twentyc.rest.Form(this.elements.form);
-      $(this.rest_api_form).on("api-write:success", function() {
-        alert("Organization updated");
       }.bind(this));
     }
   }
@@ -408,8 +408,9 @@ account.PasswordReset = twentyc.cls.define(
       this.rest_api_form = new twentyc.rest.Form(this.elements.form);
       $(this.rest_api_form).on("api-post:success", function() {
           if(this.rest_api_form.base_url.match(/\/start$/)) {
-            alert("Password reset instructions have been sent to you, provided the email address was found in our system.")
-
+            this.rest_api_form.element.hide()
+            this.rest_api_form.element.siblings('.alert-success').show()
+            this.rest_api_form.element.siblings('.alert-info').hide()
           } else {
             document.location.href = "/";
           }

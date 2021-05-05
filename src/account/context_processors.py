@@ -24,4 +24,4 @@ def permissions(request):
 
 def info(request):
 
-    return {"billing_env": settings.BILLING_ENV, "release_env": settings.RELEASE_ENV}
+    return {"billing_env": settings.BILLING_ENV, "release_env": settings.RELEASE_ENV, "version": settings.PACKAGE_VERSION}

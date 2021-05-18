@@ -551,3 +551,12 @@ table.table-sm {
 .pointer:hover{
   cursor: pointer;
 }
+
+/*
+ * error page
+ */
+
+div.page_error {
+  text-align: center;
+  margin: 50px;
+}

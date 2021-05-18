@@ -4,7 +4,10 @@ from django.conf import settings
 def permissions(request):
     context = {}
 
-    instances = [request.selected_org]
+    try:
+        instances = [request.selected_org]
+    except AttributeError:
+        return {"permissions": context}
     ops = [("c", "create"), ("r", "read"), ("u", "update"), ("d", "delete")]
 
     for instance in instances:

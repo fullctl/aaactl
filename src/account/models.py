@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
@@ -389,8 +389,8 @@ class EmailConfirmation(HandleRefModel):
         email_noreply(
             user.email,
             _("Confirm your email address"),
-            render_to_response(
-                "account/email/confirm-email.txt", {"instance": instance}
+            render(
+                None, "account/email/confirm-email.txt", {"instance": instance}
             ).content.decode("utf-8"),
         )
 
@@ -457,8 +457,8 @@ class PasswordReset(HandleRefModel):
         email_noreply(
             user.email,
             _("Password Reset"),
-            render_to_response(
-                "account/email/password-reset.txt", {"instance": instance}
+            render(
+                None, "account/email/password-reset.txt", {"instance": instance}
             ).content.decode("utf-8"),
         )
 
@@ -667,7 +667,8 @@ class Invitation(HandleRefModel):
         email_noreply(
             self.email,
             _("Invitation to join {}").format(self.org.label),
-            render_to_response(
+            render(
+                None,
                 "account/email/invite.txt",
                 {
                     "inv": self,

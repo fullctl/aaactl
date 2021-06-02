@@ -19,7 +19,7 @@ aaactl = "aaactl.cli:main"
 
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 django-reversion = ">=3,<4"
 djangorestframework = "<4,>=3"
 Django = ">=3.2,<4"

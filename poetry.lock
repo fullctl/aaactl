@@ -598,9 +598,10 @@ description = "Core classes and functions for service applications"
 category = "main"
 optional = false
 python-versions = "^3.7"
+develop = false
 
 [package.dependencies]
-celery = ">=5,<6"
+celery = "<6,>=5"
 Django = ">=2.2,<4"
 django-autocomplete-light = ">=3,<=4"
 django-grainy = ">=1.9.0,<2"
@@ -613,11 +614,14 @@ grainy = ">=1.8.1,<2"
 peeringdb = "<2"
 pyyaml = "*"
 social-auth-app-django = "<4"
-whitenoise = ">=5.2.0,<6.0.0"
+whitenoise = "^5.2.0"
 
 [package.source]
-type = "url"
-url = "https://github.com/fullctl/fullctl/archive/refs/heads/prep_prod.zip"
+type = "git"
+url = "https://github.com/fullctl/fullctl.git"
+reference = "prep_prod"
+resolved_reference = "e5476ae0fc8d1d6b48400d6594da9f1ac2002da3"
+
 [[package]]
 name = "future"
 version = "0.18.2"
@@ -1438,7 +1442,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "9130945cf190a1e8204d2ea741d20496ce056913d240af8688204d3354312df0"
+content-hash = "57d993ca0458a46cf61b010280713d4d8e5fa35c6eb678bbf412f90c1b3594f0"
 
 [metadata.files]
 amqp = [

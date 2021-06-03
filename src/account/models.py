@@ -190,6 +190,9 @@ class OrganizationUser(HandleRefModel):
     class HandleRef:
         tag = "orguser"
 
+    def __str__(self):
+        return f"{self.org.slug}:{self.user.username} ({self.id})"
+
 
 def generate_api_key():
     i = 0
@@ -216,6 +219,13 @@ class APIKeyBase(HandleRefModel):
     def is_authenticated(self):
         return True
 
+    @property
+    def key_id(self):
+        return self.key[:8]
+
+    def __str__(self):
+        return f"{self.key_id} ({self.id})"
+
 
 @reversion.register
 @grainy_model(namespace="key")
@@ -236,6 +246,7 @@ class APIKey(APIKeyBase):
 
     class HandleRef:
         tag = "key"
+
 
 @reversion.register
 class APIKeyPermission(HandleRefModel, Permission):
@@ -341,6 +352,9 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
 
     class HandleRef:
         tag = "orgkeyperm"
+
+    def __str__(self):
+        return f"{self.namespace} ({self.id})"
 
 
 
@@ -657,7 +671,7 @@ class Invitation(HandleRefModel):
         )
 
     def __str__(self):
-        return f"{self.email} -> {self.org.label}"
+        return f"{self.org.slug}:{self.email} ({self.id})"
 
     def send(self):
         if self.created_by:

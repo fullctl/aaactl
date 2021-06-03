@@ -14,6 +14,8 @@ from account.session import set_selected_org
 from applications.models import Service
 from common.rest.decorators import grainy_endpoint, user_endpoint
 
+from fullctl.django.auditlog import auditlog
+
 
 @route
 class UserInformation(viewsets.ViewSet):
@@ -46,9 +48,10 @@ class UserInformation(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["PUT"])
+    @auditlog()
     @user_endpoint()
     @disable_api_key
-    def set_password(self, request):
+    def set_password(self, request, auditlog=None):
         serializer = Serializers.pwd(
             data=request.data,
             many=False,
@@ -58,6 +61,9 @@ class UserInformation(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         serializer.save()
+
+        auditlog.log("set_password")
+
         return Response(serializer.data)
 
     @action(detail=False, methods=["POST"])
@@ -85,9 +91,10 @@ class UserInformation(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["POST"])
+    @auditlog()
     @user_endpoint()
     @disable_api_key
-    def create_key(self, request):
+    def create_key(self, request, auditlog=None):
         context = {"user": request.user}
         data = dict(request.data)
         data.update(user=request.user.id)
@@ -99,9 +106,10 @@ class UserInformation(viewsets.ViewSet):
 
 
     @action(detail=False, methods=["DELETE"])
+    @auditlog()
     @user_endpoint()
     @disable_api_key
-    def key(self, request):
+    def key(self, request, auditlog=None):
         key = models.APIKey.objects.get(
             id=request.data.get("id"), user=request.user
         )
@@ -153,14 +161,19 @@ class Organization(viewsets.ViewSet):
             Serializers.org(userorg.org, context={"user": request.user}).data
         )
 
+
+    @auditlog()
     @user_endpoint()
-    def create(self, request):
+    def create(self, request, auditlog=None):
         serializer = Serializers.org(
             data=request.data, many=False, context={"user": request.user}
         )
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         org = serializer.save()
+
+        auditlog.set("org", org)
+
         if not hasattr(request, "api_key"):
             set_selected_org(request, org)
         return Response(
@@ -168,8 +181,9 @@ class Organization(viewsets.ViewSet):
         )
 
     @set_org
+    @auditlog()
     @grainy_endpoint("org.{org.id}.manage", explicit=False)
-    def update(self, request, pk, org):
+    def update(self, request, pk, org, auditlog=None):
         user = request.user
         if user.has_usable_password():
             serializer = Serializers.orgeditpwdprotected(
@@ -189,6 +203,9 @@ class Organization(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         org = serializer.save()
+
+        auditlog.set("org", org)
+
         return Response(
             Serializers.org(org, many=False, context={"user": request.user}).data
         )
@@ -210,8 +227,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["DELETE"])
     @set_org
+    @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
-    def user(self, request, pk, org):
+    def user(self, request, pk, org, auditlog=None):
         orguser = models.OrganizationUser.objects.get(
             id=request.data.get("id"), org=org
         )
@@ -228,12 +246,14 @@ class Organization(viewsets.ViewSet):
             )
 
         org.remove_user(orguser.user)
+
         return Response(Serializers.orguser(instance=orguser, many=False).data)
 
     @action(detail=True, methods=["PUT"])
     @set_org
+    @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
-    def set_permissions(self, request, pk, org):
+    def set_permissions(self, request, pk, org, auditlog=None):
         serializer = Serializers.orguserperm(
             data={
                 "org": org.id,
@@ -246,6 +266,7 @@ class Organization(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         serializer.save()
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"])
@@ -266,8 +287,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["PUT"])
     @set_org
+    @auditlog()
     @grainy_endpoint("orgkey.{org.id}", explicit=False)
-    def set_key_permissions(self, request, pk, org):
+    def set_key_permissions(self, request, pk, org, auditlog=None):
         serializer = Serializers.orgkeyperm(
             data={
                 "org": org.id,
@@ -278,30 +300,37 @@ class Organization(viewsets.ViewSet):
             many=False,
         )
 
-        if not serializer.instance.orgkey.managed:
+        orgkey = models.OrganizationAPIKey.objects.get(org=org, id=request.data.get("id"))
+
+        if not orgkey.managed:
             return Response({"id": ["not a managed key"]}, status=400)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         serializer.save()
+
         return Response(serializer.data)
 
     @action(detail=True, methods=["DELETE"])
     @set_org
+    @auditlog()
     @grainy_endpoint("orgkey.{org.id}", explicit=False)
-    def key(self, request, pk, org):
+    def key(self, request, pk, org, auditlog=None):
         orgkey = models.OrganizationAPIKey.objects.get(
             id=request.data.get("id"), org=org
         )
         response =  Response(Serializers.orgkey(instance=orgkey, many=False).data)
         orgkey.delete()
+
+
         return response
 
 
     @action(detail=True, methods=["POST"])
     @set_org
+    @auditlog()
     @grainy_endpoint("orgkey.{org.id}", explicit=False)
-    def create_key(self, request, pk, org):
+    def create_key(self, request, pk, org, auditlog=None):
         context = {"user": request.user, "org": org}
         data = dict(request.data)
         data.update(org=org.id)
@@ -309,8 +338,10 @@ class Organization(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         orgkey = serializer.save()
+
+
         for mperm in models.ManagedPermission.objects.all():
-            mperm.auto_grant_key(org, orgkey)
+            mperm.auto_grant_key(orgkey)
         return Response(Serializers.orgkey(orgkey, many=False).data)
 
 
@@ -325,8 +356,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["POST"])
     @set_org
+    @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
-    def invite(self, request, pk, org):
+    def invite(self, request, pk, org, auditlog=None):
         context = {"user": request.user, "org": org}
         serializer = Serializers.inv(data=request.data, many=False, context=context)
         if not serializer.is_valid():

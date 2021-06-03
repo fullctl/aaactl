@@ -48,6 +48,7 @@ class ProductGroup(HandleRefModel):
     class HandleRef:
         tag = "prodgrp"
 
+
     class Meta:
         db_table = "billing_product_group"
         verbose_name = _("Product Group")
@@ -114,6 +115,7 @@ class Product(HandleRefModel):
         db_table = "billing_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
+
 
     @property
     def is_recurring(self):

@@ -9,6 +9,7 @@ from billing.rest.route import route
 from billing.rest.serializers import Serializers
 from common.rest.decorators import grainy_endpoint
 
+from fullctl.django.auditlog import auditlog
 
 @route
 class Organization(viewsets.ViewSet):
@@ -21,8 +22,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["POST"])
     @set_org
+    @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def billing_setup(self, request, pk, org):
+    def billing_setup(self, request, pk, org, auditlog=None):
 
         reversion.set_user(request.user)
 
@@ -51,8 +53,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["DELETE"])
     @set_org
+    @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def payment_method(self, request, pk, org):
+    def payment_method(self, request, pk, org, auditlog=None):
         pay = models.PaymentMethod.objects.get(
             billcon__org=org, id=request.data.get("id")
         )
@@ -77,8 +80,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["PUT", "DELETE"])
     @set_org
+    @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def billing_contact(self, request, pk, org):
+    def billing_contact(self, request, pk, org, auditlog=None):
 
         instance = org.billcon_set.get(id=request.data.get("id"))
 
@@ -107,8 +111,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["POST"])
     @set_org
+    @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def subscribe(self, request, pk, org):
+    def subscribe(self, request, pk, org, auditlog=None):
         name = request.data.get("product")
 
         try:

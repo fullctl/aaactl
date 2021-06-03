@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.translation import gettext as _
-from django_handleref.admin import VersionAdmin
-from reversion.admin import VersionAdmin as ReversionAdmin
+from fullctl.django.admin import BaseAdmin
 
 import billing.product_handlers
 from billing.models import (
@@ -26,9 +25,6 @@ from billing.models import (
 
 # Register your models here.
 
-
-class BaseAdmin(VersionAdmin, ReversionAdmin):
-    readonly_fields = ("version",)
 
 
 class ProductForm(forms.ModelForm):

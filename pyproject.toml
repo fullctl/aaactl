@@ -19,7 +19,7 @@ aaactl = "aaactl.cli:main"
 
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 django-reversion = ">=3,<4"
 djangorestframework = "<4,>=3"
 Django = ">=3.2,<4"
@@ -37,7 +37,7 @@ django-cors-middleware = "*"
 pytest-filedata = "<1"
 django-grainy = ">1.7,<2" 
 grainy = ">=1.8.1,<2"
-fullctl = { url = "https://github.com/fullctl/fullctl/archive/refs/heads/new_fixes.zip" }
+fullctl = { url = "https://github.com/fullctl/fullctl/archive/refs/heads/prep_prod.zip" }
 uWSGI = "^2.0.19"
 
 [tool.poetry.dev-dependencies]

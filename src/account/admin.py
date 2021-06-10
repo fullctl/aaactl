@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib import admin
-from django.http import HttpResponse
 from django_grainy.forms import (
     PERM_CHOICES_FOR_FIELD,
     BitmaskSelect,

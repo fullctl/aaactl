@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate
-from django_grainy.util import Permissions
 
 from account.models import EmailConfirmation, Invitation, PasswordReset
 

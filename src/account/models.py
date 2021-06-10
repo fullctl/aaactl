@@ -1,7 +1,6 @@
 import datetime
 import secrets
 
-import django_grainy.helpers
 import reversion
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -12,7 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 from django_grainy.models import Permission, PermissionField, PermissionManager
-from django_grainy.util import Permissions, check_permissions, namespace
+from django_grainy.util import Permissions, check_permissions
 
 from common.email import email_noreply
 from common.models import HandleRefModel
@@ -603,7 +602,7 @@ class ManagedPermission(HandleRefModel):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.delete_permission(ns)
 
-    def revoke_key(sef, orgkey):
+    def revoke_key(self, orgkey):
         org = orgkey.org
         ns = self.namespace.format(org_id=org.pk)
         orgkey.grainy_permissions.delete_permission(ns)

@@ -1,7 +1,5 @@
 from urllib.parse import urlparse
 
-import django_grainy.helpers
-import grainy.core
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as fn_login
@@ -11,7 +9,6 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
-from oauth2_provider.decorators import protected_resource
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 
 import account.forms

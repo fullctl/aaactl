@@ -5,6 +5,7 @@ ARG install_to=/srv/service
 ARG build_deps=" \
     postgresql-dev \
     g++ \
+    git \
     libffi-dev \
     libjpeg-turbo-dev \
     linux-headers \

@@ -4,7 +4,7 @@ from django_grainy.decorators import grainy_rest_viewset_response
 from rest_framework.response import Response
 
 
-class user_endpoint(object):
+class user_endpoint:
     def __call__(self, fn):
         def wrapped(self, request, *args, **kwargs):
             if not request.user.is_authenticated:
@@ -17,7 +17,7 @@ class user_endpoint(object):
         return wrapped
 
 
-class grainy_endpoint(object):
+class grainy_endpoint:
     def __init__(self, namespace=None, require_auth=True, explicit=True):
         self.namespace = namespace
         self.require_auth = require_auth
@@ -41,7 +41,6 @@ class grainy_endpoint(object):
                     reversion.set_user(request.user)
                 else:
                     reversion.set_comment(f"{request.user}")
-
 
                 return fn(self, request, *args, **kwargs)
 

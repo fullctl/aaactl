@@ -2,7 +2,9 @@ import secrets
 
 settings_manager.set_option("SERVER_EMAIL", "root@localhost")
 settings_manager.set_option("SERVER_EMAIL", "root@localhost")
-settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+settings_manager.set_option(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
 
 settings_manager.set_from_env("SECRET_KEY", None)
 if not SECRET_KEY:
@@ -12,4 +14,4 @@ if not SECRET_KEY:
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 
 # random static URL to stop caching
-STATIC_URL = "/s/{}/".format(secrets.token_urlsafe(1))
+STATIC_URL = f"/s/{secrets.token_urlsafe(1)}/"

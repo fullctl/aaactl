@@ -1,5 +1,6 @@
 import social_core.pipeline.user
 
+
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
 
     if "username" in details:
@@ -8,6 +9,7 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
     return social_core.pipeline.user.get_username(
         strategy, details, backend, user=user, *args, **kwargs
     )
+
 
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 

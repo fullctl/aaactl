@@ -48,7 +48,6 @@ class ProductGroup(HandleRefModel):
     class HandleRef:
         tag = "prodgrp"
 
-
     class Meta:
         db_table = "billing_product_group"
         verbose_name = _("Product Group")
@@ -115,7 +114,6 @@ class Product(HandleRefModel):
         db_table = "billing_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
-
 
     @property
     def is_recurring(self):
@@ -360,9 +358,7 @@ class Subscription(HandleRefModel):
 
     @reversion.create_revision()
     def add_prod(self, prod):
-        subprod, _ = SubscriptionProduct.objects.get_or_create(
-            sub=self, prod=prod
-        )
+        subprod, _ = SubscriptionProduct.objects.get_or_create(sub=self, prod=prod)
         return subprod
 
     @reversion.create_revision()
@@ -728,7 +724,7 @@ class SubscriptionProductModifier(HandleRefModel):
 def unique_id(Model, field):
     i = 0
     while i < 1000:
-        unique_id = "{}".format(secrets.token_urlsafe(10))
+        unique_id = f"{secrets.token_urlsafe(10)}"
 
         if not Model.objects.filter(**{field: unique_id}).exists():
             return unique_id

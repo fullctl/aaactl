@@ -20,7 +20,7 @@ def get_processor(_id):
     return MAP[_id]
 
 
-class PaymentProcessor(object):
+class PaymentProcessor:
     id = "_processor"
     name = "Payment Processor Interface"
 

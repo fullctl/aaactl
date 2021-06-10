@@ -11,7 +11,7 @@ import account.models as models
 from common.rest import HANDLEREF_FIELDS
 
 
-class Serializers(object):
+class Serializers:
     pass
 
 
@@ -23,7 +23,7 @@ def register(cls):
     return cls
 
 
-class FormValidationMixin(object):
+class FormValidationMixin:
     required_context = ["user"]
 
     def get_form(self, data):
@@ -32,7 +32,7 @@ class FormValidationMixin(object):
     def validate(self, data):
         for k in self.required_context:
             if k not in self.context:
-                raise serializers.ValidationError("Context missing: {}".format(k))
+                raise serializers.ValidationError(f"Context missing: {k}")
 
         form = self.get_form(data)
 
@@ -44,19 +44,19 @@ class FormValidationMixin(object):
         return data
 
 
-class PermissionNamespacesMixin(object):
+class PermissionNamespacesMixin:
     @property
     def permission_namespaces(self):
         if not hasattr(self, "_permission_namespaces"):
-            mperms = models.ManagedPermission.objects.filter(status="ok", managable=True).order_by("group", "description")
+            mperms = models.ManagedPermission.objects.filter(
+                status="ok", managable=True
+            ).order_by("group", "description")
             r = []
             for mperm in mperms:
-                r.append( (mperm.namespace, mperm.description) )
+                r.append((mperm.namespace, mperm.description))
             self._permission_namespaces = r
 
-
         return self._permission_namespaces
-
 
 
 class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
@@ -95,10 +95,11 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
         component = data["component"]
         permissions = data["permissions"]
 
-        self.permission_holder.grainy_permissions.add_permission(component.format(org_id=org.id), permissions)
+        self.permission_holder.grainy_permissions.add_permission(
+            component.format(org_id=org.id), permissions
+        )
 
         return data[self.rel_fld]
-
 
 
 @register
@@ -116,7 +117,7 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
         fields = ["id", "name", "email", "you", "manageable", "permissions"]
 
     def get_name(self, obj):
-        return "{} {}".format(obj.user.first_name, obj.user.last_name)
+        return f"{obj.user.first_name} {obj.user.last_name}"
 
     def get_email(self, obj):
         return obj.user.email
@@ -132,12 +133,13 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
     def get_permissions(self, obj):
         perms = Permissions(obj.user)
-        rv = dict(
-            [
-                (ns, {"perms": perms.get(ns.format(org_id=obj.org.id), as_string=True), "label": label})
-                for ns, label in self.permission_namespaces
-            ]
-        )
+        rv = {
+            ns: {
+                "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
+                "label": label,
+            }
+            for ns, label in self.permission_namespaces
+        }
 
         # for svc in self.context.get("services",[]):
         #    rv[svc.slug] = perms.get([obj.org, svc], as_string=True)
@@ -156,6 +158,7 @@ class OrganizationUserPermissions(PermissionSetterMixin):
     @property
     def permission_holder(self):
         return self.validated_data[self.rel_fld].user
+
 
 @register
 class Organization(serializers.ModelSerializer):
@@ -438,17 +441,27 @@ class APIKey(FormValidationMixin, serializers.ModelSerializer):
 
 
 @register
-class OrganizationAPIKey(FormValidationMixin, PermissionNamespacesMixin, serializers.ModelSerializer):
+class OrganizationAPIKey(
+    FormValidationMixin, PermissionNamespacesMixin, serializers.ModelSerializer
+):
     manageable = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
 
     form = forms.InviteToOrganization
     required_context = ["org", "user"]
 
-
     class Meta:
         model = models.OrganizationAPIKey
-        fields = ["org", "key", "created", "status", "name", "email", "manageable", "permissions"]
+        fields = [
+            "org",
+            "key",
+            "created",
+            "status",
+            "name",
+            "email",
+            "manageable",
+            "permissions",
+        ]
 
     def get_manageable(self, obj):
         perms = self.context.get("perms")
@@ -456,15 +469,15 @@ class OrganizationAPIKey(FormValidationMixin, PermissionNamespacesMixin, seriali
             return perms.get(obj, as_string=True)
         return "r"
 
-
     def get_permissions(self, obj):
         perms = Permissions(obj)
-        rv = dict(
-            [
-                (ns, {"perms": perms.get(ns.format(org_id=obj.org.id), as_string=True), "label": label})
-                for ns, label in self.permission_namespaces
-            ]
-        )
+        rv = {
+            ns: {
+                "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
+                "label": label,
+            }
+            for ns, label in self.permission_namespaces
+        }
 
         return rv
 
@@ -485,4 +498,3 @@ class OrganizationAPIKeyPermissions(PermissionSetterMixin):
     @property
     def permission_holder(self):
         return self.validated_data[self.rel_fld]
-

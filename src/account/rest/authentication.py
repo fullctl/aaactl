@@ -1,7 +1,8 @@
 from django_grainy.util import Permissions
 from rest_framework import authentication, exceptions
 
-from account.models import APIKey, OrganizationAPIKey, InternalAPIKey
+from account.models import APIKey, InternalAPIKey, OrganizationAPIKey
+
 
 class APIKeyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
@@ -60,8 +61,6 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
                     return None
             except model.DoesNotExist:
                 pass
-
-
 
         if not api_key:
             raise exceptions.AuthenticationFailed("Invalid api key")

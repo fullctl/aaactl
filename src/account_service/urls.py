@@ -21,8 +21,8 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django_grainy.remote import ProvideGet, ProvideLoad
 
-from account.views.diag import diag
 from account.grainy_ext import APIKeyAuthenticator
+from account.views.diag import diag
 
 # OAuth2 provider endpoints
 oauth2_endpoint_views = [
@@ -83,7 +83,7 @@ if settings.EXPOSE_ADMIN:
     ]
 
 urlpatterns += [
-#    path("_diag/", diag),
+    #    path("_diag/", diag),
     # account
     path(
         "account/auth/o/",
@@ -121,9 +121,8 @@ urlpatterns += [
     path("", include("fullctl.django.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-handler500 = 'fullctl.django.views.handle_error_500'
-handler404 = 'fullctl.django.views.handle_error_404'
-handler403 = 'fullctl.django.views.handle_error_403'
-handler401 = 'fullctl.django.views.handle_error_401'
-handler400 = 'fullctl.django.views.handle_error_400'
-
+handler500 = "fullctl.django.views.handle_error_500"
+handler404 = "fullctl.django.views.handle_error_404"
+handler403 = "fullctl.django.views.handle_error_403"
+handler401 = "fullctl.django.views.handle_error_401"
+handler400 = "fullctl.django.views.handle_error_400"

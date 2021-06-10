@@ -8,7 +8,7 @@ import billing.payment_processors as processors
 from account.rest.serializers import FormValidationMixin
 
 
-class Serializers(object):
+class Serializers:
     pass
 
 

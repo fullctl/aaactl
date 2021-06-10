@@ -1,15 +1,13 @@
-from __future__ import print_function
-
 import pytest
 from django.test import Client
 
 
-class BillingObjects(object):
+class BillingObjects:
     def __init__(self, handle="test"):
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
 
-        from account.models import Organization, ManagedPermission
+        from account.models import ManagedPermission, Organization
         from billing.models import (
             BillingContact,
             PaymentMethod,
@@ -25,7 +23,7 @@ class BillingObjects(object):
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
 
         ManagedPermission.objects.get_or_create(
@@ -33,7 +31,7 @@ class BillingObjects(object):
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
 
         ManagedPermission.objects.get_or_create(
@@ -41,9 +39,8 @@ class BillingObjects(object):
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
-
 
         self.product_group = ProductGroup.objects.create(
             name="Test Group",
@@ -144,8 +141,8 @@ class BillingObjects(object):
         )
 
         self.user = get_user_model().objects.create_user(
-            username="user_{}".format(handle),
-            email="{}@localhost".format(handle),
+            username=f"user_{handle}",
+            email=f"{handle}@localhost",
             password="test",
         )
         self.org.add_user(self.user, perms="crud")
@@ -157,20 +154,20 @@ class BillingObjects(object):
         self.client.login(username=self.user.username, password="test")
 
 
-class AccountObjects(object):
+class AccountObjects:
     def __init__(self, handle):
         from django.contrib.auth import get_user_model
         from django_grainy.util import Permissions
         from rest_framework.test import APIClient
 
-        from account.models import Organization, ManagedPermission
+        from account.models import ManagedPermission, Organization
 
         ManagedPermission.objects.get_or_create(
             namespace="org.{org_id}",
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
 
         ManagedPermission.objects.get_or_create(
@@ -178,7 +175,7 @@ class AccountObjects(object):
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
 
         ManagedPermission.objects.get_or_create(
@@ -186,14 +183,12 @@ class AccountObjects(object):
             description="",
             group="aaactl",
             auto_grant_admins=15,
-            auto_grant_users=1
+            auto_grant_users=1,
         )
 
-
-
         self.user = user = get_user_model().objects.create_user(
-            username="user_{}".format(handle),
-            email="{}@localhost".format(handle),
+            username=f"user_{handle}",
+            email=f"{handle}@localhost",
             password="test",
         )
 
@@ -201,22 +196,22 @@ class AccountObjects(object):
 
         personal_org = user.personal_org
 
-        personal_org.name = "PersonalOrg{}".format(handle)
-        personal_org.slug = "personalorg{}".format(handle)
+        personal_org.name = f"PersonalOrg{handle}"
+        personal_org.slug = f"personalorg{handle}"
         personal_org.save()
 
         self.org = org = Organization.objects.create(name=handle, slug=handle)
         org.add_user(user, perms="crud")
 
         self.other_org = Organization.objects.create(
-            name="Other {}".format(handle), slug="other-{}".format(handle)
+            name=f"Other {handle}", slug=f"other-{handle}"
         )
 
         self.user_unpermissioned = (
             user_unpermissioned
         ) = get_user_model().objects.create_user(
-            username="user_{}_unperm".format(handle),
-            email="{}_unperm@localhost".format(handle),
+            username=f"user_{handle}_unperm",
+            email=f"{handle}_unperm@localhost",
             password="test",
         )
 

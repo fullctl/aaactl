@@ -61,7 +61,7 @@ def login(request):
 
                 # redirect_next is alraedy cleaned and validated
                 # through valid_redirect at this point
-                return redirect(redirect_next) # lgtm[py/url-redirection]
+                return redirect(redirect_next)  # lgtm[py/url-redirection]
             else:
                 messages.error(request, _("Login failed: Wrong username / password"))
 
@@ -175,7 +175,7 @@ def confirm_email(request, secret):
 oauth_profile_scopes = ["profile", "api_keys", "provider:peeringdb"]
 
 
-#@protected_resource(scopes=oauth_profile_scopes)
+# @protected_resource(scopes=oauth_profile_scopes)
 def oauth_profile(request):
 
     from account.rest.serializers import Serializers
@@ -190,7 +190,7 @@ def oauth_profile(request):
     oauth_provider_passthru = []
 
     for social_auth in user.social_auth.all():
-        key = "provider:{}".format(social_auth.provider)
+        key = f"provider:{social_auth.provider}"
         verify, _ = oauth.verify_request(request, scopes=[key])
         if verify:
             oauth_provider_passthru.append(social_auth)
@@ -205,7 +205,7 @@ def oauth_profile(request):
         user_name=user.username,
         given_name=user.first_name,
         family_name=user.last_name,
-        name="{} {}".format(user.first_name, user.last_name),
+        name=f"{user.first_name} {user.last_name}",
         # TODO: dont assume oauth implies verification
         verified_user=True,
         organizations=[

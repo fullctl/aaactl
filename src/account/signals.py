@@ -1,8 +1,14 @@
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from account.models import APIKey, EmailConfirmation, Organization, UserSettings, ManagedPermission
+from account.models import (
+    APIKey,
+    EmailConfirmation,
+    ManagedPermission,
+    Organization,
+    UserSettings,
+)
 
 
 @receiver(post_save, sender=get_user_model())
@@ -26,11 +32,13 @@ def generate_api_key(sender, **kwargs):
 #        user = kwargs.get("instance")
 #        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")
 
+
 @receiver(post_save, sender=get_user_model())
 def create_personal_org(sender, **kwargs):
     if kwargs.get("created"):
         user = kwargs.get("instance")
         Organization.personal_org(user)
+
 
 @receiver(post_save, sender=ManagedPermission)
 def set_permissions(sender, **kwargs):
@@ -38,7 +46,7 @@ def set_permissions(sender, **kwargs):
     created = kwargs.get("created")
     mperm = kwargs.get("instance")
 
-    if(created):
+    if created:
         for org in Organization.objects.all():
             mperm.auto_grant(org)
     else:

@@ -3,8 +3,6 @@ import os
 from confu.util import SettingsManager
 from django.utils.translation import gettext_lazy as _
 
-from confu.util import SettingsManager
-
 cfg = SettingsManager(globals())
 _DEFAULT_ARG = object()
 
@@ -29,17 +27,15 @@ def get_locale_name(code):
 
 def try_include(filename):
     """ Tries to include another file from the settings directory. """
-    print_debug("including {} {}".format(filename, RELEASE_ENV))
+    print_debug(f"including {filename} {RELEASE_ENV}")
     try:
         with open(filename) as f:
             exec(compile(f.read(), filename, "exec"), globals())
 
-        print_debug("loaded additional settings file '{}'".format(filename))
+        print_debug(f"loaded additional settings file '{filename}'")
 
     except FileNotFoundError:
-        print_debug(
-            "additional settings file '{}' was not found, skipping".format(filename)
-        )
+        print_debug(f"additional settings file '{filename}' was not found, skipping")
 
 
 def read_file(name):
@@ -65,10 +61,10 @@ else:
     settings_manager.set_bool("DEBUG", False)
 
 # look for mainsite/settings/${RELEASE_ENV}.py and load if it exists
-env_file = os.path.join(os.path.dirname(__file__), "{}.py".format(RELEASE_ENV))
+env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}.py")
 try_include(env_file)
 
-print_debug("Release env is '{}'".format(RELEASE_ENV))
+print_debug(f"Release env is '{RELEASE_ENV}'")
 
 if RELEASE_ENV == "prod":
     # we only expose admin on non-production environments
@@ -149,7 +145,7 @@ settings_manager.set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
 LOGIN_URL = "/account/auth/login/"
 LOGIN_REDIRECT_URL = "/account"
 
-INVITATION_URL = "{}/auth/invite/".format(HOST_URL)
+INVITATION_URL = f"{HOST_URL}/auth/invite/"
 INVITATION_EMAIL_LIMIT = 5
 
 
@@ -268,9 +264,7 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 ]
 
 
-INSTALLED_APPS += (
-    "fullctl.django.apps.DjangoFullctlConfig",
-)
+INSTALLED_APPS += ("fullctl.django.apps.DjangoFullctlConfig",)
 
 
 BILLING_COMPONENTS = ["fullctl.prefixctl"]
@@ -286,7 +280,7 @@ BILLING_AGREEMENT_DESCRIPTION = BILLING_AGREEMENT_NAME
 BILLING_DEFAULT_CURRENCY = "USD"
 
 settings_manager.set_option("BILLING_ENV", "test")
-print_debug("Billing env is '{}'".format(BILLING_ENV))
+print_debug(f"Billing env is '{BILLING_ENV}'")
 
 # OAUTH PROVIDER
 
@@ -355,9 +349,9 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 # BACKEND: PeeringDB
 
 settings_manager.set_option("PDB_ENDPOINT", "https://peeringdb.com")
-PDB_OAUTH_ACCESS_TOKEN_URL = "{}/oauth2/token/".format(PDB_ENDPOINT)
-PDB_OAUTH_AUTHORIZE_URL = "{}/oauth2/authorize/".format(PDB_ENDPOINT)
-PDB_OAUTH_PROFILE_URL = "{}/profile/v1".format(PDB_ENDPOINT)
+PDB_OAUTH_ACCESS_TOKEN_URL = f"{PDB_ENDPOINT}/oauth2/token/"
+PDB_OAUTH_AUTHORIZE_URL = f"{PDB_ENDPOINT}/oauth2/authorize/"
+PDB_OAUTH_PROFILE_URL = f"{PDB_ENDPOINT}/profile/v1"
 
 
 # django rest framework
@@ -432,4 +426,4 @@ TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 
 # TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
 
-print_debug("loaded settings for version {} (DEBUG: {})".format(PACKAGE_VERSION, DEBUG))
+print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DEBUG})")

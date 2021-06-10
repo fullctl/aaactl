@@ -1,7 +1,13 @@
 from django.contrib.auth import get_user_model
 from django_grainy.remote import Authenticator
 
-from account.rest.authentication import Permissions, APIKeyAuthentication, APIKey, InternalAPIKey
+from account.rest.authentication import (
+    APIKey,
+    APIKeyAuthentication,
+    InternalAPIKey,
+    Permissions,
+)
+
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):

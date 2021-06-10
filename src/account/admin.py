@@ -1,26 +1,30 @@
-from django.http import HttpResponse
-
 from django import forms
 from django.contrib import admin
-from django_grainy.forms import UserPermissionForm, PermissionFormField, BitmaskSelect, PERM_CHOICES_FOR_FIELD
+from django.http import HttpResponse
+from django_grainy.forms import (
+    PERM_CHOICES_FOR_FIELD,
+    BitmaskSelect,
+    PermissionFormField,
+    UserPermissionForm,
+)
 
 from account.models import (
     APIKey,
     APIKeyPermission,
-    OrganizationAPIKey,
-    OrganizationAPIKeyPermission,
+    EmailConfirmation,
     InternalAPIKey,
     InternalAPIKeyPermission,
-    EmailConfirmation,
     Invitation,
     ManagedPermission,
     Organization,
+    OrganizationAPIKey,
+    OrganizationAPIKeyPermission,
     OrganizationUser,
     PasswordReset,
 )
 
-
 # registered models
+
 
 class InlineAPIKeyPermission(admin.TabularInline):
     model = APIKeyPermission
@@ -34,6 +38,7 @@ class APIKeyAdmin(admin.ModelAdmin):
     search_fields = ("name", "user__username", "user__email", "key")
     inlines = (InlineAPIKeyPermission,)
 
+
 class InlineInternalAPIKeyPermission(admin.TabularInline):
     model = InternalAPIKeyPermission
     extra = 1
@@ -45,7 +50,6 @@ class InternalAPIKeyAdmin(admin.ModelAdmin):
     list_display = ("key", "name", "created")
     search_fields = ("name", "key")
     inlines = (InlineInternalAPIKeyPermission,)
-
 
 
 class InlineOrganizationAPIKeyPermission(admin.TabularInline):
@@ -61,7 +65,6 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
     inlines = (InlineOrganizationAPIKeyPermission,)
 
 
-
 class OrganizationUserInline(admin.TabularInline):
     model = OrganizationUser
     extra = 1
@@ -72,7 +75,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
     search_fields = ("orguser_set__last_name", "name")
     inlines = (OrganizationUserInline,)
-
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=True)
@@ -106,22 +108,30 @@ class PasswordResetAdmin(admin.ModelAdmin):
 
     fields = ("version", "status", "user", "email")
 
+
 class ManagedPermissionForm(forms.ModelForm):
 
     auto_grant_admins = PermissionFormField(
-        initial=15,
-        widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
+        initial=15, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
     )
 
     auto_grant_users = PermissionFormField(
-        initial=1,
-        widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
+        initial=1, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
     )
 
 
 @admin.register(ManagedPermission)
 class ManagedPermissionAdmin(admin.ModelAdmin):
-    list_display = ("description", "namespace", "group", "managable", "auto_grant_admins", "auto_grant_users", "created", "updated")
+    list_display = (
+        "description",
+        "namespace",
+        "group",
+        "managable",
+        "auto_grant_admins",
+        "auto_grant_users",
+        "created",
+        "updated",
+    )
     search_fields = ("group", "description", "namespace")
     form = ManagedPermissionForm
 
@@ -129,6 +139,3 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
         if obj:
             return ("namespace",)
         return super().get_readonly_fields(request, obj)
-
-
-

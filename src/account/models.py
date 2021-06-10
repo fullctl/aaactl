@@ -11,8 +11,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, PermissionManager, PermissionField
-from django_grainy.util import Permissions, namespace, check_permissions
+from django_grainy.models import Permission, PermissionField, PermissionManager
+from django_grainy.util import Permissions, check_permissions, namespace
 
 from common.email import email_noreply
 from common.models import HandleRefModel
@@ -95,7 +95,6 @@ class Organization(HandleRefModel):
         else:
             slug = generate_org_slug()
 
-
         org, created = cls.objects.get_or_create(user=user, slug=slug)
 
         if created:
@@ -113,11 +112,10 @@ class Organization(HandleRefModel):
             mperms = ManagedPermission.objects.filter(status="ok", group="aaactl")
             r = []
             for mperm in mperms:
-                r.append( mperm.namespace )
+                r.append(mperm.namespace)
             self._permission_namespaces = r
 
         return self._permission_namespaces
-
 
     @property
     def users(self):
@@ -148,7 +146,6 @@ class Organization(HandleRefModel):
                     mperm.auto_grant_user(self, user)
                 else:
                     mperm.auto_grant_admin(self, user)
-
 
         return orguser
 
@@ -268,6 +265,7 @@ class APIKeyPermission(HandleRefModel, Permission):
     class HandleRef:
         tag = "keyperm"
 
+
 @reversion.register
 @grainy_model(namespace="_key_")
 class InternalAPIKey(APIKeyBase):
@@ -309,7 +307,6 @@ class InternalAPIKeyPermission(HandleRefModel, Permission):
 
     class HandleRef:
         tag = "keyperm"
-
 
 
 @reversion.register
@@ -355,7 +352,6 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
 
     def __str__(self):
         return f"{self.namespace} ({self.id})"
-
 
 
 def generate_emconf_secret():
@@ -517,7 +513,10 @@ class ManagedPermission(HandleRefModel):
     """
 
     namespace = models.CharField(
-        max_length=255, help_text=_("The permission namespace. The following variables are available for formatting: {org_id}")
+        max_length=255,
+        help_text=_(
+            "The permission namespace. The following variables are available for formatting: {org_id}"
+        ),
     )
 
     group = models.CharField(
@@ -533,18 +532,21 @@ class ManagedPermission(HandleRefModel):
     )
 
     auto_grant_admins = PermissionField(
-        help_text=_("Auto grants the permission at the following level to organization admins")
+        help_text=_(
+            "Auto grants the permission at the following level to organization admins"
+        )
     )
 
     auto_grant_users = PermissionField(
-        help_text=_("Auto grants the permission at the following level to organization members and api keys")
+        help_text=_(
+            "Auto grants the permission at the following level to organization members and api keys"
+        )
     )
 
     class Meta:
         db_table = "account_managed_permission"
         verbose_name = _("Managed permission")
         verbose_name_plural = _("Managed permissions")
-
 
     class HandleRef:
         tag = "mperm"
@@ -553,7 +555,6 @@ class ManagedPermission(HandleRefModel):
     def grant_all_key(cls, orgkey, admin=False):
         for mperm in cls.objects.all():
             mperm.auto_grant_key(orgkey, admin=admin)
-
 
     @classmethod
     def grant_all_user(cls, user, admin=False):
@@ -579,7 +580,6 @@ class ManagedPermission(HandleRefModel):
 
     def __str__(self):
         return f"{self.group} - {self.description}"
-
 
     def auto_grant(self, org):
 
@@ -626,7 +626,6 @@ class ManagedPermission(HandleRefModel):
             perms = self.auto_grant_users
 
         orgkey.grainy_permissions.add_permission(ns, perms)
-
 
 
 @reversion.register

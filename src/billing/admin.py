@@ -26,7 +26,6 @@ from billing.models import (
 # Register your models here.
 
 
-
 class ProductForm(forms.ModelForm):
     pass
 

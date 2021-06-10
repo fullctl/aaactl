@@ -1,6 +1,7 @@
 import reversion
 from django.contrib import messages
 from django.utils.translation import gettext as _
+from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -13,8 +14,6 @@ from account.rest.serializers import Serializers
 from account.session import set_selected_org
 from applications.models import Service
 from common.rest.decorators import grainy_endpoint, user_endpoint
-
-from fullctl.django.auditlog import auditlog
 
 
 @route
@@ -104,19 +103,15 @@ class UserInformation(viewsets.ViewSet):
         key = serializer.save()
         return Response(Serializers.key(key, many=False).data)
 
-
     @action(detail=False, methods=["DELETE"])
     @auditlog()
     @user_endpoint()
     @disable_api_key
     def key(self, request, auditlog=None):
-        key = models.APIKey.objects.get(
-            id=request.data.get("id"), user=request.user
-        )
-        response =  Response(Serializers.key(instance=key, many=False).data)
+        key = models.APIKey.objects.get(id=request.data.get("id"), user=request.user)
+        response = Response(Serializers.key(instance=key, many=False).data)
         key.delete()
         return response
-
 
     def get_throttles(self):
         if self.action in ["resend_confirmation_mail"]:
@@ -160,7 +155,6 @@ class Organization(viewsets.ViewSet):
         return Response(
             Serializers.org(userorg.org, context={"user": request.user}).data
         )
-
 
     @auditlog()
     @user_endpoint()
@@ -284,7 +278,6 @@ class Organization(viewsets.ViewSet):
         )
         return Response(serializer.data)
 
-
     @action(detail=True, methods=["PUT"])
     @set_org
     @auditlog()
@@ -300,7 +293,9 @@ class Organization(viewsets.ViewSet):
             many=False,
         )
 
-        orgkey = models.OrganizationAPIKey.objects.get(org=org, id=request.data.get("id"))
+        orgkey = models.OrganizationAPIKey.objects.get(
+            org=org, id=request.data.get("id")
+        )
 
         if not orgkey.managed:
             return Response({"id": ["not a managed key"]}, status=400)
@@ -319,12 +314,10 @@ class Organization(viewsets.ViewSet):
         orgkey = models.OrganizationAPIKey.objects.get(
             id=request.data.get("id"), org=org
         )
-        response =  Response(Serializers.orgkey(instance=orgkey, many=False).data)
+        response = Response(Serializers.orgkey(instance=orgkey, many=False).data)
         orgkey.delete()
 
-
         return response
-
 
     @action(detail=True, methods=["POST"])
     @set_org
@@ -339,12 +332,9 @@ class Organization(viewsets.ViewSet):
             return Response(serializer.errors, status=400)
         orgkey = serializer.save()
 
-
         for mperm in models.ManagedPermission.objects.all():
             mperm.auto_grant_key(orgkey)
         return Response(Serializers.orgkey(orgkey, many=False).data)
-
-
 
     @action(detail=True, methods=["GET"])
     @set_org

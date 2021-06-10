@@ -1,4 +1,5 @@
 import reversion
+from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,7 +10,6 @@ from billing.rest.route import route
 from billing.rest.serializers import Serializers
 from common.rest.decorators import grainy_endpoint
 
-from fullctl.django.auditlog import auditlog
 
 @route
 class Organization(viewsets.ViewSet):

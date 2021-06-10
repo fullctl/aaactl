@@ -67,9 +67,6 @@ class PaymentProcessor(object):
         return self.payment_method.data
 
     def __init__(self, payment_method, **kwargs):
-        self.load(payment_method)
-
-    def load(self, payment_method):
         self.payment_method = payment_method
 
     def save(self):

@@ -249,8 +249,6 @@ class BillingSetup(serializers.Serializer):
 
             if not sub.subprod_set.filter(prod=prod).exists():
                 sub.add_prod(prod)
-        else:
-            sub = None
 
         models.Subscription.set_payment_method(org, pay_method)
 

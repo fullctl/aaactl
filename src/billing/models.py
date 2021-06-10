@@ -360,9 +360,10 @@ class Subscription(HandleRefModel):
 
     @reversion.create_revision()
     def add_prod(self, prod):
-        subprod, created = SubscriptionProduct.objects.get_or_create(
+        subprod, _ = SubscriptionProduct.objects.get_or_create(
             sub=self, prod=prod
         )
+        return subprod
 
     @reversion.create_revision()
     def end_cycle(self):

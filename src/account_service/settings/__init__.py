@@ -40,7 +40,6 @@ def try_include(filename):
         print_debug(
             "additional settings file '{}' was not found, skipping".format(filename)
         )
-        pass
 
 
 def read_file(name):

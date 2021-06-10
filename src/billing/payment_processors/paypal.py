@@ -20,7 +20,7 @@ class PaypalProcessor(PaymentProcessor):
         return self.user_payment_opt.data.get("approval_url")
 
     def __init__(self, user_payment_opt, **kwargs):
-        self.plan_id = None
+        self.plan_id = user_payment_opt.data.get("plan_id")
         self.plan = None
         self.agreement = None
 
@@ -34,10 +34,6 @@ class PaypalProcessor(PaymentProcessor):
             )
 
         super().__init__(user_payment_opt, **kwargs)
-
-    def load(self, user_payment_opt):
-        super().load(user_payment_opt)
-        self.plan_id = user_payment_opt.data.get("plan_id")
 
     def require_billing_plan(self, subs, **kwargs):
         if self.plan_id:

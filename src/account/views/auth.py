@@ -59,7 +59,9 @@ def login(request):
             if user is not None:
                 fn_login(request, user)
 
-                return redirect(redirect_next)
+                # redirect_next is alraedy cleaned and validated
+                # through valid_redirect at this point
+                return redirect(redirect_next) # lgtm[py/url-redirection]
             else:
                 messages.error(request, _("Login failed: Wrong username / password"))
 

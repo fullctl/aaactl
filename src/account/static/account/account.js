@@ -11,7 +11,7 @@ account.ControlPanel = twentyc.cls.define(
       this.elements = {};
       this.forms = {};
 
-      this.loadDropDown()
+      this.loadDropDown();
       this.styleDropDown();
 
       this.createOrganization();
@@ -451,7 +451,7 @@ account.Services = twentyc.cls.define(
              $('<span>').text('Total Monthly Cost: ').addClass('lighter-grey'),
              $('<span>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white')
           ])
-        )
+        );
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
         item_table.after($('<tr>').addClass('blank-row'));

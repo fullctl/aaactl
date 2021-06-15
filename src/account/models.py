@@ -589,7 +589,7 @@ class ManagedPermission(HandleRefModel):
                 self.auto_grant_user(org, user)
 
         for key in org.orgkey_set.all():
-            self.auto_grant_key(org, key)
+            self.auto_grant_key(key)
 
     def revoke(self, org):
         for user in org.users:

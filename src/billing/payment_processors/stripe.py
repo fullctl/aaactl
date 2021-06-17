@@ -49,7 +49,7 @@ class Stripe(PaymentProcessor):
             return self.customer
 
         customer = stripe.Customer.create(
-            description="billcon{}".format(self.payment_method.billcon.id),
+            description=f"billcon{self.payment_method.billcon.id}",
             api_key=self.api_key,
         )
 

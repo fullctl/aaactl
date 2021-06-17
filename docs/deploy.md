@@ -20,6 +20,11 @@ This will run a postgres database and the account service in containers and moun
 
 Any container commands can then be run from `Ctl/dev/run.sh`
 
+Create managed  permissions
+```sh
+Ctl/dev/run.sh loaddata fixtures/fixture.perms.json
+```
+
 First time running, create a new superuser to use to login:
 ```sh
 Ctl/dev/run.sh createsuperuser
@@ -82,7 +87,7 @@ https://fullctl.dev8.20c.com/complete/twentyc/
 
 * client type: confidential
 * authoriozation grant type: authorization code
-* name: FullCTL
+* name: fullctl
 * skip authorization: true
 * client id: generated or if fullctl already set up use the client id set up there
 * secret: generated or if fullctl already set up use the secret setup there

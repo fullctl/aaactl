@@ -10,18 +10,16 @@
       data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
       data-api-action="set_permissions"
       data-api-method="PUT">
-      <div class="row">
+      <div class="row" style="margin-bottom: 3px;">
         <div style="display:none" data-api-submit="yes">
           <input type="text" name="id" type="hidden">
           <input type="text" name="component" type="hidden">
         </div>
 
-        <div class="col-3 ml-4" data-field="component"></div>
-        <div class="col-8">
-          <span><input data-permission-flag="c" type="checkbox"> create</span>
-          <span><input data-permission-flag="r" type="checkbox"> read</span>
-          <span><input data-permission-flag="u" type="checkbox"> update</span>
-          <span><input data-permission-flag="d" type="checkbox"> delete</span>
+        <div class="col-md-7" data-field="component"></div>
+        <div class="col-md-4">
+          <span style="white-space: nowrap"><input data-permission-flag="r" type="checkbox"> read</span>
+          <span style="white-space: nowrap"><input data-permission-flag="cud" type="checkbox"> write</span>
         </div>
       </div>
     </div>
@@ -59,6 +57,6 @@
 
 <script>
 $(document).ready(function() {
-  var user_list = new account.UsersList();
+  new account.UsersList();
 });
 </script>

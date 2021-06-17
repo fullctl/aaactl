@@ -76,11 +76,7 @@ if settings.DEBUG:
 
 urlpatterns = []
 
-if settings.RELEASE_ENV != "prod":
-
-    # we only expose admin on non-production
-    # environments
-
+if settings.EXPOSE_ADMIN:
     urlpatterns += [
         path("admin/", admin.site.urls),
     ]
@@ -120,4 +116,11 @@ urlpatterns += [
     path(
         "", RedirectView.as_view(pattern_name="account:controlpanel", permanent=False)
     ),
+    path("", include("fullctl.django.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+handler500 = "fullctl.django.views.handle_error_500"
+handler404 = "fullctl.django.views.handle_error_404"
+handler403 = "fullctl.django.views.handle_error_403"
+handler401 = "fullctl.django.views.handle_error_401"
+handler400 = "fullctl.django.views.handle_error_400"

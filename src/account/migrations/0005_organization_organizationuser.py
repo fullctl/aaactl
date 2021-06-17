@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
                     "org",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="user_set",
+                        related_name="orguser_set",
                         to="account.Organization",
                     ),
                 ),
@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
                     "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="org_set",
+                        related_name="orguser_set",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),

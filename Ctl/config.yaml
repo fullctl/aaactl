@@ -256,6 +256,38 @@ ctl:
                 source: "{{ plugin.deploy_venv.build_path }}/venv"
                 pipfile: "{{ plugin.deploy_venv.source_path }}/Pipfile"
 
+    - name: build
+      type: command
+      config:
+        shell: true
+        command:
+          - "docker build -t $(basename $(pwd)):$(cat Ctl/VERSION) ."
+
+    - name: deploy
+      type: command
+      config:
+        shell: true
+        command:
+          - "poetry lock"
+          - "docker build -t $(basename $(pwd)):$(cat Ctl/VERSION) ."
+          - "docker tag $(basename $(pwd)):$(cat Ctl/VERSION) $REGISTRY/fullctl/$(basename $(pwd)):$(cat Ctl/VERSION)"
+          - "docker push $REGISTRY/fullctl/$(basename $(pwd)):$(cat Ctl/VERSION)"
+
+    - name: show_version
+      type: command
+      config:
+        shell: true
+        command:
+          - "echo version $(cat Ctl/VERSION)"
+
+    - name: deploy_dev
+      type: chain
+      config:
+        chain:
+          - stage: build and deploy
+            plugin: deploy
+          - stage: complete
+            plugin: show_version
 
   # PERMISSION CONFIG
 

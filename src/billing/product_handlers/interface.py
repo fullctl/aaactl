@@ -1,4 +1,4 @@
-class Interface(object):
+class Interface:
 
     id = "interface"
     name = "Interface"

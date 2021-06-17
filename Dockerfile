@@ -5,6 +5,7 @@ ARG install_to=/srv/service
 ARG build_deps=" \
     postgresql-dev \
     g++ \
+    git \
     libffi-dev \
     libjpeg-turbo-dev \
     linux-headers \
@@ -89,7 +90,7 @@ COPY Ctl/docker/django-uwsgi.ini etc/
 COPY Ctl/docker/manage.sh /usr/bin/manage
 
 
-ENV UWSGI_SOCKET=127.0.0.1:6002
+#ENV UWSGI_SOCKET=127.0.0.1:6002
 
 USER $USER
 

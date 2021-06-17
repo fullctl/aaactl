@@ -7,12 +7,12 @@
       <td scope="col" class="name-column table-text-bold dark-grey op-40" data-field="user_name"></td>
       <td scope="col" class="light-grey op-40" data-field="email"></td>
       <td scope="col" class="manage-column right small-links">
-        {% if permissions.create_org_users %}
-        <a 
+        {% if permissions.create_org_user %}
+        <a
           tabindex="0"
-          class="resend-invite" 
+          class="resend-invite"
           href="javascript:void(0)"
-          data-container="body" 
+          data-container="body"
           data-toggle="popover"
           data-placement="top">Re-Send Invitation</a>
         {% endif %}
@@ -28,7 +28,7 @@
 
 <script>
 $(document).ready(function() {
-  var pending_users = new account.PendingUsers();
+  new account.PendingUsers();
 });
 </script>
 

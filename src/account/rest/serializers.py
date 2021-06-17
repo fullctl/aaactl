@@ -11,7 +11,7 @@ import account.models as models
 from common.rest import HANDLEREF_FIELDS
 
 
-class Serializers(object):
+class Serializers:
     pass
 
 
@@ -23,7 +23,7 @@ def register(cls):
     return cls
 
 
-class FormValidationMixin(object):
+class FormValidationMixin:
     required_context = ["user"]
 
     def get_form(self, data):
@@ -32,7 +32,7 @@ class FormValidationMixin(object):
     def validate(self, data):
         for k in self.required_context:
             if k not in self.context:
-                raise serializers.ValidationError("Context missing: {}".format(k))
+                raise serializers.ValidationError(f"Context missing: {k}")
 
         form = self.get_form(data)
 
@@ -44,73 +44,33 @@ class FormValidationMixin(object):
         return data
 
 
-@register
-class OrganizationUser(serializers.ModelSerializer):
-    ref_tag = "orguser"
+class PermissionNamespacesMixin:
+    @property
+    def permission_namespaces(self):
+        if not hasattr(self, "_permission_namespaces"):
+            mperms = models.ManagedPermission.objects.filter(
+                status="ok", managable=True
+            ).order_by("group", "description")
+            r = []
+            for mperm in mperms:
+                r.append((mperm.namespace, mperm.description))
+            self._permission_namespaces = r
 
-    name = serializers.SerializerMethodField()
-    email = serializers.SerializerMethodField()
-    you = serializers.SerializerMethodField()
-    manageable = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField()
-
-    permission_namespaces = [
-        "users",
-        "billing.contact",
-        "billing.service",
-        "billing.orderhistory",
-        "manage",
-    ]
-
-    class Meta:
-        model = models.OrganizationUser
-        fields = ["id", "name", "email", "you", "manageable", "permissions"]
-
-    def get_name(self, obj):
-        return "{} {}".format(obj.user.first_name, obj.user.last_name)
-
-    def get_email(self, obj):
-        return obj.user.email
-
-    def get_you(self, obj):
-        return obj.user == self.context.get("user")
-
-    def get_manageable(self, obj):
-        perms = self.context.get("perms")
-        if perms:
-            return perms.get([obj.org, "users"], as_string=True)
-        return "r"
-
-    def get_permissions(self, obj):
-        perms = Permissions(obj.user)
-        rv = dict(
-            [
-                (ns, perms.get([obj.org, ns], as_string=True))
-                for ns in self.permission_namespaces
-            ]
-        )
-
-        # for svc in self.context.get("services",[]):
-        #    rv[svc.slug] = perms.get([obj.org, svc], as_string=True)
-        return rv
+        return self._permission_namespaces
 
 
-@register
-class OrganizationUserPermissions(serializers.Serializer):
-    ref_tag = "orguserperm"
-
-    permission_namespaces = models.Organization.permission_namespaces
-
+class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
     org = serializers.PrimaryKeyRelatedField(queryset=models.Organization.objects.all())
-    orguser = serializers.PrimaryKeyRelatedField(
-        queryset=models.OrganizationUser.objects.all()
-    )
     component = serializers.CharField()
     permissions = serializers.CharField(allow_blank=True)
 
+    @property
+    def permission_holder(self):
+        return self.validated_data[self.rel_fld]
+
     def validate_component(self, value):
         value = value.lower()
-        if value not in self.permission_namespaces:
+        if value not in dict(self.permission_namespaces):
             raise serializers.ValidationError(_("Not a valid permissioning component"))
 
         return value
@@ -125,21 +85,79 @@ class OrganizationUserPermissions(serializers.Serializer):
         return value
 
     def validate(self, data):
-        if data.get("orguser").org != data.get("org"):
-            raise serializers.ValidationError(_("Invalid user to org relationship id"))
-
+        if data.get(self.rel_fld).org != data.get("org"):
+            raise serializers.ValidationError(_("Invalid org relationship"))
         return data
 
     def save(self):
         data = self.validated_data
-        orguser = data["orguser"]
         org = data["org"]
         component = data["component"]
         permissions = data["permissions"]
 
-        orguser.user.grainy_permissions.add_permission([org, component], permissions)
+        self.permission_holder.grainy_permissions.add_permission(
+            component.format(org_id=org.id), permissions
+        )
 
-        return orguser
+        return data[self.rel_fld]
+
+
+@register
+class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
+    ref_tag = "orguser"
+
+    name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    you = serializers.SerializerMethodField()
+    manageable = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.OrganizationUser
+        fields = ["id", "name", "email", "you", "manageable", "permissions"]
+
+    def get_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_email(self, obj):
+        return obj.user.email
+
+    def get_you(self, obj):
+        return obj.user == self.context.get("user")
+
+    def get_manageable(self, obj):
+        perms = self.context.get("perms")
+        if perms:
+            return perms.get(f"user.{obj.org.id}", as_string=True)
+        return "r"
+
+    def get_permissions(self, obj):
+        perms = Permissions(obj.user)
+        rv = {
+            ns: {
+                "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
+                "label": label,
+            }
+            for ns, label in self.permission_namespaces
+        }
+
+        # for svc in self.context.get("services",[]):
+        #    rv[svc.slug] = perms.get([obj.org, svc], as_string=True)
+        return rv
+
+
+@register
+class OrganizationUserPermissions(PermissionSetterMixin):
+    ref_tag = "orguserperm"
+    rel_fld = "orguser"
+
+    orguser = serializers.PrimaryKeyRelatedField(
+        queryset=models.OrganizationUser.objects.all()
+    )
+
+    @property
+    def permission_holder(self):
+        return self.validated_data[self.rel_fld].user
 
 
 @register
@@ -409,7 +427,74 @@ class PasswordReset(FormValidationMixin, serializers.Serializer):
 
 
 @register
-class APIKey(serializers.ModelSerializer):
+class APIKey(FormValidationMixin, serializers.ModelSerializer):
     class Meta:
         model = models.APIKey
-        fields = ["key", "created", "status"]
+        fields = ["user", "key", "created", "status", "name", "readonly"]
+
+    form = forms.CreateAPIKey
+    required_contet = ["user"]
+
+    def save(self):
+        self.validated_data.pop("form_data", None)
+        return super().save()
+
+
+@register
+class OrganizationAPIKey(
+    FormValidationMixin, PermissionNamespacesMixin, serializers.ModelSerializer
+):
+    manageable = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
+    form = forms.InviteToOrganization
+    required_context = ["org", "user"]
+
+    class Meta:
+        model = models.OrganizationAPIKey
+        fields = [
+            "org",
+            "key",
+            "created",
+            "status",
+            "name",
+            "email",
+            "manageable",
+            "permissions",
+        ]
+
+    def get_manageable(self, obj):
+        perms = self.context.get("perms")
+        if perms:
+            return perms.get(obj, as_string=True)
+        return "r"
+
+    def get_permissions(self, obj):
+        perms = Permissions(obj)
+        rv = {
+            ns: {
+                "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
+                "label": label,
+            }
+            for ns, label in self.permission_namespaces
+        }
+
+        return rv
+
+    def save(self):
+        self.validated_data.pop("form_data", None)
+        return super().save()
+
+
+@register
+class OrganizationAPIKeyPermissions(PermissionSetterMixin):
+    ref_tag = "orgkeyperm"
+    rel_fld = "orgkey"
+
+    orgkey = serializers.PrimaryKeyRelatedField(
+        queryset=models.OrganizationAPIKey.objects.all()
+    )
+
+    @property
+    def permission_holder(self):
+        return self.validated_data[self.rel_fld]

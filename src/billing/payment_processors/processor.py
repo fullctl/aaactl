@@ -20,7 +20,7 @@ def get_processor(_id):
     return MAP[_id]
 
 
-class PaymentProcessor(object):
+class PaymentProcessor:
     id = "_processor"
     name = "Payment Processor Interface"
 
@@ -67,9 +67,6 @@ class PaymentProcessor(object):
         return self.payment_method.data
 
     def __init__(self, payment_method, **kwargs):
-        self.load(payment_method)
-
-    def load(self, payment_method):
         self.payment_method = payment_method
 
     def save(self):

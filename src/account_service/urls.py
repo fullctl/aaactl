@@ -100,6 +100,13 @@ urlpatterns += [
         "api/billing/",
         include(("billing.rest.urls", "billing_api"), namespace="billing_api"),
     ),
+    # service applications
+    # path("apps/", include(("appications.urls", "applications"), namespace="applications")),
+    path(
+        "api/apps/",
+        include(("applications.rest.urls", "applications_api"), namespace="applications_api"),
+    ),
+
     # social-auth urls
     path("social/", include("social_django.urls", namespace="social")),
     # grainy

@@ -419,6 +419,26 @@ account.PasswordReset = twentyc.cls.define(
   }
 );
 
+account.ServiceApplications = twentyc.cls.define(
+  "ServiceApplications",
+  {
+    ServiceApplications : function() {
+      this.element = $('.service-apps-listing');
+      this.rest_api_list = new twentyc.rest.List(this.element);
+
+      this.rest_api_list.formatters.row = (row, data) => {
+        let redirect_url = data.invite_redirect.replace("{org.slug}", account.org.slug)
+        row.find("a.redirect").attr("href", redirect_url);
+        row.find("img.logo").attr("src", data.logo);
+      };
+
+      this.rest_api_list.load();
+
+
+    }
+});
+
+
 account.Services = twentyc.cls.define(
   "Services",
   {

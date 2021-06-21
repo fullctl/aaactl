@@ -149,8 +149,17 @@
 {% block javascript %}
 {{ super }}
 <script>
+{% if request.selected_org %}
+account.org = {
+  "id": {{ request.selected_org.id }},
+  "slug": "{{ request.selected_org.slug }}"
+}
+{% endif %}
+
 $(document).ready(function() {
   window.controlpanel = new account.ControlPanel();
 });
 </script>
 {% endblock %}
+
+

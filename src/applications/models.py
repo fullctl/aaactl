@@ -16,6 +16,7 @@ class Service(HandleRefModel):
 
     invite_redirect = models.URLField(max_length=255, null=True, blank=True)
     api_host = models.URLField(max_length=255, null=True, blank=True)
+    logo = models.URLField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "applications_service"

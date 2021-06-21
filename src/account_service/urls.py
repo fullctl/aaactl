@@ -104,9 +104,10 @@ urlpatterns += [
     # path("apps/", include(("appications.urls", "applications"), namespace="applications")),
     path(
         "api/apps/",
-        include(("applications.rest.urls", "applications_api"), namespace="applications_api"),
+        include(
+            ("applications.rest.urls", "applications_api"), namespace="applications_api"
+        ),
     ),
-
     # social-auth urls
     path("social/", include("social_django.urls", namespace="social")),
     # grainy

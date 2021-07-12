@@ -490,6 +490,26 @@ table.table-sm {
   height: 28px;
 }
 
+.service-apps-list {
+  text-align: center;
+}
+
+.service-app {
+  display: inline-block;
+  background-color: #4a4d50;
+  padding: 5px;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+
+.service-app a {
+  border: none;
+}
+
+.service-app img {
+  height: 25px;
+}
+
 .service-list td {
   padding: .3rem 1rem;
 }

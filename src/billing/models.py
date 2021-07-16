@@ -351,7 +351,7 @@ class Subscription(HandleRefModel):
         return f"{self.group.name} Service Charges"
 
     def __str__(self):
-        return f"{self.group.name} : {self.org.name}"
+        return f"{self.group.name} : {self.org}"
 
     def get_cycle(self, date):
         return self.cycle_set.filter(start__lte=date, end__gte=date).first()
@@ -402,7 +402,9 @@ class Subscription(HandleRefModel):
             self.cycle_start = start
             self.save()
 
-        return SubscriptionCycle.objects.create(sub=self, start=start, end=end)
+        cycle = SubscriptionCycle.objects.create(sub=self, start=start, end=end)
+
+        return cycle
 
 
 @reversion.register()
@@ -525,7 +527,8 @@ class SubscriptionCycle(HandleRefModel):
             subprod=subprod,
         )
 
-        cycleprod.usage = usage
+        if usage is not None:
+            cycleprod.usage = usage
         cycleprod.save()
 
     def charge(self):

@@ -498,10 +498,14 @@ account.Services = twentyc.cls.define(
         return $('<td>').text(this.description).addClass('dark-grey table-text-bold')
       }
       this.formattedUsageType = () => {
-        return $('<td>').append([
-          $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
-          $('<span>').text(this.editedUsageType()).addClass('dark-grey table-text-large')
-        ])
+        if(this.type == "Fixed Price") {
+          return $('<td>');
+        } else {
+          return $('<td>').append([
+            $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
+            $('<span>').text(this.editedUsageType()).addClass('dark-grey table-text-large')
+          ])
+        }
       }
       this.editedUsageType = () => {
         if ( this.type == 'Metered Usage') {
@@ -513,10 +517,14 @@ account.Services = twentyc.cls.define(
       }
 
       this.formattedUsageAmount = () => {
-        return $('<td>').append([
-          $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
-          $('<span>').text(this.editedUsageAmount()).addClass('dark-grey table-text-large')
-        ])
+        if(this.type == "Fixed Price") {
+          return $('<td>');
+        } else {
+          return $('<td>').append([
+            $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
+            $('<span>').text(this.editedUsageAmount()).addClass('dark-grey table-text-large')
+          ])
+        }
       }
 
       this.editedUsageAmount = () => {
@@ -534,7 +542,7 @@ account.Services = twentyc.cls.define(
       }
 
       this.formattedCost = () => {
-        return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right')
+        return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right right')
       }
     }
 });

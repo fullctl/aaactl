@@ -124,7 +124,7 @@ class Organization(HandleRefModel):
     @property
     def label(self):
         if self.user_id:
-            return _("Personal")
+            return f"{self.user.username} (Personal)"
         return self.name
 
     @property

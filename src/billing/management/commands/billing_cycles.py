@@ -5,15 +5,21 @@ from django.db import transaction
 
 from billing.models import Subscription
 
+
 class Rollback(Exception):
     pass
+
 
 # FIXME: use fullctl.django base command
 class Command(BaseCommand):
     help = "Progresses billing cycles"
 
     def add_arguments(self, parser):
-        parser.add_argument("--commit", action="store_true", help="commit database changes and credit card charges")
+        parser.add_argument(
+            "--commit",
+            action="store_true",
+            help="commit database changes and credit card charges",
+        )
 
     def log(self, msg):
         if not self.commit:

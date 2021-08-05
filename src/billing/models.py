@@ -7,7 +7,6 @@ import reversion
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -101,7 +100,7 @@ class Product(HandleRefModel):
         ),
     )
 
-    data = JSONField(
+    data = models.JSONField(
         help_text=_("Arbitrary extra data you want to define for this product"),
         blank=True,
         default=dict,
@@ -213,7 +212,7 @@ class RecurringProduct(HandleRefModel):
         ),
     )
 
-    data = JSONField(
+    data = models.JSONField(
         help_text=_(
             "Arbitrary extra data you want to define for this recurring product"
         ),
@@ -309,7 +308,7 @@ class Subscription(HandleRefModel):
         help_text=_("User payment option that will be charged by this sub"),
     )
 
-    data = JSONField(
+    data = models.JSONField(
         default=dict, blank=True, help_text=_("Any extra data for the subscription")
     )
 
@@ -420,7 +419,7 @@ class SubscriptionProduct(HandleRefModel):
 
     prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sub_set")
 
-    data = JSONField(
+    data = models.JSONField(
         default=dict,
         blank=True,
         help_text=_("Any extra data for the subscription item"),
@@ -874,7 +873,7 @@ class CustomerData(HandleRefModel):
     billcon = models.OneToOneField(
         "billing.BillingContact", on_delete=models.CASCADE, related_name="customer"
     )
-    data = JSONField(default=dict, blank=True)
+    data = models.JSONField(default=dict, blank=True)
 
     class HandleRef:
         tag = "cust"
@@ -932,7 +931,7 @@ class PaymentMethod(HandleRefModel):
     )
     custom_name = models.CharField(max_length=255, null=True, blank=True)
     processor = models.CharField(max_length=255)
-    data = JSONField(default=dict, blank=True)
+    data = models.JSONField(default=dict, blank=True)
 
     holder = models.CharField(max_length=255)
     country = CountryField()
@@ -983,7 +982,7 @@ class PaymentCharge(HandleRefModel):
         help_text=_("Price attributed to cycle for this product"),
     )
     description = models.CharField(max_length=255, null=True, blank=True)
-    data = JSONField(default=dict, blank=True, help_text=_("Any extra data"))
+    data = models.JSONField(default=dict, blank=True, help_text=_("Any extra data"))
 
     class Meta:
         db_table = "billing_charge"

@@ -20,25 +20,18 @@ aaactl = "aaactl.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-django-reversion = ">=3,<4"
-djangorestframework = "<4,>=3"
-Django = ">=3.2,<4"
-confu = ">=1.5,<2"
-social-auth-app-django = ">3,<4"
-psycopg2-binary = ">2.8,<3"
-django-crispy-forms = "<2,>=1.8"
-django-recaptcha = "<3,>=2"
-django-handleref = "<1,>=0.5"
-stripe = "^2.55.2"
+
+# not in fullctl
 python-dateutil = "*"
 django-countries = "*"
-django-oauth-toolkit = "*"
 django-cors-middleware = "*"
+django-oauth-toolkit = "*"
+
 pytest-filedata = "<1"
-django-grainy = ">1.7,<2" 
-grainy = ">=1.8.1,<2"
-fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep_prod" }
 uWSGI = "^2.0.19"
+
+fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep_prod" }
+stripe = "^2.55.2"
 
 [tool.poetry.dev-dependencies]
 # tests

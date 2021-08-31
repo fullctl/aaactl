@@ -6,13 +6,13 @@ import reversion
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from fullctl.django.util import host_url
 
 MAP = {}
 
 
 def register(cls):
     MAP[cls.id] = cls
-    print("MAP UPDATED", MAP)
     return cls
 
 
@@ -27,13 +27,13 @@ class PaymentProcessor:
     @property
     def agreement_cancel_url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("billing:agreement-cancel", args=(self.id,))
+            host_url(), reverse("billing:agreement-cancel", args=(self.id,))
         )
 
     @property
     def agreement_success_url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("billing:agreement-success", args=(self.id,))
+            host_url(), reverse("billing:agreement-success", args=(self.id,))
         )
 
     @property

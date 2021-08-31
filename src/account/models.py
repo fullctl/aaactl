@@ -16,6 +16,8 @@ from django_grainy.util import Permissions, check_permissions
 from common.email import email_noreply
 from common.models import HandleRefModel
 
+from fullctl.django.util import host_url
+
 # Create your models here.
 
 
@@ -408,7 +410,7 @@ class EmailConfirmation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL,
+            host_url(),
             reverse("account:auth-confirm-email", args=(self.secret,)),
         )
 
@@ -481,7 +483,7 @@ class PasswordReset(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL,
+            host_url(),
             reverse("account:auth-reset-password", args=(self.secret,)),
         )
 
@@ -665,7 +667,7 @@ class Invitation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("account:accept-invite", args=(self.secret,))
+            host_url(), reverse("account:accept-invite", args=(self.secret,))
         )
 
     def __str__(self):
@@ -686,7 +688,7 @@ class Invitation(HandleRefModel):
                     "inv": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": settings.HOST_URL,
+                    "host": host_url(),
                 },
             ).content.decode("utf-8"),
         )

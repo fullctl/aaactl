@@ -147,10 +147,6 @@ settings_manager.set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
 LOGIN_URL = "/account/auth/login/"
 LOGIN_REDIRECT_URL = "/account"
 
-INVITATION_URL = f"{HOST_URL}/auth/invite/"
-INVITATION_EMAIL_LIMIT = 5
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -171,6 +167,7 @@ MIDDLEWARE += [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "fullctl.django.middleware.CurrentRequestContext",
 ]
 
 ROOT_URLCONF = "account_service.urls"

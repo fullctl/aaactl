@@ -1,6 +1,6 @@
 import fullctl.service_bridge.client as client
 
-from account.models import InternalAPIKey
+from account.models import InternalAPIKey, Organization
 
 
 class Bridge(client.Bridge):
@@ -11,9 +11,14 @@ class Bridge(client.Bridge):
         if not api_key:
             raise KeyError("No internal api key")
 
-        super().__init__(service.api_host, api_key.key, org.slug)
-
-        self.org_id = org.id
+        if org:
+            self.org_id = org.id
+            self.org_instance = org
+            org_slug = org.slug
+        else:
+            self.org_id = 0
+            self.org_instance = None
+            org_slug = None
 
         self.user = user
         if user:
@@ -23,30 +28,56 @@ class Bridge(client.Bridge):
 
         self.service = service
 
+        super().__init__(service.api_host, api_key.key, org_slug)
+
     def usage(self, product_name):
         # this should stay {org} and not {org_id} so it uses the org slug
-        path = self._endpoint("usage", default="usage/{org}")
+        path = self._endpoint("usage", default="usage/{org}/")
         data = self.get(path)
         for row in data:
             if row["name"] == product_name:
                 return row["units"]
         return None
 
-    def sync_user(self, user_id):
-        path = self._endpoint("sync_user", default="aaactl-sync/user/{user}")
-        self.put(path)
+    def sync_user(self):
+        path = self._endpoint("sync_user", default="aaactl-sync/user/{user_id}/")
+        data = {
+            "username": self.user.username,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+            "email": self.user.email,
+        }
+
+        try:
+            self.put(path, data=data)
+        except client.ServiceBridgeError as exc:
+            if exc.status == 404:
+                # user does not exist at service yet and creation
+                # should happen through authentication process
+                #
+                # but we also dont want to error here
+                pass
 
     def sync_org(self):
-        path = self._endpoint("sync_org", default="aaactl-sync/org/{org_id}")
-        self.put(path)
+        path = self._endpoint("sync_org", default="aaactl-sync/org/")
+        data = {
+            "name": self.org_instance.name,
+            "remote_id": self.org_instance.id,
+            "personal": (self.org_instance.user is not None),
+            "backend": "twentyc",
+            "slug": self.org,
+        }
+        self.post(path, data=data)
 
-    def add_orguser(self, user_id):
-        path = self._endpoint("sync_orguser", default="aaactl-sync/orguser/{org_id}")
-        self.post(path)
+    def sync_orguser(self):
+        path = self._endpoint("sync_orguser", default="aaactl-sync/orguser/{user_id}/")
 
-    def del_orguser(self, user_id):
-        path = self._endpoint("sync_orguser", default="aaactl-sync/orguser/{org_id}")
-        self.post(path)
+        data = {
+            "user": self.user_id,
+            "orgs": [org.id for org in Organization.get_for_user(self.user)],
+        }
+
+        self.put(path, data=data)
 
     def _endpoint(self, name, default=None):
         endpoint = self.service.api_endpoint_set.filter(name=name).first()
@@ -58,4 +89,4 @@ class Bridge(client.Bridge):
         else:
             path = endpoint.path
 
-        return path.format(org=self.org, org_id=self.org_id, user=self.user_id)
+        return path.format(org=self.org, org_id=self.org_id, user_id=self.user_id)

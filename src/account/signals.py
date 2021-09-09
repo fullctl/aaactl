@@ -7,8 +7,36 @@ from account.models import (
     EmailConfirmation,
     ManagedPermission,
     Organization,
+    OrganizationUser,
     UserSettings,
 )
+
+import fullctl.django.models.concrete.tasks as task_models
+
+
+@receiver(post_save, sender=Organization)
+def sync_org(sender, **kwargs):
+    task_models.CallCommand.create_task("aaactl_sync", "org", kwargs["instance"].id)
+
+
+@receiver(post_save, sender=get_user_model())
+def sync_user(sender, **kwargs):
+    task_models.CallCommand.create_task("aaactl_sync", "user", kwargs["instance"].id)
+
+
+@receiver(post_save, sender=OrganizationUser)
+def sync_orguser_add(sender, **kwargs):
+    if kwargs.get("created"):
+        task_models.CallCommand.create_task(
+            "aaactl_sync", "orguser", kwargs["instance"].user_id
+        )
+
+
+@receiver(post_delete, sender=OrganizationUser)
+def sync_orguser_delete(sender, **kwargs):
+    task_models.CallCommand.create_task(
+        "aaactl_sync", "orguser", kwargs["instance"].user_id
+    )
 
 
 @receiver(post_save, sender=get_user_model())

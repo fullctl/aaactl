@@ -57,6 +57,20 @@ pytest tests/test_account_api.py::test_org_users
 
 ## Configure instance
 
+### Setup internal api key
+
+Go to `https://$ACCOUNT_SERVICE_URL/admin/account/internalapikey/add/` and create
+a new internal api key.
+
+This key is used for internal communications between aaactl and the various fullctl services.
+
+Under `Internal API Key Permissions` for the key also create the following entry:
+
+- namespace: `*.*`
+- permissions: `crud`
+
+This key has access to everything - never share it.
+
 ### Setup PDB oauth2 client
 
 Redirect goes to:

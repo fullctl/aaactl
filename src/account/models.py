@@ -11,11 +11,10 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 from django_grainy.models import Permission, PermissionField, PermissionManager
 from django_grainy.util import Permissions, check_permissions
+from fullctl.django.util import host_url
 
 from common.email import email_noreply
 from common.models import HandleRefModel
-
-from fullctl.django.util import host_url
 
 # Create your models here.
 

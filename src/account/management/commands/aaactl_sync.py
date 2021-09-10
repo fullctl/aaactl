@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-
 from fullctl.django.management.commands.base import CommandInterface
 
 from account.models import Organization

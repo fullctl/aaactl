@@ -1,3 +1,4 @@
+import fullctl.django.models.concrete.tasks as task_models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -10,8 +11,6 @@ from account.models import (
     OrganizationUser,
     UserSettings,
 )
-
-import fullctl.django.models.concrete.tasks as task_models
 
 
 @receiver(post_save, sender=Organization)

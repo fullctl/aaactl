@@ -30,7 +30,7 @@ django-oauth-toolkit = "*"
 pytest-filedata = "<1"
 uWSGI = "^2.0.19"
 
-fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep_prod" }
+fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
 stripe = "^2.55.2"
 
 [tool.poetry.dev-dependencies]

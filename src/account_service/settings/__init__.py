@@ -13,7 +13,7 @@ def print_debug(*args, **kwargs):
 
 
 def get_locale_name(code):
-    """ Gets the readble name for a locale code. """
+    """Gets the readble name for a locale code."""
     language_map = dict(django.conf.global_settings.LANGUAGES)
 
     # check for exact match
@@ -26,7 +26,7 @@ def get_locale_name(code):
 
 
 def try_include(filename):
-    """ Tries to include another file from the settings directory. """
+    """Tries to include another file from the settings directory."""
     print_debug(f"including {filename} {RELEASE_ENV}")
     try:
         with open(filename) as f:
@@ -147,10 +147,6 @@ settings_manager.set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
 LOGIN_URL = "/account/auth/login/"
 LOGIN_REDIRECT_URL = "/account"
 
-INVITATION_URL = f"{HOST_URL}/auth/invite/"
-INVITATION_EMAIL_LIMIT = 5
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -171,6 +167,7 @@ MIDDLEWARE += [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "fullctl.django.middleware.CurrentRequestContext",
 ]
 
 ROOT_URLCONF = "account_service.urls"

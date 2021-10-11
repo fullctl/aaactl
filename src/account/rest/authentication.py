@@ -1,19 +1,15 @@
 from django_grainy.util import Permissions
 from rest_framework import authentication, exceptions
 
+from fullctl.django.rest.authentication import key_from_request
+
+
 from account.models import APIKey, InternalAPIKey, OrganizationAPIKey
 
 
 class APIKeyAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        key = request.GET.get("key")
-
-        if not key:
-            auth = request.headers.get("Authorization")
-            if auth:
-                auth = auth.split(" ")
-                if auth[0] == "Bearer":
-                    key = auth[1]
+        key = key_from_request(request)
 
         api_key = None
 

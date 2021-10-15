@@ -1,8 +1,6 @@
 from django_grainy.util import Permissions
-from rest_framework import authentication, exceptions
-
 from fullctl.django.rest.authentication import key_from_request
-
+from rest_framework import authentication, exceptions
 
 from account.models import APIKey, InternalAPIKey, OrganizationAPIKey
 

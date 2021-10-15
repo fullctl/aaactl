@@ -262,6 +262,8 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.info",
 ]
 
+SERVICE_TAG = "aaactl"
+
 
 INSTALLED_APPS += ("fullctl.django.apps.DjangoFullctlConfig",)
 

@@ -40,7 +40,7 @@ class Bridge(client.Bridge):
         return None
 
     def sync_user(self):
-        path = self._endpoint("sync_user", default="aaactl-sync/user/{user_id}/")
+        path = self._endpoint("sync_user", default="service-bridge/aaactl-sync/user/{user_id}/")
         data = {
             "username": self.user.username,
             "first_name": self.user.first_name,
@@ -61,7 +61,7 @@ class Bridge(client.Bridge):
                 pass
 
     def sync_org(self):
-        path = self._endpoint("sync_org", default="aaactl-sync/org/")
+        path = self._endpoint("sync_org", default="service-bridge/aaactl-sync/org/")
         data = {
             "name": self.org_instance.name,
             "remote_id": self.org_instance.id,
@@ -72,7 +72,7 @@ class Bridge(client.Bridge):
         self.post(path, data=data)
 
     def sync_orguser(self):
-        path = self._endpoint("sync_orguser", default="aaactl-sync/orguser/{user_id}/")
+        path = self._endpoint("sync_orguser", default="service-bridge/aaactl-sync/orguser/{user_id}/")
 
         data = {
             "user": self.user_id,

@@ -16,6 +16,7 @@ ARG build_deps=" \
     cargo \
     "
 ARG run_deps=" \
+    libgcc \
     postgresql-libs \
     "
 # env to pass to sub images

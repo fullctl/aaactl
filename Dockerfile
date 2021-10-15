@@ -12,6 +12,8 @@ ARG build_deps=" \
     make \
     openssl-dev \
     curl \
+    rust \
+    cargo \
     "
 ARG run_deps=" \
     postgresql-libs \
@@ -29,10 +31,6 @@ ENV POETRY_VERSION=1.1.4
 FROM base as builder
 
 RUN apk --update --no-cache add $BUILD_DEPS
-
-# Install Rust to install Poetry
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Use Pip to install Poetry
 RUN pip install "poetry==$POETRY_VERSION"

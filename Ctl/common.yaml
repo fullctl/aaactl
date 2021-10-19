@@ -13,5 +13,5 @@ billing:
 api_keys:
   internal:
     perms:
-      account_service: crud
+      aaactl: crud
       fullctl: crud

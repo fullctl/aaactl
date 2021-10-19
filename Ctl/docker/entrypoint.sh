@@ -30,13 +30,13 @@ case "$@" in
   "run_tests" )
     source venv/bin/activate
     cd main
-    export DJANGO_SETTINGS_MODULE=account_service.settings
+    export DJANGO_SETTINGS_MODULE=aaactl.settings
     pytest tests/ -vv --cov-report=term-missing --cov-report=xml --cov=account --cov=billing --cov=common --cov=applications 
     ;;
   "test_mode" )
     source venv/bin/activate
     cd main
-    export DJANGO_SETTINGS_MODULE=account_service.settings
+    export DJANGO_SETTINGS_MODULE=aaactl.settings
     echo dropping to shell
     exec "/bin/sh"
     ;;

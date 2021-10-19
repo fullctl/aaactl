@@ -89,8 +89,8 @@ settings_manager.set_from_env("SECRET_KEY")
 settings_manager.set_option("DATABASE_ENGINE", "postgresql_psycopg2")
 settings_manager.set_option("DATABASE_HOST", "127.0.0.1")
 settings_manager.set_option("DATABASE_PORT", "")
-settings_manager.set_option("DATABASE_NAME", "account_service")
-settings_manager.set_option("DATABASE_USER", "account_service")
+settings_manager.set_option("DATABASE_NAME", "aaactl")
+settings_manager.set_option("DATABASE_USER", "aaactl")
 settings_manager.set_option("DATABASE_PASSWORD", "")
 
 
@@ -171,7 +171,7 @@ MIDDLEWARE += [
     "fullctl.django.middleware.CurrentRequestContext",
 ]
 
-ROOT_URLCONF = "account_service.urls"
+ROOT_URLCONF = "aaactl.urls"
 
 TEMPLATES = [
     {
@@ -189,7 +189,7 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "account_service.wsgi.application"
+WSGI_APPLICATION = "aaactl.wsgi.application"
 
 CACHES = {
     "default": {
@@ -243,7 +243,7 @@ INSTALLED_APPS += (
     "crispy_forms",
     # oauth
     "social_django",
-    # account_service apps
+    # aaactl apps
     "common",
     "account",
     "billing",

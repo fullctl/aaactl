@@ -4,11 +4,11 @@ env:
     - dev2.20c.com # CHANGE THIS
   host_url: https://dev2.20c.com:7051 # CHANGE THIS
   email:
-    default: account_service@dev2.20c.com # CHANGE THIS
+    default: aaactl@dev2.20c.com # CHANGE THIS
 
 db:
-  name: account_service
-  user: account_service
+  name: aaactl
+  user: aaactl
   host: localhost
 
 peeringdb:

@@ -3,8 +3,8 @@ services:
   postgres:
     image: "postgres:12"
     environment:
-      POSTGRES_DB: account_service
-      POSTGRES_USER: account_service
+      POSTGRES_DB: aaactl
+      POSTGRES_USER: aaactl
       POSTGRES_PASSWORD: devPASSWORD
     logging:
       options:
@@ -25,8 +25,8 @@ services:
       DATABASE_PASSWORD: devPASSWORD
       DATABASE_HOST: postgres
       # defaults
-      # DATABASE_USER: account_service
-      # DATABASE_NAME: account_service
+      # DATABASE_USER: aaactl
+      # DATABASE_NAME: aaactl
       # DATABASE_PORT: 5432
     logging:
       options:

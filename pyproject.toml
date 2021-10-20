@@ -20,6 +20,11 @@ aaactl = "aaactl.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
+fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
+uWSGI = "^2.0.19"
+
+# XXX move to fullctl
+django-structlog = "^2.1.3"
 
 # not in fullctl
 python-dateutil = "*"
@@ -27,10 +32,6 @@ django-countries = "*"
 django-cors-middleware = "*"
 django-oauth-toolkit = "*"
 
-pytest-filedata = "<1"
-uWSGI = "^2.0.19"
-
-fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
 stripe = "^2.55.2"
 
 [tool.poetry.dev-dependencies]
@@ -38,6 +39,7 @@ stripe = "^2.55.2"
 pytest = ">=6.0.1"
 pytest-django = ">=3.8.0"
 pytest-cov = ">=2.7.1, <3"
+pytest-filedata = "<1"
 pytest-mock = ">=3.2.0"
 codecov = ">=2.0.15, <3"
 coverage = ">=5, <6"

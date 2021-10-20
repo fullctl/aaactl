@@ -120,7 +120,9 @@ LANGUAGE_CODE = "en-us"
 USE_I18N = True
 USE_L10N = True
 
-ADMINS = [("Support", SERVER_EMAIL),]
+ADMINS = [
+    ("Support", SERVER_EMAIL),
+]
 MANAGERS = ADMINS
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

@@ -1,4 +1,4 @@
-FROM python:3.9-alpine as base
+FROM ghcr.io/fullctl/fullctl-builder-alpine:prep-release as base
 
 ARG virtual_env=/venv
 ARG install_to=/srv/service
@@ -31,26 +31,13 @@ ENV POETRY_VERSION=1.1.11
 # build container
 FROM base as builder
 
-RUN apk --update --no-cache add $BUILD_DEPS
-
-# Use Pip to install Poetry
-RUN pip install "poetry==$POETRY_VERSION"
-
-# Create a VENV
-RUN python3 -m venv "$VIRTUAL_ENV"
-
-WORKDIR /build
-
 # individual files here instead of COPY . . for caching
 COPY pyproject.toml poetry.lock ./
 
 # Need to upgrade pip and wheel within Poetry for all its installs
-RUN poetry run pip install --upgrade pip
-RUN poetry run pip install --upgrade wheel
 RUN poetry install --no-root
 
 COPY Ctl/VERSION Ctl/
-
 
 #### final image
 

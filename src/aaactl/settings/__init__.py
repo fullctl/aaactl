@@ -1,4 +1,6 @@
 import os
+import sys
+
 
 from confu.util import SettingsManager
 from django.utils.translation import gettext_lazy as _
@@ -423,14 +425,17 @@ TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 
 # default email goes to console
 settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
 
-# XXX logging
+
+# use structlog for logging
 import structlog
 
 MIDDLEWARE += [
     'django_structlog.middlewares.RequestMiddleware',
 ]
 
+# set these explicitly, not with DEBUG
 settings_manager.set_option("DJANGO_LOG_LEVEL", "INFO")
 settings_manager.set_option("FULLCTL_LOG_LEVEL", "DEBUG")
 
@@ -452,14 +457,53 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-# TODO need to figure out logging
-# if DEBUG:
-#    # make all loggers use the console.
-#    for logger in LOGGING["loggers"]:
-#        LOGGING["loggers"][logger]["handlers"] = ["console"]
-#
-
-# TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
+# logging define extra formatters and handlers for convenience
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+        },
+        "color_console": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.dev.ConsoleRenderer(),
+        },
+        "key_value": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.KeyValueRenderer(key_order=['timestamp', 'level', 'event', 'logger']),
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "color_console",
+            "stream": sys.stdout,
+        },
+        "console_json": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+            "stream": sys.stdout,
+        },
+        "mail_admins": {
+            "class": "django.utils.log.AdminEmailHandler",
+            "level": "ERROR",
+            # plain text by default - HTML is nicer
+            "include_html": True,
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console_json"],
+            "level": DJANGO_LOG_LEVEL,
+        },
+        "django_structlog": {
+            "handlers": ["console_json"],
+            "level": FULLCTL_LOG_LEVEL,
+        },
+    }
+}
 
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")

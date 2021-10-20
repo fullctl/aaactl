@@ -421,6 +421,37 @@ DEBUG_EMAIL = DEBUG
 
 TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 
+# default email goes to console
+settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+
+# XXX logging
+import structlog
+
+MIDDLEWARE += [
+    'django_structlog.middlewares.RequestMiddleware',
+]
+
+settings_manager.set_option("DJANGO_LOG_LEVEL", "INFO")
+settings_manager.set_option("FULLCTL_LOG_LEVEL", "DEBUG")
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    context_class=structlog.threadlocal.wrap_dict(dict),
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
 # TODO need to figure out logging
 # if DEBUG:
 #    # make all loggers use the console.
@@ -429,5 +460,9 @@ TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 #
 
 # TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
+
+# look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
+env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")
+try_include(env_file)
 
 print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DEBUG})")

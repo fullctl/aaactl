@@ -82,6 +82,7 @@ settings_manager.set_option(
 # Contact email, from address, support email
 settings_manager.set_from_env("SERVER_EMAIL")
 
+
 # django secret key
 settings_manager.set_from_env("SECRET_KEY")
 
@@ -94,6 +95,19 @@ settings_manager.set_option("DATABASE_PORT", "")
 settings_manager.set_option("DATABASE_NAME", "aaactl")
 settings_manager.set_option("DATABASE_USER", "aaactl")
 settings_manager.set_option("DATABASE_PASSWORD", "")
+
+
+# email
+
+# default email goes to console
+settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
+
+settings_manager.set_from_env("EMAIL_HOST")
+settings_manager.set_from_env("EMAIL_PORT")
+settings_manager.set_from_env("EMAIL_HOST_USER")
+settings_manager.set_from_env("EMAIL_HOST_PASSWORD")
+settings_manager.set_bool("EMAIL_USE_TLS", True)
 
 
 # Keys
@@ -423,9 +437,6 @@ DEBUG_EMAIL = DEBUG
 
 TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 
-# default email goes to console
-settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-# TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
 
 
 # use structlog for logging

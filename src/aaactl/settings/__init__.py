@@ -1,11 +1,9 @@
 import os
 import sys
 
-
 from confu.util import SettingsManager
-from fullctl.django import settings
 from django.utils.translation import gettext_lazy as _
-
+from fullctl.django import settings
 
 
 def print_debug(*args, **kwargs):
@@ -68,7 +66,6 @@ settings.set_default_v1(settings_manager)
 settings_manager.set_option(
     "PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip()
 )
-
 
 
 # Keys
@@ -166,6 +163,8 @@ DATABASES = {
     }
 }
 
+print(DATABASES)
+
 # START CONCAT CONFIG
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -213,7 +212,6 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.permissions",
     "account.context_processors.info",
 ]
-
 
 
 INSTALLED_APPS += ("fullctl.django.apps.DjangoFullctlConfig",)
@@ -370,12 +368,11 @@ DEBUG_EMAIL = DEBUG
 TEMPLATES[0]["OPTIONS"]["debug"] = DEBUG
 
 
-
 # use structlog for logging
 import structlog
 
 MIDDLEWARE += [
-    'django_structlog.middlewares.RequestMiddleware',
+    "django_structlog.middlewares.RequestMiddleware",
 ]
 
 # set these explicitly, not with DEBUG
@@ -415,7 +412,9 @@ LOGGING = {
         },
         "key_value": {
             "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.KeyValueRenderer(key_order=['timestamp', 'level', 'event', 'logger']),
+            "processor": structlog.processors.KeyValueRenderer(
+                key_order=["timestamp", "level", "event", "logger"]
+            ),
         },
     },
     "handlers": {
@@ -445,7 +444,7 @@ LOGGING = {
             "handlers": ["console_json"],
             "level": FULLCTL_LOG_LEVEL,
         },
-    }
+    },
 }
 
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists

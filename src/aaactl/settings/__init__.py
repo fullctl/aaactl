@@ -3,10 +3,9 @@ import sys
 
 
 from confu.util import SettingsManager
+from fullctl.django import settings
 from django.utils.translation import gettext_lazy as _
 
-cfg = SettingsManager(globals())
-_DEFAULT_ARG = object()
 
 
 def print_debug(*args, **kwargs):
@@ -45,69 +44,31 @@ def read_file(name):
         return fh.read()
 
 
-# Intialize settings manager with global variable
-
-settings_manager = SettingsManager(globals())
-
+SERVICE_TAG = "aaactl"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
-# set RELEASE_ENV, usually one of dev, beta, tutor, prod
-settings_manager.set_option("RELEASE_ENV", "dev")
+# XXX settings_manager = service.serttingsManger(base_dir, vars=globals())
+# Intialize settings manager with global variable
+settings_manager = settings.SettingsManager(globals())
 
-# set DEBUG first, print_debug() depends on it
-if RELEASE_ENV == "dev":
-    settings_manager.set_bool("DEBUG", True)
-else:
-    settings_manager.set_bool("DEBUG", False)
+settings.set_release_env_v1(settings_manager)
 
 # look for mainsite/settings/${RELEASE_ENV}.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}.py")
 try_include(env_file)
 
-print_debug(f"Release env is '{RELEASE_ENV}'")
+settings.set_default_v1(settings_manager)
 
-if RELEASE_ENV == "prod":
-    # we only expose admin on non-production environments
-    settings_manager.set_bool("EXPOSE_ADMIN", False)
-else:
-    settings_manager.set_bool("EXPOSE_ADMIN", True)
+# set RELEASE_ENV, usually one of dev, beta, tutor, prod
+# settings_manager.set_option("RELEASE_ENV", "dev")
 
 # set version, default from /srv/service/etc/VERSION
 settings_manager.set_option(
     "PACKAGE_VERSION", read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip()
 )
 
-# Contact email, from address, support email
-settings_manager.set_from_env("SERVER_EMAIL")
-
-
-# django secret key
-settings_manager.set_from_env("SECRET_KEY")
-
-
-# database
-
-settings_manager.set_option("DATABASE_ENGINE", "postgresql_psycopg2")
-settings_manager.set_option("DATABASE_HOST", "127.0.0.1")
-settings_manager.set_option("DATABASE_PORT", "")
-settings_manager.set_option("DATABASE_NAME", "aaactl")
-settings_manager.set_option("DATABASE_USER", "aaactl")
-settings_manager.set_option("DATABASE_PASSWORD", "")
-
-
-# email
-
-# default email goes to console
-settings_manager.set_option("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-# TODO EMAIL_SUBJECT_PREFIX = "[{}] ".format(RELEASE_ENV)
-
-settings_manager.set_from_env("EMAIL_HOST")
-settings_manager.set_from_env("EMAIL_PORT")
-settings_manager.set_from_env("EMAIL_HOST_USER")
-settings_manager.set_from_env("EMAIL_HOST_PASSWORD")
-settings_manager.set_bool("EMAIL_USE_TLS", True)
 
 
 # Keys
@@ -165,32 +126,6 @@ settings_manager.set_option("DEFAULT_FROM_EMAIL", SERVER_EMAIL)
 LOGIN_URL = "/account/auth/login/"
 LOGIN_REDIRECT_URL = "/account"
 
-# Application definition
-
-INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
-
-settings_manager.set_default("MIDDLEWARE", [])
-MIDDLEWARE += [
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "fullctl.django.middleware.CurrentRequestContext",
-]
-
-ROOT_URLCONF = "aaactl.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -206,8 +141,6 @@ TEMPLATES = [
         },
     }
 ]
-
-WSGI_APPLICATION = "aaactl.wsgi.application"
 
 CACHES = {
     "default": {
@@ -281,7 +214,6 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.info",
 ]
 
-SERVICE_TAG = "aaactl"
 
 
 INSTALLED_APPS += ("fullctl.django.apps.DjangoFullctlConfig",)

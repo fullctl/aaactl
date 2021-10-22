@@ -4,7 +4,6 @@ import sys
 from django.utils.translation import gettext_lazy as _
 from fullctl.django import settings
 
-
 SERVICE_TAG = "aaactl"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -13,9 +12,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "
 
 # Intialize settings manager with global variable
 settings_manager = settings.SettingsManager(globals())
-
-settings.set_release_env_v1(settings_manager)
-RELEASE_ENV = settings_manager.get("RELEASE_ENV")
+settings_manager.set_release_env()
 
 # look for mainsite/settings/${RELEASE_ENV}.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}.py")
@@ -27,7 +24,7 @@ settings_manager.set_option(
     "PACKAGE_VERSION", settings.read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip()
 )
 
-settings.set_default_v1(settings_manager)
+settings_manager.set_default_v1()
 
 
 # Keys
@@ -204,7 +201,7 @@ REST_FRAMEWORK = {
     },
 }
 
-settings.set_default_append(settings_manager)
+settings_manager.set_default_append()
 
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")

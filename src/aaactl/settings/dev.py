@@ -1,6 +1,5 @@
 import secrets
 
-
 settings_manager.set_option("SERVER_EMAIL", "root@localhost")
 settings_manager.set_option(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"

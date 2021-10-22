@@ -1,7 +1,6 @@
 import os
 import sys
 
-from confu.util import SettingsManager
 from django.utils.translation import gettext_lazy as _
 from fullctl.django import settings
 
@@ -27,7 +26,6 @@ settings_manager.try_include(env_file)
 settings_manager.set_option(
     "PACKAGE_VERSION", settings.read_file(os.path.join(BASE_DIR, "etc/VERSION")).strip()
 )
-RELEASE_ENV = settings_manager.get("RELEASE_ENV")
 
 settings.set_default_v1(settings_manager)
 

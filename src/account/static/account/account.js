@@ -199,6 +199,34 @@ account.ChangeInformation = twentyc.cls.define(
 );
 
 
+account.UserSettings = twentyc.cls.define(
+  "UserSettings",
+  {
+    UserSettings : function() {
+      this.elements = {}
+      this.elements.form = $('form.user-settings');
+
+      this.styleAccountInformation();
+
+      this.rest_api_form = new twentyc.rest.Form(this.elements.form);
+      $(this.rest_api_form).on("api-write:success", function() {
+        document.location.href = "/"
+      }.bind(this));
+    },
+
+    styleAccountInformation : function() {
+      $('.collapse').on('show.bs.collapse', function () {
+        $( this ).parent().css('background-color','rgba(224, 225, 226, 0.6)');
+      });
+      $('.collapse').on('hidden.bs.collapse', function () {
+        $( this ).parent().css('background-color','rgba(224, 225, 226, 0)');
+      });
+    },
+  }
+);
+
+
+
 account.ChangePassword = twentyc.cls.define(
   "ChangePassword",
   {

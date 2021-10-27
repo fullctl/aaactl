@@ -64,6 +64,18 @@
       </div>
     </div>
     <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingFive">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+            <h5 class="mb-0">Preferences</h5>
+          </a>
+      </div>
+      <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
+        <div class="card-body">
+          {% include "account/controlpanel/user-preferences.html" with form=usercfg_form %}
+        </div>
+      </div>
+    </div>
+    <div class="card">
       <div class="pt-3 pb-3 pl-4" id="headingTwo">
           <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
             <h5 class="mb-0">Linked Authentication</h5>
@@ -121,6 +133,7 @@
 <script>
 $(document).ready(function() {
   new account.ChangeInformation();
+  new account.UserSettings();
 });
 </script>
 

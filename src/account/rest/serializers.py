@@ -289,6 +289,16 @@ class UserInformationPasswordProtected(UserInformation):
 
 
 @register
+class UserSettings(FormValidationMixin, serializers.ModelSerializer):
+    ref_tag = "usercfg"
+    form = forms.UserSettings
+
+    class Meta:
+        model = models.UserSettings
+        fields = ["opt_promotions"]
+
+
+@register
 class ChangePassword(serializers.Serializer):
     ref_tag = "pwd"
 

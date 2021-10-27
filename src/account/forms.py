@@ -40,6 +40,9 @@ class UserInformationBase(forms.Form):
 
         return username
 
+class UserSettings(forms.Form):
+    opt_promotions = forms.BooleanField(required=False, label=_("Notify me about product updates and promotions"))
+
 
 class RegisterUser(UserInformationBase, forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)

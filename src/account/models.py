@@ -31,6 +31,9 @@ class UserSettings(HandleRefModel):
     email_confirmed = models.BooleanField(
         default=False, help_text=_("Has the user confirmed his email")
     )
+    opt_promotions = models.BooleanField(
+        default=True, help_text=_("User is opted in for promotional notifications")
+    )
 
     class Meta:
         db_table = "account_user_settings"

@@ -41,7 +41,7 @@ class UserInformationBase(forms.Form):
         return username
 
 class UserSettings(forms.Form):
-    opt_promotions = forms.BooleanField(required=False, label=_("Notify me about product updates and promotions"))
+    opt_promotions = forms.BooleanField(required=False, label=_("Notify me about product updates and offers"))
 
 
 class RegisterUser(UserInformationBase, forms.Form):

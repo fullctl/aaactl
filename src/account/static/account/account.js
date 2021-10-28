@@ -456,8 +456,9 @@ account.ServiceApplications = twentyc.cls.define(
 
       this.rest_api_list.formatters.row = (row, data) => {
         let redirect_url = data.invite_redirect.replace("{org.slug}", account.org.slug)
+        let img= row.find("img.logo")
         row.find("a.redirect").attr("href", redirect_url);
-        row.find("img.logo").attr("src", data.logo);
+        img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
       };
 
       this.rest_api_list.load();

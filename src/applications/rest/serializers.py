@@ -20,4 +20,4 @@ def register(cls):
 class Service(serializers.ModelSerializer):
     class Meta:
         model = models.Service
-        fields = ["name", "logo", "api_host", "invite_redirect"]
+        fields = ["name", "slug", "api_host", "invite_redirect"]

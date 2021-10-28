@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0020_auto_20210423_1224'),
+        ("account", "0020_auto_20210423_1224"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='usersettings',
-            name='opt_promotions',
-            field=models.BooleanField(default=True, help_text='User is opted in for promotional notifications'),
+            model_name="usersettings",
+            name="opt_promotions",
+            field=models.BooleanField(
+                default=True, help_text="User is opted in for promotional notifications"
+            ),
         ),
     ]

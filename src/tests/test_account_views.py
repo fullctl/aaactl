@@ -63,7 +63,6 @@ def test_accept_invite(db, account_objects, account_objects_b):
     assert account_objects_b.user.orguser_set.filter(org=account_objects.org).exists()
 
 
-
 def test_index(db, account_objects, client_anon):
 
     response = account_objects.client.get(reverse("account:controlpanel"))

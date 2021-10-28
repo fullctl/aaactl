@@ -1,10 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
 
 import account.forms
-from account.decorators import org_view
 
 # Create your views here.
 
@@ -28,7 +25,9 @@ def index(request):
     create_org_form = account.forms.CreateOrganization()
     create_orgkey_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()
-    usercfg_form = account.forms.UserSettings(initial={"opt_promotions":user.usercfg.opt_promotions})
+    usercfg_form = account.forms.UserSettings(
+        initial={"opt_promotions": user.usercfg.opt_promotions}
+    )
 
     if user.has_usable_password():
         change_pwd_form = account.forms.ChangePassword(user)
@@ -63,4 +62,3 @@ def index(request):
     )
 
     return render(request, "account/controlpanel/index.html", env)
-

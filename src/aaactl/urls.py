@@ -101,7 +101,10 @@ urlpatterns += [
         include(("billing.rest.urls", "billing_api"), namespace="billing_api"),
     ),
     # service applications
-     path("apps/", include(("applications.urls", "applications"), namespace="applications")),
+    path(
+        "apps/",
+        include(("applications.urls", "applications"), namespace="applications"),
+    ),
     path(
         "api/apps/",
         include(

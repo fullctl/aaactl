@@ -1,7 +1,8 @@
-from fullctl.django.rest.core import BadRequest
 from fullctl.django.rest.route.service_bridge import route
-from fullctl.django.rest.views.service_bridge import DataViewSet, MethodFilter, SystemViewSet
-from rest_framework.decorators import action
+from fullctl.django.rest.views.service_bridge import (
+    DataViewSet,
+    SystemViewSet,
+)
 from rest_framework.response import Response
 
 import applications.models as application_models
@@ -32,7 +33,7 @@ class Heartbeat(SystemViewSet):
 
     @grainy_endpoint("service_bridge.system", explicit=False)
     def list(self, request, *args, **kwargs):
-        return Response({"status":"ok"})
+        return Response({"status": "ok"})
 
 
 @route

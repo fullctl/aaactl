@@ -62,7 +62,6 @@ class UserInformation(viewsets.ViewSet):
         serializer.save()
         return Response(serializer.data)
 
-
     @action(detail=False, methods=["PUT"])
     @auditlog()
     @user_endpoint()

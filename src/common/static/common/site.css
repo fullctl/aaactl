@@ -33,6 +33,9 @@ h5 {
 .right {
   text-align: right;
 }
+.center {
+  text-align: center;
+}
 
 .validation-error {
   color: darkred;
@@ -579,4 +582,17 @@ table.table-sm {
 div.page_error {
   text-align: center;
   margin: 50px;
+}
+
+td.status {
+  padding: 3px;
+}
+.status-ok {
+  background-color: darkgreen;
+  color: #fff;
+}
+.status-failure {
+  background-color: darkred;
+  color: #fff;
+  text-decoration: underline;
 }

@@ -1,6 +1,6 @@
 from fullctl.django.rest.core import BadRequest
 from fullctl.django.rest.route.service_bridge import route
-from fullctl.django.rest.views.service_bridge import DataViewSet, MethodFilter
+from fullctl.django.rest.views.service_bridge import DataViewSet, MethodFilter, SystemViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -24,6 +24,15 @@ class AaactlDataViewSet(DataViewSet):
     @grainy_endpoint("service_bridge")
     def list(self, request, *args, **kwargs):
         return self._list(request, *args, **kwargs)
+
+
+@route
+class Heartbeat(SystemViewSet):
+    ref_tag = "heartbeat"
+
+    @grainy_endpoint("service_bridge.system", explicit=False)
+    def list(self, request, *args, **kwargs):
+        return Response({"status":"ok"})
 
 
 @route

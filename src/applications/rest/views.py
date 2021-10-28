@@ -13,7 +13,7 @@ class Services(viewsets.ViewSet):
 
     def list(self, request):
         serializer = Serializers.svcapp(
-            Service.objects.all(),
+            Service.objects.filter(status="ok", group="fullctl"),
             many=True,
         )
         return Response(serializer.data)

@@ -57,7 +57,36 @@ pytest tests/test_account_api.py::test_org_users
 
 ## Configure instance
 
-### Setup PDB oauth2 client
+### Service bridge
+
+#### Setup internal api key
+
+Go to `https://$ACCOUNT_SERVICE_URL/admin/account/internalapikey/add/` and create
+a new internal api key.
+
+This key is used for internal communications between aaactl and the various fullctl services.
+
+Under `Internal API Key Permissions` for the key also create the following entry:
+
+- namespace: `*.*`
+- permissions: `crud`
+
+This key has access to everything - never share it.
+
+#### Task processor
+
+In order for aaactl to sync org and user information changes to other fullctl
+services in real time, at least one task processor needs to be running.
+
+Start a task processor by running
+
+```sh
+python manage.py fullctl_poll_tasks --workers 4
+```
+
+### oAuth
+
+#### Setup PDB oauth2 client
 
 Redirect goes to:
 
@@ -68,13 +97,13 @@ For example:
 `https://account.dev8.20c.com/social/complete/peeringdb/`
 ￼
 ￼
-### Setup Google oauth2 client
+#### Setup Google oauth2 client
 
 https://$ACCOUNT_SERVICE_URL/social/complete/google-oauth2/
 
 https://account.dev8.20c.com/social/complete/google-oauth2/
 
-### Setup oauth2 provider
+#### Setup oauth2 provider
 
 Create an application for FullCtl at /admin/oauth2_provider/application
 
@@ -91,7 +120,6 @@ https://fullctl.dev8.20c.com/complete/twentyc/
 * skip authorization: true
 * client id: generated or if fullctl already set up use the client id set up there
 * secret: generated or if fullctl already set up use the secret setup there
-
 
 -----
 

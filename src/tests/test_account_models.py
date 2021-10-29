@@ -9,7 +9,7 @@ def test_personal_org(db, account_objects):
 
 def test_personal_org_user_del(db, account_objects):
     personal_org = account_objects.user.personal_org
-    assert personal_org.label == "Personal"
+    assert personal_org.label == "user_test (Personal)"
 
     account_objects.user.delete()
     personal_org.refresh_from_db()
@@ -83,9 +83,6 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
     assert inv.created_by is None
 
     inv.send()
-
-    stdout = capsys.readouterr().out
-    assert "[Deleted user]" in stdout
 
     inv.complete(account_objects_b.user)
     assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()

@@ -12,6 +12,6 @@ class ServiceAPIEndpointInline(admin.TabularInline):
 
 @admin.register(Service)
 class ServiceAdmin(BaseAdmin):
-    list_display = ("name", "slug", "created")
+    list_display = ("name", "slug", "status", "created")
     search_fields = ("name",)
     inlines = (ServiceAPIEndpointInline,)

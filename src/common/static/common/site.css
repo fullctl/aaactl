@@ -33,6 +33,9 @@ h5 {
 .right {
   text-align: right;
 }
+.center {
+  text-align: center;
+}
 
 .validation-error {
   color: darkred;
@@ -490,6 +493,26 @@ table.table-sm {
   height: 28px;
 }
 
+.service-apps-list {
+  text-align: center;
+}
+
+.service-app {
+  display: inline-block;
+  background-color: #4a4d50;
+  padding: 5px;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+
+.service-app a {
+  border: none;
+}
+
+.service-app img {
+  height: 25px;
+}
+
 .service-list td {
   padding: .3rem 1rem;
 }
@@ -559,4 +582,17 @@ table.table-sm {
 div.page_error {
   text-align: center;
   margin: 50px;
+}
+
+td.status {
+  padding: 3px;
+}
+.status-ok {
+  background-color: darkgreen;
+  color: #fff;
+}
+.status-failure {
+  background-color: darkred;
+  color: #fff;
+  text-decoration: underline;
 }

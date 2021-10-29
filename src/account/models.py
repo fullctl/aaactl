@@ -2,7 +2,6 @@ import datetime
 import secrets
 
 import reversion
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -12,6 +11,7 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 from django_grainy.models import Permission, PermissionField, PermissionManager
 from django_grainy.util import Permissions, check_permissions
+from fullctl.django.util import host_url
 
 from common.email import email_noreply
 from common.models import HandleRefModel
@@ -30,6 +30,9 @@ class UserSettings(HandleRefModel):
     )
     email_confirmed = models.BooleanField(
         default=False, help_text=_("Has the user confirmed his email")
+    )
+    opt_promotions = models.BooleanField(
+        default=True, help_text=_("User is opted in for promotional notifications")
     )
 
     class Meta:
@@ -124,7 +127,7 @@ class Organization(HandleRefModel):
     @property
     def label(self):
         if self.user_id:
-            return _("Personal")
+            return f"{self.user.username} (Personal)"
         return self.name
 
     @property
@@ -408,7 +411,7 @@ class EmailConfirmation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL,
+            host_url(),
             reverse("account:auth-confirm-email", args=(self.secret,)),
         )
 
@@ -481,7 +484,7 @@ class PasswordReset(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL,
+            host_url(),
             reverse("account:auth-reset-password", args=(self.secret,)),
         )
 
@@ -665,7 +668,7 @@ class Invitation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("account:accept-invite", args=(self.secret,))
+            host_url(), reverse("account:accept-invite", args=(self.secret,))
         )
 
     def __str__(self):
@@ -686,7 +689,7 @@ class Invitation(HandleRefModel):
                     "inv": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": settings.HOST_URL,
+                    "host": host_url(),
                 },
             ).content.decode("utf-8"),
         )

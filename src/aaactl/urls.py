@@ -1,4 +1,4 @@
-"""account_service URL Configuration
+"""aaactl URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.1/topics/http/urls/
@@ -99,6 +99,17 @@ urlpatterns += [
     path(
         "api/billing/",
         include(("billing.rest.urls", "billing_api"), namespace="billing_api"),
+    ),
+    # service applications
+    path(
+        "apps/",
+        include(("applications.urls", "applications"), namespace="applications"),
+    ),
+    path(
+        "api/apps/",
+        include(
+            ("applications.rest.urls", "applications_api"), namespace="applications_api"
+        ),
     ),
     # social-auth urls
     path("social/", include("social_django.urls", namespace="social")),

@@ -199,6 +199,34 @@ account.ChangeInformation = twentyc.cls.define(
 );
 
 
+account.UserSettings = twentyc.cls.define(
+  "UserSettings",
+  {
+    UserSettings : function() {
+      this.elements = {}
+      this.elements.form = $('form.user-settings');
+
+      this.styleAccountInformation();
+
+      this.rest_api_form = new twentyc.rest.Form(this.elements.form);
+      $(this.rest_api_form).on("api-write:success", function() {
+        document.location.href = "/"
+      }.bind(this));
+    },
+
+    styleAccountInformation : function() {
+      $('.collapse').on('show.bs.collapse', function () {
+        $( this ).parent().css('background-color','rgba(224, 225, 226, 0.6)');
+      });
+      $('.collapse').on('hidden.bs.collapse', function () {
+        $( this ).parent().css('background-color','rgba(224, 225, 226, 0)');
+      });
+    },
+  }
+);
+
+
+
 account.ChangePassword = twentyc.cls.define(
   "ChangePassword",
   {
@@ -419,6 +447,27 @@ account.PasswordReset = twentyc.cls.define(
   }
 );
 
+account.ServiceApplications = twentyc.cls.define(
+  "ServiceApplications",
+  {
+    ServiceApplications : function() {
+      this.element = $('.service-apps-listing');
+      this.rest_api_list = new twentyc.rest.List(this.element);
+
+      this.rest_api_list.formatters.row = (row, data) => {
+        let redirect_url = data.invite_redirect.replace("{org.slug}", account.org.slug)
+        let img= row.find("img.logo")
+        row.find("a.redirect").attr("href", redirect_url);
+        img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+      };
+
+      this.rest_api_list.load();
+
+
+    }
+});
+
+
 account.Services = twentyc.cls.define(
   "Services",
   {
@@ -478,10 +527,14 @@ account.Services = twentyc.cls.define(
         return $('<td>').text(this.description).addClass('dark-grey table-text-bold')
       }
       this.formattedUsageType = () => {
-        return $('<td>').append([
-          $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
-          $('<span>').text(this.editedUsageType()).addClass('dark-grey table-text-large')
-        ])
+        if(this.type == "Fixed Price") {
+          return $('<td>');
+        } else {
+          return $('<td>').append([
+            $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
+            $('<span>').text(this.editedUsageType()).addClass('dark-grey table-text-large')
+          ])
+        }
       }
       this.editedUsageType = () => {
         if ( this.type == 'Metered Usage') {
@@ -493,10 +546,14 @@ account.Services = twentyc.cls.define(
       }
 
       this.formattedUsageAmount = () => {
-        return $('<td>').append([
-          $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
-          $('<span>').text(this.editedUsageAmount()).addClass('dark-grey table-text-large')
-        ])
+        if(this.type == "Fixed Price") {
+          return $('<td>');
+        } else {
+          return $('<td>').append([
+            $('<span>').text('Usage: ').addClass('light-grey table-text-thin'),
+            $('<span>').text(this.editedUsageAmount()).addClass('dark-grey table-text-large')
+          ])
+        }
       }
 
       this.editedUsageAmount = () => {
@@ -514,7 +571,7 @@ account.Services = twentyc.cls.define(
       }
 
       this.formattedCost = () => {
-        return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right')
+        return $('<td>').text('$' + Number(this.cost).toFixed(2)).addClass('dark-grey table-text-large text-align-right right')
       }
     }
 });

@@ -47,6 +47,22 @@ class UserInformation(viewsets.ViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=["PUT"])
+    @user_endpoint()
+    @disable_api_key
+    def user_settings(self, request):
+        serializer = Serializers.usercfg(
+            instance=request.user.usercfg,
+            data=request.data,
+            many=False,
+            context={"user": request.user, "request": request},
+        )
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["PUT"])
     @auditlog()
     @user_endpoint()
     @disable_api_key

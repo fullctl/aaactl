@@ -202,6 +202,8 @@ def oauth_profile(request):
         user_name=user.username,
         given_name=user.first_name,
         family_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
         name=f"{user.first_name} {user.last_name}",
         # TODO: dont assume oauth implies verification
         verified_user=True,

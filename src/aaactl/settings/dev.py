@@ -14,3 +14,6 @@ SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 
 # random static URL to stop caching
 STATIC_URL = f"/s/{secrets.token_urlsafe(1)}/"
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+

@@ -33,4 +33,5 @@ def info(request):
         "billing_env": settings.BILLING_ENV,
         "release_env": settings.RELEASE_ENV,
         "version": settings.PACKAGE_VERSION,
+        "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
     }

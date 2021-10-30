@@ -88,6 +88,8 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 ]
 
 
+settings_manager.set_option("GOOGLE_ANALYTICS_ID","")
+
 # Billing integration
 
 settings_manager.set_option("BILLING_ENV", "test")

@@ -89,6 +89,7 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 
 
 settings_manager.set_option("GOOGLE_ANALYTICS_ID","")
+settings_manager.set_option("CLOUDFLARE_ANALYTICS_ID","")
 
 # Billing integration
 

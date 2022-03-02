@@ -280,11 +280,11 @@ account.UsersList = twentyc.cls.define(
         for(component in value) {
           editor = this.template("permissions")
           var label = value[component].label
-          editor.find('[data-field="component"]').text(label);
           widget = new twentyc.rest.PermissionsForm(editor);
           widget.fill(data);
           widget.fill({component:component});
           widget.set_flag_values(value[component]);
+          editor.find('[data-field="component"]').text(label);
           container.append(editor)
         }
         return container;
@@ -334,11 +334,11 @@ account.OrgKeysList = twentyc.cls.define(
         for(component in value) {
           editor = this.template("permissions")
           var label = value[component].label
-          editor.find('[data-field="component"]').text(label);
           widget = new twentyc.rest.PermissionsForm(editor);
           widget.fill(data);
           widget.fill({component:component});
           widget.set_flag_values(value[component]);
+          editor.find('[data-field="component"]').text(label);
           container.append(editor)
         }
         return container;

@@ -1,8 +1,5 @@
 from fullctl.django.rest.route.service_bridge import route
-from fullctl.django.rest.views.service_bridge import (
-    DataViewSet,
-    SystemViewSet,
-)
+from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from rest_framework.response import Response
 
 import applications.models as application_models

@@ -114,7 +114,9 @@ class UserInformation(viewsets.ViewSet):
         serializer = Serializers.inv(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["POST"], url_path="accept-invite/(?P<invite_id>[^/.]+)")
+    @action(
+        detail=False, methods=["POST"], url_path="accept-invite/(?P<invite_id>[^/.]+)"
+    )
     @user_endpoint()
     @disable_api_key
     def accept_invite(self, request, invite_id=None):
@@ -125,7 +127,9 @@ class UserInformation(viewsets.ViewSet):
         invite.complete(user)
         return Response(data)
 
-    @action(detail=False, methods=["POST"], url_path="reject-invite/(?P<invite_id>[^/.]+)")
+    @action(
+        detail=False, methods=["POST"], url_path="reject-invite/(?P<invite_id>[^/.]+)"
+    )
     @user_endpoint()
     @disable_api_key
     def reject_invite(self, request, invite_id=None):
@@ -135,8 +139,6 @@ class UserInformation(viewsets.ViewSet):
         data = serializer.data
         invite.delete()
         return Response(data)
-
-
 
     @action(detail=False, methods=["POST"])
     @auditlog()

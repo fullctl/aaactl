@@ -64,6 +64,19 @@
       </div>
     </div>
     <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingSix">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+            <h5 class="mb-0">Invites <span id="count-invites"></span></h5>
+          </a>
+      </div>
+      <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
+        <div class="card-body">
+          {% include "account/controlpanel/user-invites.html" with form=usercfg_form %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="pt-3 pb-3 pl-4" id="headingFive">
           <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
             <h5 class="mb-0">Preferences</h5>

@@ -38,6 +38,8 @@ account.ControlPanel = twentyc.cls.define(
         console.log(response.content);
       }.bind(this));
 
+      this.personal_invites = new account.PersonalInvites();
+
     },
 
     postFromLink: function(url) {
@@ -85,6 +87,7 @@ account.ControlPanel = twentyc.cls.define(
 
     loadDropDown: function(){
       this.dropDown = new twentyc.rest.List($('.org-select'));
+      $('.org-select-dropdown-header').empty();
 
       $(this.dropDown).on("insert:after", (e, row, data) => {
         row.attr('href', '/?org='+ data.slug)
@@ -650,6 +653,48 @@ account.PersonalAPIKeys = twentyc.cls.define(
       })
     }
 })
+
+account.PersonalInvites = twentyc.cls.define(
+  "PersonalInvites",
+  {
+    PersonalInvites: function() {
+      this.element = $('.personal-invites');
+      this.rest_api_list = new twentyc.rest.List(this.element);
+
+      $(this.rest_api_list).on("api-get:success", (ev, e, d, response) => {
+        if(response.content.data.length > 0)
+          $('#count-invites').text("("+response.content.data.length+")");
+      });
+
+      this.rest_api_list.formatters.row = (row, data) => {
+        var button_accept = new twentyc.rest.Button(row.find('button.accept-invite'));
+        var button_reject = new twentyc.rest.Button(row.find('button.reject-invite'));
+
+        button_accept.format_request_url = (url) => {
+          return url.replace(/invite_id/g, data.id);
+        }
+
+        button_reject.format_request_url = (url) => {
+          return url.replace(/invite_id/g, data.id);
+        }
+
+        $(button_reject).on("api-write:success", () => {
+          this.rest_api_list.load();
+        });
+
+        $(button_accept).on("api-write:success", () => {
+          this.rest_api_list.load();
+          window.controlpanel.loadDropDown();
+          window.controlpanel.styleDropDown();
+        });
+
+      };
+
+      this.rest_api_list.load();
+    }
+  }
+)
+
 
 
 account.PendingUsers = twentyc.cls.define(

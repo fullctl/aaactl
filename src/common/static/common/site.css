@@ -10,6 +10,7 @@
   --darkest-gray: #2C2E30;
   --highlight-success: #7ED321;
   --hightlight-warning: #D0021B;
+  --danger: #dc3545;
 }
 
 body {
@@ -68,6 +69,10 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 .right {
   text-align: right;
+}
+
+.marg-top {
+  margin-top: 15px;
 }
 
 .header-outer {
@@ -322,6 +327,12 @@ appears when the header is clicked.*/
   border-radius: 100px;
 }
 
+.user-info button.danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
 .card {
   background-color: var(--lightest-gray);
   border-radius: 0;
@@ -445,6 +456,11 @@ table.table-sm {
   background-color: var(--light-gray);
   font-size: 14px;
   color: var(--dark-gray);
+}
+
+.btn-square.btn-danger {
+  background-color: #dc3534;
+  color: #fff;
 }
 
 .user-badge {
@@ -576,6 +592,18 @@ table.table-sm {
 }
 
 /*
+ * personal invites
+ */
+
+div.invites-list-body + div.no-invites {
+  display: none;
+}
+
+div.invites-list-body:empty + div.no-invites {
+  display: block;
+}
+
+/*
  * error page
  */
 
@@ -596,3 +624,4 @@ td.status {
   color: #fff;
   text-decoration: underline;
 }
+

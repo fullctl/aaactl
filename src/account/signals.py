@@ -25,10 +25,9 @@ def sync_user(sender, **kwargs):
 
 @receiver(post_save, sender=OrganizationUser)
 def sync_orguser_add(sender, **kwargs):
-    if kwargs.get("created"):
-        task_models.CallCommand.create_task(
-            "aaactl_sync", "orguser", kwargs["instance"].user_id
-        )
+    task_models.CallCommand.create_task(
+        "aaactl_sync", "orguser", kwargs["instance"].user_id
+    )
 
 
 @receiver(post_delete, sender=OrganizationUser)

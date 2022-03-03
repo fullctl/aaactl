@@ -1,3 +1,6 @@
+from account.models import Organization
+
+
 def set_selected_org(request, org=None, raise_on_denial=False):
     if not request.user.is_authenticated:
         return
@@ -9,7 +12,7 @@ def set_selected_org(request, org=None, raise_on_denial=False):
                 raise PermissionError()
 
     if not org:
-        org = request.user.personal_org
+        org = Organization.default_org(request.user)
 
     request.session["selected_org"] = org.id
 

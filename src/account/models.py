@@ -92,6 +92,17 @@ class Organization(HandleRefModel):
     @classmethod
     def personal_org(cls, user):
 
+        """
+        returns the personal org for the user
+
+        will create the org if it does not exist
+        """
+
+        try:
+            return user.orguser_set.get(org__user_id=user.id).org
+        except OrganizationUser.DoesNotExist:
+            pass
+
         if not cls.objects.filter(slug=user.username).exists():
             slug = user.username
         else:
@@ -103,6 +114,22 @@ class Organization(HandleRefModel):
             org.add_user(user, "crud")
 
         return org
+
+    @classmethod
+    def default_org(cls, user):
+        """
+        Returns the default organization for the user.
+
+        If the user has not specified a default organization, the user's personal
+        organization will be returned,
+        """
+
+        default_org = user.orguser_set.filter(is_default=True)
+
+        if default_org.exists():
+            return default_org.first().org
+
+        return cls.personal_org(user)
 
     @classmethod
     def get_for_user(cls, user, perms="r"):
@@ -143,6 +170,12 @@ class Organization(HandleRefModel):
     def add_user(self, user, perms="r"):
         orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
+
+            if user.orguser_set.count() == 2:
+                # switch from personal org to real org as primary org
+                orguser.is_default = True
+                orguser.save()
+
             for mperm in ManagedPermission.objects.all():
                 if perms == "r":
                     mperm.auto_grant_user(self, user)
@@ -171,6 +204,21 @@ class Organization(HandleRefModel):
 
         return check_permissions(user, self, "c", ignore_grant_all=True)
 
+    def set_as_default(self, user):
+
+        """
+        Makes this organization the default organization for the user
+        """
+
+        orguser = user.orguser_set.filter(org=self).first()
+
+        if not orguser:
+            raise KeyError("Not a member of this organization")
+
+        # set new default org
+        orguser.is_default = True
+        orguser.save()
+
 
 @reversion.register
 class OrganizationUser(HandleRefModel):
@@ -179,6 +227,11 @@ class OrganizationUser(HandleRefModel):
     )
     org = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="orguser_set"
+    )
+
+    is_default = models.BooleanField(
+        default=False,
+        help_text=_("This organization is the user's designated default organization"),
     )
 
     class Meta:
@@ -191,6 +244,11 @@ class OrganizationUser(HandleRefModel):
 
     def __str__(self):
         return f"{self.org.slug}:{self.user.username} ({self.id})"
+
+    def save(self, **kwargs):
+        if self.is_default:
+            self.user.orguser_set.exclude(id=self.id).update(is_default=False)
+        super().save(**kwargs)
 
 
 def generate_api_key():

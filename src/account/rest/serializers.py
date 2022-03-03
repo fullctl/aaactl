@@ -168,10 +168,20 @@ class Organization(serializers.ModelSerializer):
     label = serializers.CharField(read_only=True)
     selected = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
+    is_default = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Organization
-        fields = ["id", "name", "label", "slug", "selected", "personal", "is_admin"]
+        fields = [
+            "id",
+            "name",
+            "label",
+            "slug",
+            "selected",
+            "personal",
+            "is_admin",
+            "is_default",
+        ]
 
     def get_personal(self, obj):
         if obj.user == self.context.get("user"):
@@ -187,6 +197,13 @@ class Organization(serializers.ModelSerializer):
         if not hasattr(self, "_perms"):
             self._perms = Permissions(user)
         return self._perms.check(obj, "crud")
+
+    def get_is_default(self, obj):
+        user = self.context.get("user")
+        if not hasattr(self, "_default_org"):
+            self._default_org = models.Organization.default_org(user)
+
+        return self._default_org.id == obj.id
 
     def validate(self, data):
         user = self.context.get("user")

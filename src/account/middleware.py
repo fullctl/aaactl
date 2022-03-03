@@ -37,7 +37,7 @@ class RequestAugmentation:
             request.session["selected_org"]
             org = Organization.objects.get(id=request.session["selected_org"])
         except Organization.DoesNotExist:
-            org = Organization.personal_org(request.user)
+            org = Organization.default_org(request.user)
             set_selected_org(request, org)
         except KeyError:
             org = set_selected_org(request)

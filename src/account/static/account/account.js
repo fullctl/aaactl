@@ -20,7 +20,9 @@ account.ControlPanel = twentyc.cls.define(
       this.changePassword();
 
       this.elements.order_history = $('.order-history');
-      this.order_history_list = new twentyc.rest.List(this.elements.order_history);
+      if(this.elements.order_history.length > 0) {
+        this.order_history_list = new twentyc.rest.List(this.elements.order_history);
+      }
       this.buildOrderHistory();
 
       this.elements.resend_confirmation_email = $('form.resend-confirmation-email');
@@ -53,6 +55,12 @@ account.ControlPanel = twentyc.cls.define(
     },
 
     buildOrderHistory: function() {
+
+      // if the user isn't provisioned to view the order history this
+      // property wont be set and we can just return
+      if(!this.order_history_list)
+        return;
+
       this.order_history_list.formatters.description = function(value, data) {
         return $('<span>').append(
           $('<strong>').text(value),
@@ -89,6 +97,15 @@ account.ControlPanel = twentyc.cls.define(
       this.dropDown = new twentyc.rest.List($('.org-select'));
       $('.org-select-dropdown-header').empty();
 
+
+      this.dropDown.formatters.label = (value, data) => {
+        if(data.is_default) {
+          return value + " (Primary)";
+        }
+        return value;
+      }
+
+
       $(this.dropDown).on("insert:after", (e, row, data) => {
         row.attr('href', '/?org='+ data.slug)
         if (data.selected) {
@@ -99,8 +116,15 @@ account.ControlPanel = twentyc.cls.define(
         };
       });
       $(this.dropDown).on("load:after", ()=> {
-        $('.org-select-menu').children().last().wrap('<div class="custom-divider"></div')
-        $('.org-select-menu').append(`<a class="dropdown-item org-item" role="button" data-toggle="modal" data-target="#createOrgModal">+ Create Organization</a>`)
+        var menu = $('.org-select-menu');
+
+        menu.children().last().wrap('<div class="custom-divider"></div');
+
+        var btn_make_default = new twentyc.rest.Button(this.dropDown.template("btn_make_default"));
+        $(btn_make_default).on('api-write:success', ()=>{ this.loadDropDown(); });
+        menu.append(btn_make_default.element)
+
+        menu.append(`<a class="dropdown-item org-item" role="button" data-toggle="modal" data-target="#createOrgModal">+ Create Organization</a>`)
       });
       this.dropDown.load();
     },

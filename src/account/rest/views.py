@@ -144,8 +144,6 @@ class UserInformation(viewsets.ViewSet):
     @user_endpoint()
     @disable_api_key
     def set_default_org(self, request):
-        user = request.user
-
         if not request.selected_org:
             return Response({"non_field_errors": ["no org selected"]}, status=400)
 

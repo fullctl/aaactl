@@ -16,6 +16,8 @@ def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
 
     response = account_objects.api_client_anon.get(reverse("account_api:user-list"))
 
+    print(response.headers)
+
     assert response.status_code == 403
 
     response = account_objects.api_client_anon.get(

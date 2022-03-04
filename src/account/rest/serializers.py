@@ -72,9 +72,9 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
     def permission_holder(self):
         return self.validated_data[self.rel_fld]
 
-    def validate_component(self, value):
+    def _validate_component(self, value, org):
         value = value.lower()
-        org = self.instance.org
+
         if value not in dict(self.permission_namespaces(org)):
             raise serializers.ValidationError(_("Not a valid permissioning component"))
 
@@ -92,6 +92,9 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
     def validate(self, data):
         if data.get(self.rel_fld).org != data.get("org"):
             raise serializers.ValidationError(_("Invalid org relationship"))
+
+        self._validate_component(data["component"], data["org"])
+
         return data
 
     def save(self):

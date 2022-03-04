@@ -591,6 +591,16 @@ class ManagedPermission(HandleRefModel):
         default=True, help_text=_("Can organization admins manage this permission?")
     )
 
+    grant_mode = models.CharField(
+        max_length=16,
+        default="auto",
+        choices=(
+            ("auto", _("Automatically")),
+            ("restricted", _("Restricted")),
+        ),
+        help_text=_("How is this permission granted"),
+    )
+
     auto_grant_admins = PermissionField(
         help_text=_(
             "Auto grants the permission at the following level to organization admins"
@@ -641,7 +651,21 @@ class ManagedPermission(HandleRefModel):
     def __str__(self):
         return f"{self.group} - {self.description}"
 
+    def can_grant_to_org(self, org):
+
+        if self.grant_mode == "auto":
+            return True
+
+        if self.grant_mode == "restricted":
+            return org.org_managed_perm_set.filter(managed_permission=self).exists()
+
+        raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
+
     def auto_grant(self, org):
+
+        if not self.can_grant_to_org(org):
+            self.revoke(org)
+            return
 
         for user in org.users:
             if org.is_admin_user(user):
@@ -657,7 +681,7 @@ class ManagedPermission(HandleRefModel):
             self.revoke_user(org, user)
 
         for key in org.orgkey_set.all():
-            self.revoke_key(org, key)
+            self.revoke_key(key)
 
     def revoke_user(self, org, user):
         ns = self.namespace.format(org_id=org.pk)
@@ -686,6 +710,38 @@ class ManagedPermission(HandleRefModel):
             perms = self.auto_grant_users
 
         orgkey.grainy_permissions.add_permission(ns, perms)
+
+
+@reversion.register
+class OrganizationManagedPermission(HandleRefModel):
+
+    """
+    Describes a relationship of an organization to a `restricted` ManagedPermission
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+    )
+
+    managed_permission = models.ForeignKey(
+        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+    )
+
+    reason = models.CharField(
+        max_length=255,
+        help_text=_("Reason organization was granted to manage this permission"),
+    )
+
+    class HandleRef:
+        tag = "org_managed_perm"
+
+    class Meta:
+        db_table = "account_org_managed_perms"
+        verbose_name = _("Managed permission for organization")
+        verbose_name_plural = _("Managed permissions for organization")
+
+    def apply(self):
+        self.managed_permission.auto_grant(self.org)
 
 
 @reversion.register

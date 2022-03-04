@@ -45,14 +45,18 @@ class FormValidationMixin:
 
 
 class PermissionNamespacesMixin:
-    @property
-    def permission_namespaces(self):
+    def permission_namespaces(self, org):
         if not hasattr(self, "_permission_namespaces"):
             mperms = models.ManagedPermission.objects.filter(
                 status="ok", managable=True
             ).order_by("group", "description")
             r = []
             for mperm in mperms:
+
+                if mperm.grant_mode == "restricted":
+                    if not mperm.org_managed_perm_set.filter(org=org).exists():
+                        continue
+
                 r.append((mperm.namespace, mperm.description))
             self._permission_namespaces = r
 
@@ -70,7 +74,8 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
     def validate_component(self, value):
         value = value.lower()
-        if value not in dict(self.permission_namespaces):
+        org = self.instance.org
+        if value not in dict(self.permission_namespaces(org)):
             raise serializers.ValidationError(_("Not a valid permissioning component"))
 
         return value
@@ -138,7 +143,7 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
             }
-            for ns, label in self.permission_namespaces
+            for ns, label in self.permission_namespaces(obj.org)
         }
 
         # for svc in self.context.get("services",[]):
@@ -503,7 +508,7 @@ class OrganizationAPIKey(
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
             }
-            for ns, label in self.permission_namespaces
+            for ns, label in self.permission_namespaces(obj.org)
         }
 
         return rv

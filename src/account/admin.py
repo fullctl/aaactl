@@ -18,6 +18,7 @@ from account.models import (
     Organization,
     OrganizationAPIKey,
     OrganizationAPIKeyPermission,
+    OrganizationManagedPermission,
     OrganizationUser,
     PasswordReset,
 )
@@ -126,6 +127,7 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
         "namespace",
         "group",
         "managable",
+        "grant_mode",
         "auto_grant_admins",
         "auto_grant_users",
         "created",
@@ -138,3 +140,13 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
         if obj:
             return ("namespace",)
         return super().get_readonly_fields(request, obj)
+
+
+@admin.register(OrganizationManagedPermission)
+class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
+    list_display = (
+        "org",
+        "managed_permission",
+        "reason",
+        "created",
+    )

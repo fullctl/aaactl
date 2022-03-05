@@ -1,6 +1,6 @@
 import fullctl.django.models.concrete.tasks as task_models
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 from account.models import (
@@ -8,6 +8,7 @@ from account.models import (
     EmailConfirmation,
     ManagedPermission,
     Organization,
+    OrganizationManagedPermission,
     OrganizationUser,
     UserSettings,
 )
@@ -25,10 +26,9 @@ def sync_user(sender, **kwargs):
 
 @receiver(post_save, sender=OrganizationUser)
 def sync_orguser_add(sender, **kwargs):
-    if kwargs.get("created"):
-        task_models.CallCommand.create_task(
-            "aaactl_sync", "orguser", kwargs["instance"].user_id
-        )
+    task_models.CallCommand.create_task(
+        "aaactl_sync", "orguser", kwargs["instance"].user_id
+    )
 
 
 @receiver(post_delete, sender=OrganizationUser)
@@ -78,7 +78,7 @@ def set_permissions(sender, **kwargs):
             mperm.auto_grant(org)
     else:
         for org in Organization.objects.all():
-            if not mperm.managable:
+            if not mperm.managable_for_org(org):
                 mperm.revoke(org)
             mperm.auto_grant(org)
 
@@ -89,3 +89,15 @@ def revoke_permissions(sender, **kwargs):
 
     for org in Organization.objects.all():
         mperm.revoke(org)
+
+
+@receiver(post_save, sender=OrganizationManagedPermission)
+def set_org_manage_permission(sender, **kwargs):
+    instance = kwargs.get("instance")
+    instance.apply()
+
+
+@receiver(pre_delete, sender=OrganizationManagedPermission)
+def delete_org_manage_permission(sender, **kwargs):
+    instance = kwargs.get("instance")
+    instance.managed_permission.revoke(instance.org)

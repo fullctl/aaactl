@@ -250,6 +250,7 @@ appears when the header is clicked.*/
   color: var(--text-accent);
   padding-left: .75rem;
   padding-right: .75rem;
+  cursor: pointer;
 }
 /* Custom css-only caret*/
 .caret {

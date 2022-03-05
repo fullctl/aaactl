@@ -80,6 +80,7 @@ class Bridge(client.Bridge):
 
         data = {
             "user": self.user_id,
+            "default_org": Organization.default_org(self.user).id,
             "orgs": [org.id for org in Organization.get_for_user(self.user)],
         }
 

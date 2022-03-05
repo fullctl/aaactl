@@ -213,6 +213,8 @@ def oauth_profile(request):
         ],
     )
 
+    print(data)
+
     if oauth_email:
         data.update(dict(email=user.email))
 

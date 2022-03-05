@@ -140,6 +140,17 @@ class UserInformation(viewsets.ViewSet):
         invite.delete()
         return Response(data)
 
+    @action(detail=False, methods=["POST"], url_path="set-default-org")
+    @user_endpoint()
+    @disable_api_key
+    def set_default_org(self, request):
+        if not request.selected_org:
+            return Response({"non_field_errors": ["no org selected"]}, status=400)
+
+        request.selected_org.set_as_default(request.user)
+
+        return Response({})
+
     @action(detail=False, methods=["POST"])
     @auditlog()
     @user_endpoint()

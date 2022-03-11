@@ -1,6 +1,6 @@
 import pytest
-from django_grainy.util import Permissions
 from django.contrib.auth import get_user_model
+from django_grainy.util import Permissions
 
 from account.models import ManagedPermission, OrganizationManagedPermission
 
@@ -51,6 +51,7 @@ def test_grant_mode_restricted(account_objects):
 
     assert not Permissions(account_objects.user).check("test.mperm", "r")
 
+
 @pytest.mark.django_db
 def test_grant_mode_restricted_add_user(account_objects):
 
@@ -82,6 +83,7 @@ def test_grant_mode_restricted_add_user(account_objects):
     omperm.delete()
 
     assert not Permissions(user_2).check("test.mperm", "r")
+
 
 @pytest.mark.django_db
 def test_grant_mode_restricted_add_user_granted(account_objects):

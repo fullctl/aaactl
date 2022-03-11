@@ -177,6 +177,10 @@ class Organization(HandleRefModel):
                 orguser.save()
 
             for mperm in ManagedPermission.objects.all():
+
+                if not mperm.can_grant_to_org(self):
+                    continue
+
                 if perms == "r":
                     mperm.auto_grant_user(self, user)
                 else:

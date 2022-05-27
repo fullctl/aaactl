@@ -151,10 +151,14 @@ settings_manager.set_option("SOCIAL_AUTH_PEERINGDB_ENABLED", True)
 settings_manager.set_option("SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED", True)
 
 if SOCIAL_AUTH_PEERINGDB_ENABLED:
-    AUTHENTICATION_BACKENDS.insert(0, "account.social_backends.peeringdb.PeeringDBOAuth2")
+    AUTHENTICATION_BACKENDS.insert(
+        0, "account.social_backends.peeringdb.PeeringDBOAuth2"
+    )
 
 if SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED:
-    AUTHENTICATION_BACKENDS.insert(0,"social_core.backends.okta_openidconnect.OktaOpenIdConnect")
+    AUTHENTICATION_BACKENDS.insert(
+        0, "social_core.backends.okta_openidconnect.OktaOpenIdConnect"
+    )
 
 if SOCIAL_AUTH_GOOGLE_OAUTH2_ENABLED:
     AUTHENTICATION_BACKENDS.insert(0, "social_core.backends.google.GoogleOAuth2")

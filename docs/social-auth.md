@@ -9,4 +9,3 @@
   - `SOCIAL_AUTH_OKTA_OPENIDCONNECT_API_URL`: `https://{your okta domain}/oauth2/default`
   - `SOCIAL_AUTH_OKTA_OPENIDCONNECT_KEY`: `{client id}`
   - `SOCIAL_AUTH_OKTA_OPENIDCONNECT_SECRET`: `{client secret`}
-  - `SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED`: `{1}`

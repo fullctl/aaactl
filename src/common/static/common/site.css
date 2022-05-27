@@ -166,10 +166,12 @@ img.small-logo{
   font-size: 12px;
 }
 
+img.login-oauth-fix-height,
 img.login-peeringdb {
   height: 40px;
 }
 
+img.login-oauth-fix-width,
 img.login-google {
   width: 40px;
 }

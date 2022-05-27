@@ -105,6 +105,7 @@ class Organization(HandleRefModel):
 
         if not cls.objects.filter(slug=user.username).exists():
             slug = user.username
+            slug = slug.replace(".","_").replace("@","AT")
         else:
             slug = generate_org_slug()
 

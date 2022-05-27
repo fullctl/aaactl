@@ -11,6 +11,13 @@
       class="img-fluid login-google"
     >
     <span>{% trans "Sign in with Google" %}</span>
+    {% elif backend == "okta-oauth2" or backend == "okta-openidconnect" %}
+    <img
+      alt="{% trans "login with okta" %}"
+      title="{% trans "login with ojta" %}"
+      src="{% static "account/oauth/okta.png" %}"
+      class="img-fluid login-oauth-fix-height"
+    >
     {% elif backend == "peeringdb" %}
     <img
       alt="{% trans "login with peeringdb" %}"

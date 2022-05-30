@@ -2,21 +2,30 @@
 {% block footer %}
 <div class="row mt-0">
   <div class="col-4 mx-auto text-center tagline">
+    {% block developer %}
     <h6 class="d-inline developed-by">Developed by</h6>
     <img src="{% static "common/20c-logo-filled.svg" %}" class="small-logo">
+    {% endblock %}
   </div>
 </div>
 
 <div class="row mt-3 pt-3 footer-links">
   <div class="col-sm-6">
-    <div class="copyright">© 2020-{% now "Y" %} 20C, LLC</div>
+    <div class="copyright">
+    {% block copyright %}© 2020-{% now "Y" %} 20C, LLC{% endblock %}
+    </div>
     <small class="copyright">{{ version }}</small>
   </div>
   <div class="col-sm-6">
-    <p class="float-sm-right" ><a href="mailto:sales@20c.com">Contact us</a></p>
+    <p class="float-sm-right" >
+    {% block contactus %}<a href="mailto:sales@20c.com">Contact us</a>{% endblock %}
+    </p>
   </div>
   <div class="w-100"></div>
-  <div class="col-sm-6"><p><a href="https://20c.com/legal">Legal</a></p>
+  <div class="col-sm-6">
+    <p>
+    {% block legal %}<a href="https://20c.com/legal">Legal</a>{% endblock %}
+    </p>
   </div>
 </div>
 

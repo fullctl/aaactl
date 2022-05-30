@@ -180,6 +180,10 @@ SOCIAL_AUTH_PIPELINE = (
 
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 
+# Allow password login
+
+settings_manager.set_option("PASSWORD_LOGIN_ENABLED", True)
+
 # Template Context processors
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [

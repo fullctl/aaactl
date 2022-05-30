@@ -11,6 +11,13 @@
     {% else %}
     <span>Google</span>
     {% endif %}
+{% elif backend == "okta-oauth2" or backend == "okta-openidconnect" %}
+    <img
+      alt="{% trans "login with okta" %}"
+      title="{% trans "login with ojta" %}"
+      src="{% static "account/oauth/okta.png" %}"
+      class="img-fluid linked-auth-okta"
+    >
 {% elif backend == "peeringdb" %}
     <img
       alt="{% trans "login with peeringdb" %}"

@@ -33,6 +33,14 @@ settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
 settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_KEY")
 settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_API_URL")
+
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_API_URL")
+
 
 settings_manager.set_option("RECAPTCHA_PUBLIC_KEY", "...")
 settings_manager.set_option("RECAPTCHA_SECRET_KEY", "...")
@@ -138,11 +146,22 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 
 # Supported backends
 
-AUTHENTICATION_BACKENDS = [
-    "social_core.backends.google.GoogleOAuth2",
-    "account.social_backends.peeringdb.PeeringDBOAuth2",
-] + AUTHENTICATION_BACKENDS
+settings_manager.set_option("SOCIAL_AUTH_GOOGLE_OAUTH2_ENABLED", True)
+settings_manager.set_option("SOCIAL_AUTH_PEERINGDB_ENABLED", True)
+settings_manager.set_option("SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED", True)
 
+if SOCIAL_AUTH_PEERINGDB_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(
+        0, "account.social_backends.peeringdb.PeeringDBOAuth2"
+    )
+
+if SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(
+        0, "social_core.backends.okta_openidconnect.OktaOpenIdConnect"
+    )
+
+if SOCIAL_AUTH_GOOGLE_OAUTH2_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(0, "social_core.backends.google.GoogleOAuth2")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",

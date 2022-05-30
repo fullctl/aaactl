@@ -29,6 +29,9 @@ django-countries = "*"
 django-cors-middleware = "*"
 django-oauth-toolkit = "*"
 
+# open-id support social auth
+python-jose = "^3.3.0"
+
 stripe = "^2.55.2"
 
 [tool.poetry.dev-dependencies]

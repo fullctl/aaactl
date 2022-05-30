@@ -100,7 +100,9 @@ def register(request):
     else:
         form = account.forms.RegisterUser()
 
-    env.update(register_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED)
+    env.update(
+        register_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED
+    )
 
     return render(request, "account/auth/register.html", env)
 

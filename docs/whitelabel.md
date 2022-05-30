@@ -11,7 +11,7 @@ cd src
 django-admin startapp whitelabel
 ```
 
-Note that the name `whitelabel` is not of consequence and can be substituted by something else if it makes more sense.
+Note that the name `whitelabel` is not of consequence and can be substituted by something else if it makes more sense. If you do name it differently you will need to adjust it in the instructions below as well though.
 
 ## Add to INSTALLED_APPS for your environment
 

@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as fn_login
 from django.contrib.auth import logout as fn_logout
@@ -65,7 +66,7 @@ def login(request):
     else:
         form = account.forms.Login()
 
-    env.update(login_form=form)
+    env.update(login_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED)
 
     return render(request, "account/auth/login.html", env)
 
@@ -99,7 +100,9 @@ def register(request):
     else:
         form = account.forms.RegisterUser()
 
-    env.update(register_form=form)
+    env.update(
+        register_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED
+    )
 
     return render(request, "account/auth/register.html", env)
 

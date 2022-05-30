@@ -135,11 +135,18 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 img.small-logo{
   height: 55.49px;
-  width: 195.82px;
   color: var(--lighter-gray);
   z-index: 10;
   margin-left: 8px;
 }
+
+img.smaller-logo{
+  height: 35.49px;
+  color: var(--lighter-gray);
+  z-index: 10;
+  margin-left: 8px;
+}
+
 
 .footer-links{
   padding-left: 120px;

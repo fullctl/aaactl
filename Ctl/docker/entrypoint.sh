@@ -31,6 +31,7 @@ case "$@" in
     source venv/bin/activate
     cd main
     export DJANGO_SETTINGS_MODULE=aaactl.settings
+    export RELEASE_ENV=run_tests
     pytest tests/ -vv --cov-report=term-missing --cov-report=xml --cov=account --cov=billing --cov=common --cov=applications 
     ;;
   "test_mode" )

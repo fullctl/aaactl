@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
-from django.contrib import messages
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as fn_login
 from django.contrib.auth import logout as fn_logout

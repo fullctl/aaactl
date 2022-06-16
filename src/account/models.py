@@ -92,8 +92,20 @@ class Organization(HandleRefModel):
     @classmethod
     def personal_org(cls, user):
 
+        """
+        returns the personal org for the user
+
+        will create the org if it does not exist
+        """
+
+        try:
+            return user.orguser_set.get(org__user_id=user.id).org
+        except OrganizationUser.DoesNotExist:
+            pass
+
         if not cls.objects.filter(slug=user.username).exists():
             slug = user.username
+            slug = slug.replace(".", "_").replace("@", "AT")
         else:
             slug = generate_org_slug()
 
@@ -103,6 +115,22 @@ class Organization(HandleRefModel):
             org.add_user(user, "crud")
 
         return org
+
+    @classmethod
+    def default_org(cls, user):
+        """
+        Returns the default organization for the user.
+
+        If the user has not specified a default organization, the user's personal
+        organization will be returned,
+        """
+
+        default_org = user.orguser_set.filter(is_default=True)
+
+        if default_org.exists():
+            return default_org.first().org
+
+        return cls.personal_org(user)
 
     @classmethod
     def get_for_user(cls, user, perms="r"):
@@ -143,7 +171,17 @@ class Organization(HandleRefModel):
     def add_user(self, user, perms="r"):
         orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
+
+            if user.orguser_set.count() == 2:
+                # switch from personal org to real org as primary org
+                orguser.is_default = True
+                orguser.save()
+
             for mperm in ManagedPermission.objects.all():
+
+                if not mperm.can_grant_to_org(self):
+                    continue
+
                 if perms == "r":
                     mperm.auto_grant_user(self, user)
                 else:
@@ -171,6 +209,21 @@ class Organization(HandleRefModel):
 
         return check_permissions(user, self, "c", ignore_grant_all=True)
 
+    def set_as_default(self, user):
+
+        """
+        Makes this organization the default organization for the user
+        """
+
+        orguser = user.orguser_set.filter(org=self).first()
+
+        if not orguser:
+            raise KeyError("Not a member of this organization")
+
+        # set new default org
+        orguser.is_default = True
+        orguser.save()
+
 
 @reversion.register
 class OrganizationUser(HandleRefModel):
@@ -179,6 +232,11 @@ class OrganizationUser(HandleRefModel):
     )
     org = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="orguser_set"
+    )
+
+    is_default = models.BooleanField(
+        default=False,
+        help_text=_("This organization is the user's designated default organization"),
     )
 
     class Meta:
@@ -191,6 +249,11 @@ class OrganizationUser(HandleRefModel):
 
     def __str__(self):
         return f"{self.org.slug}:{self.user.username} ({self.id})"
+
+    def save(self, **kwargs):
+        if self.is_default:
+            self.user.orguser_set.exclude(id=self.id).update(is_default=False)
+        super().save(**kwargs)
 
 
 def generate_api_key():
@@ -533,6 +596,16 @@ class ManagedPermission(HandleRefModel):
         default=True, help_text=_("Can organization admins manage this permission?")
     )
 
+    grant_mode = models.CharField(
+        max_length=16,
+        default="auto",
+        choices=(
+            ("auto", _("Automatically")),
+            ("restricted", _("Restricted")),
+        ),
+        help_text=_("How is this permission granted"),
+    )
+
     auto_grant_admins = PermissionField(
         help_text=_(
             "Auto grants the permission at the following level to organization admins"
@@ -583,7 +656,21 @@ class ManagedPermission(HandleRefModel):
     def __str__(self):
         return f"{self.group} - {self.description}"
 
+    def can_grant_to_org(self, org):
+
+        if self.grant_mode == "auto":
+            return True
+
+        if self.grant_mode == "restricted":
+            return org.org_managed_perm_set.filter(managed_permission=self).exists()
+
+        raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
+
     def auto_grant(self, org):
+
+        if not self.can_grant_to_org(org):
+            self.revoke(org)
+            return
 
         for user in org.users:
             if org.is_admin_user(user):
@@ -599,7 +686,7 @@ class ManagedPermission(HandleRefModel):
             self.revoke_user(org, user)
 
         for key in org.orgkey_set.all():
-            self.revoke_key(org, key)
+            self.revoke_key(key)
 
     def revoke_user(self, org, user):
         ns = self.namespace.format(org_id=org.pk)
@@ -628,6 +715,38 @@ class ManagedPermission(HandleRefModel):
             perms = self.auto_grant_users
 
         orgkey.grainy_permissions.add_permission(ns, perms)
+
+
+@reversion.register
+class OrganizationManagedPermission(HandleRefModel):
+
+    """
+    Describes a relationship of an organization to a `restricted` ManagedPermission
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+    )
+
+    managed_permission = models.ForeignKey(
+        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+    )
+
+    reason = models.CharField(
+        max_length=255,
+        help_text=_("Reason organization was granted to manage this permission"),
+    )
+
+    class HandleRef:
+        tag = "org_managed_perm"
+
+    class Meta:
+        db_table = "account_org_managed_perms"
+        verbose_name = _("Managed permission for organization")
+        verbose_name_plural = _("Managed permissions for organization")
+
+    def apply(self):
+        self.managed_permission.auto_grant(self.org)
 
 
 @reversion.register

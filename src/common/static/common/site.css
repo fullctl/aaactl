@@ -10,6 +10,7 @@
   --darkest-gray: #2C2E30;
   --highlight-success: #7ED321;
   --hightlight-warning: #D0021B;
+  --danger: #dc3545;
 }
 
 body {
@@ -68,6 +69,10 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 .right {
   text-align: right;
+}
+
+.marg-top {
+  margin-top: 15px;
 }
 
 .header-outer {
@@ -130,11 +135,18 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 img.small-logo{
   height: 55.49px;
-  width: 195.82px;
   color: var(--lighter-gray);
   z-index: 10;
   margin-left: 8px;
 }
+
+img.smaller-logo{
+  height: 35.49px;
+  color: var(--lighter-gray);
+  z-index: 10;
+  margin-left: 8px;
+}
+
 
 .footer-links{
   padding-left: 120px;
@@ -161,10 +173,12 @@ img.small-logo{
   font-size: 12px;
 }
 
+img.login-oauth-fix-height,
 img.login-peeringdb {
   height: 40px;
 }
 
+img.login-oauth-fix-width,
 img.login-google {
   width: 40px;
 }
@@ -245,6 +259,7 @@ appears when the header is clicked.*/
   color: var(--text-accent);
   padding-left: .75rem;
   padding-right: .75rem;
+  cursor: pointer;
 }
 /* Custom css-only caret*/
 .caret {
@@ -320,6 +335,12 @@ appears when the header is clicked.*/
   background-color: var(--dark-gray);
   border: 1px solid var(--darkest-gray);
   border-radius: 100px;
+}
+
+.user-info button.danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
 }
 
 .card {
@@ -445,6 +466,11 @@ table.table-sm {
   background-color: var(--light-gray);
   font-size: 14px;
   color: var(--dark-gray);
+}
+
+.btn-square.btn-danger {
+  background-color: #dc3534;
+  color: #fff;
 }
 
 .user-badge {
@@ -576,6 +602,18 @@ table.table-sm {
 }
 
 /*
+ * personal invites
+ */
+
+div.invites-list-body + div.no-invites {
+  display: none;
+}
+
+div.invites-list-body:empty + div.no-invites {
+  display: block;
+}
+
+/*
  * error page
  */
 
@@ -596,3 +634,4 @@ td.status {
   color: #fff;
   text-decoration: underline;
 }
+

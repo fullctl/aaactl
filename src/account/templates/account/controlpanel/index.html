@@ -25,6 +25,9 @@
               <a data-template="row" class="dropdown-item org-item">
                 <span data-field="label"></span>
               </a>
+              <a data-template="btn_make_default" class="dropdown-item org-item" data-api-base="{% url "account_api:user-set-default-org" %}">
+                <span>{% trans "Set as primary organization" %}</span>
+              </a>
           </div>
        </div>
       <div class="ml-2 small-links">

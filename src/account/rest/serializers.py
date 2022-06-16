@@ -45,14 +45,18 @@ class FormValidationMixin:
 
 
 class PermissionNamespacesMixin:
-    @property
-    def permission_namespaces(self):
+    def permission_namespaces(self, org):
         if not hasattr(self, "_permission_namespaces"):
             mperms = models.ManagedPermission.objects.filter(
                 status="ok", managable=True
             ).order_by("group", "description")
             r = []
             for mperm in mperms:
+
+                if mperm.grant_mode == "restricted":
+                    if not mperm.org_managed_perm_set.filter(org=org).exists():
+                        continue
+
                 r.append((mperm.namespace, mperm.description))
             self._permission_namespaces = r
 
@@ -68,9 +72,10 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
     def permission_holder(self):
         return self.validated_data[self.rel_fld]
 
-    def validate_component(self, value):
+    def _validate_component(self, value, org):
         value = value.lower()
-        if value not in dict(self.permission_namespaces):
+
+        if value not in dict(self.permission_namespaces(org)):
             raise serializers.ValidationError(_("Not a valid permissioning component"))
 
         return value
@@ -87,6 +92,9 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
     def validate(self, data):
         if data.get(self.rel_fld).org != data.get("org"):
             raise serializers.ValidationError(_("Invalid org relationship"))
+
+        self._validate_component(data["component"], data["org"])
+
         return data
 
     def save(self):
@@ -138,7 +146,7 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
             }
-            for ns, label in self.permission_namespaces
+            for ns, label in self.permission_namespaces(obj.org)
         }
 
         # for svc in self.context.get("services",[]):
@@ -168,10 +176,20 @@ class Organization(serializers.ModelSerializer):
     label = serializers.CharField(read_only=True)
     selected = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
+    is_default = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Organization
-        fields = ["id", "name", "label", "slug", "selected", "personal", "is_admin"]
+        fields = [
+            "id",
+            "name",
+            "label",
+            "slug",
+            "selected",
+            "personal",
+            "is_admin",
+            "is_default",
+        ]
 
     def get_personal(self, obj):
         if obj.user == self.context.get("user"):
@@ -187,6 +205,13 @@ class Organization(serializers.ModelSerializer):
         if not hasattr(self, "_perms"):
             self._perms = Permissions(user)
         return self._perms.check(obj, "crud")
+
+    def get_is_default(self, obj):
+        user = self.context.get("user")
+        if not hasattr(self, "_default_org"):
+            self._default_org = models.Organization.default_org(user)
+
+        return self._default_org.id == obj.id
 
     def validate(self, data):
         user = self.context.get("user")
@@ -486,7 +511,7 @@ class OrganizationAPIKey(
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
             }
-            for ns, label in self.permission_namespaces
+            for ns, label in self.permission_namespaces(obj.org)
         }
 
         return rv

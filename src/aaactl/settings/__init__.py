@@ -33,6 +33,14 @@ settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
 settings_manager.set_from_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_KEY")
 settings_manager.set_from_env("SOCIAL_AUTH_PEERINGDB_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OAUTH2_API_URL")
+
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_KEY")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_SECRET")
+settings_manager.set_from_env("SOCIAL_AUTH_OKTA_OPENIDCONNECT_API_URL")
+
 
 settings_manager.set_option("RECAPTCHA_PUBLIC_KEY", "...")
 settings_manager.set_option("RECAPTCHA_SECRET_KEY", "...")
@@ -88,6 +96,9 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 ]
 
 
+settings_manager.set_option("GOOGLE_ANALYTICS_ID", "")
+settings_manager.set_option("CLOUDFLARE_ANALYTICS_ID", "")
+
 # Billing integration
 
 settings_manager.set_option("BILLING_ENV", "test")
@@ -127,6 +138,7 @@ OAUTH2_PROVIDER = {
     },
     "ALLOWED_REDIRECT_URI_SCHEMES": ["https"],
     "REQUEST_APPROVAL_PROMPT": "auto",
+    "PKCE_REQUIRED": False,
 }
 
 # SOCIAL AUTH
@@ -135,11 +147,22 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 
 # Supported backends
 
-AUTHENTICATION_BACKENDS = [
-    "social_core.backends.google.GoogleOAuth2",
-    "account.social_backends.peeringdb.PeeringDBOAuth2",
-] + AUTHENTICATION_BACKENDS
+settings_manager.set_option("SOCIAL_AUTH_GOOGLE_OAUTH2_ENABLED", True)
+settings_manager.set_option("SOCIAL_AUTH_PEERINGDB_ENABLED", True)
+settings_manager.set_option("SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED", True)
 
+if SOCIAL_AUTH_PEERINGDB_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(
+        0, "account.social_backends.peeringdb.PeeringDBOAuth2"
+    )
+
+if SOCIAL_AUTH_OKTA_OPENIDCONNECT_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(
+        0, "social_core.backends.okta_openidconnect.OktaOpenIdConnect"
+    )
+
+if SOCIAL_AUTH_GOOGLE_OAUTH2_ENABLED:
+    AUTHENTICATION_BACKENDS.insert(0, "social_core.backends.google.GoogleOAuth2")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -158,6 +181,10 @@ SOCIAL_AUTH_PIPELINE = (
 
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 
+# Allow password login
+
+settings_manager.set_option("PASSWORD_LOGIN_ENABLED", True)
+
 # Template Context processors
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
@@ -167,7 +194,7 @@ TEMPLATES[0]["OPTIONS"]["context_processors"] += [
 
 # BACKEND: PeeringDB
 
-settings_manager.set_option("PDB_ENDPOINT", "https://peeringdb.com")
+settings_manager.set_option("PDB_ENDPOINT", "https://auth.peeringdb.com")
 PDB_OAUTH_ACCESS_TOKEN_URL = f"{PDB_ENDPOINT}/oauth2/token/"
 PDB_OAUTH_AUTHORIZE_URL = f"{PDB_ENDPOINT}/oauth2/authorize/"
 PDB_OAUTH_PROFILE_URL = f"{PDB_ENDPOINT}/profile/v1"

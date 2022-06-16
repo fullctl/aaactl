@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "aaactl"
 repository = "https://github.com/fullctl/aaactl"
-version = "1.0.0-rc2"
-description = "account control"
+version = "1.0.0-rc17"
+description = "authentication, authorization, and accounting for fullctl"
 authors = ["20C <code@20c.com>"]
 license = "Apache-2.0"
 
@@ -11,8 +11,12 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Topic :: Software Development",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
-
 
 [tool.poetry.scripts]
 aaactl = "aaactl.cli:main"
@@ -21,7 +25,6 @@ aaactl = "aaactl.cli:main"
 [tool.poetry.dependencies]
 python = "^3.7"
 fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
-uWSGI = "^2.0.19"
 
 # not in fullctl
 python-dateutil = "*"
@@ -29,33 +32,34 @@ django-countries = "*"
 django-cors-middleware = "*"
 django-oauth-toolkit = "*"
 
+# open-id support social auth
+python-jose = "^3.3"
+
 stripe = "^2.55.2"
 
 [tool.poetry.dev-dependencies]
-docker-compose = "^1.29.1"
-
-# tests
-pytest = ">=6.0.1"
-pytest-django = ">=3.8.0"
-pytest-cov = "*"
-pytest-filedata = "<1"
-pytest-mock = ">=3.2.0"
+# testing
 codecov = ">=2"
 coverage = ">=5"
-
+pytest = ">=6"
+pytest-django = ">=3.8"
+pytest-cov = "*"
+pytest-filedata = "<1"
+pytest-mock = ">=3.2"
 
 # linting
-bandit = "^1.6.2"
-black = {version = ">=20", allow-prereleases = true}
-isort = "^5.7.0"
-flake8 = "^3.8.4"
-pre-commit = "^2.13.0"
-pyupgrade = "^2.19.4"
+bandit = ">=1.7"
+black = ">=20"
+isort = ">=5.7"
+flake8 = ">=3.8"
+mypy = ">=0.950"
+pre-commit = ">=2.13"
+pyupgrade = ">=2.19"
 
 # ctl
-ctl = "^1.0.0"
-tmpl = "^1"
-Jinja2 = "^2.11.3"
+ctl = ">=1"
+tmpl = ">=1"
+Jinja2 = ">=3"
 
 [tool.isort]
 profile = "black"

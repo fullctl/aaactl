@@ -105,6 +105,52 @@ class UserInformation(viewsets.ViewSet):
         serializer = Serializers.key(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False)
+    @user_endpoint()
+    @disable_api_key
+    def invites(self, request):
+        user = request.user
+        queryset = models.Invitation.objects.filter(email=user.email)
+        serializer = Serializers.inv(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False, methods=["POST"], url_path="accept-invite/(?P<invite_id>[^/.]+)"
+    )
+    @user_endpoint()
+    @disable_api_key
+    def accept_invite(self, request, invite_id=None):
+        user = request.user
+        invite = models.Invitation.objects.get(email=user.email, id=invite_id)
+        serializer = Serializers.inv(invite)
+        data = serializer.data
+        invite.complete(user)
+        return Response(data)
+
+    @action(
+        detail=False, methods=["POST"], url_path="reject-invite/(?P<invite_id>[^/.]+)"
+    )
+    @user_endpoint()
+    @disable_api_key
+    def reject_invite(self, request, invite_id=None):
+        user = request.user
+        invite = models.Invitation.objects.get(email=user.email, id=invite_id)
+        serializer = Serializers.inv(invite)
+        data = serializer.data
+        invite.delete()
+        return Response(data)
+
+    @action(detail=False, methods=["POST"], url_path="set-default-org")
+    @user_endpoint()
+    @disable_api_key
+    def set_default_org(self, request):
+        if not request.selected_org:
+            return Response({"non_field_errors": ["no org selected"]}, status=400)
+
+        request.selected_org.set_as_default(request.user)
+
+        return Response({})
+
     @action(detail=False, methods=["POST"])
     @auditlog()
     @user_endpoint()

@@ -138,6 +138,7 @@ OAUTH2_PROVIDER = {
     },
     "ALLOWED_REDIRECT_URI_SCHEMES": ["https"],
     "REQUEST_APPROVAL_PROMPT": "auto",
+    "PKCE_REQUIRED": False,
 }
 
 # SOCIAL AUTH

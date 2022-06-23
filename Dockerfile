@@ -47,7 +47,7 @@ COPY Ctl/VERSION Ctl/
 FROM base as final
 
 ARG run_deps
-ARG run_dirs="locale media static"
+ARG run_dirs="locale main/whitelabel media static"
 ARG uid
 ARG user
 

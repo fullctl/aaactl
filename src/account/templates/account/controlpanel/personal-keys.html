@@ -3,14 +3,18 @@
 <div
   class="personal-keys"
   data-api-base="{% url "account_api:api-root" %}"
-  data-api-action="user/api_keys"
+  data-api-action="user/keys"
 >
 <div class="templates" style="display:none">
       <a data-template="row">
         <div class="container-fluid personal-key-card">
           <div class="row">
+
+            <div style="display:none" data-api-submit="yes">
+              <input type="text" name="id" type="hidden">
+            </div>
             <div class="col pl-0 pr-0">
-              <div class="small-label">Key:</div>
+              <div class="small-label"><span data-field="name"></span> <strong data-field="readonly"></strong></div>
               <div class="personal-key-container d-flex justify-content-between">
                 <textarea readonly rows="3" class="pkb personal-key-box-redacted">
                 </textarea>
@@ -30,6 +34,10 @@
                     title="copy icon"
                     src="{% static "account/icons/copy.svg" %}"/>
                     <span class="ml-1"><u>Copy</u></span>
+                  </button>
+
+                  <button class="btn btn-square btn-danger" data-api-action="user/key" data-api-method="DELETE" data-api-callback="remove" data-confirm="{% trans "Remove personal key?" %}">
+                    <span class="ml-1">{% trans "Remove" %}</span>
                   </button>
                 </div>
               </div>
@@ -52,9 +60,15 @@
 <div class="list-body"></div>
 </div>
 
+<div class="center">
+  <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#personalApiKeyModal">
+  {% trans "+ Create API Key" %}
+  </button>
+</div>
+
 
 <script>
 $(document).ready(function() {
-  var personal_api_keys = new account.PersonalAPIKeys();
+  new account.PersonalAPIKeys();
 });
 </script>

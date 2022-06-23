@@ -10,11 +10,11 @@
             </h5>
           </div>
           <div class="col-4 right">
-            <button 
-              class="btn btn-link edit-collapse" 
-              data-toggle="collapse" 
-              data-target="#collapseOne" 
-              aria-expanded="true" 
+            <button
+              class="btn btn-link edit-collapse"
+              data-toggle="collapse"
+              data-target="#collapseOne"
+              aria-expanded="true"
               aria-controls="collapseOne">
             <img
               alt="pencil icon"
@@ -35,31 +35,56 @@
             data-api-method="PUT"
           >
             <div data-api-submit="yes">
-            {{ form.email | as_crispy_field }}
+            {{ change_user_info_form.email | as_crispy_field }}
             <div class="form-row">
               <div class="form-group col-6 mb-0">
-                {{ form.first_name | as_crispy_field }}
+                {{ change_user_info_form.first_name | as_crispy_field }}
               </div>
               <div class="form-group col-6 mb-0">
-                {{ form.last_name | as_crispy_field }}
+                {{ change_user_info_form.last_name | as_crispy_field }}
               </div>
             </div>
-            {{ form.username | as_crispy_field }}
+            {{ change_user_info_form.username | as_crispy_field }}
             {% if request.user.has_usable_password %}
-              {{ form.password | as_crispy_field }}
+              {{ change_user_info_form.password | as_crispy_field }}
             {% endif %}
             </div>
             <div class="right">
-              <button 
-                class="btn btn-link cancel-collapse" 
-                data-toggle="collapse" 
-                data-target="#collapseOne" 
-                aria-expanded="true" 
+              <button
+                class="btn btn-link cancel-collapse"
+                data-toggle="collapse"
+                data-target="#collapseOne"
+                aria-expanded="true"
                 aria-controls="collapseOne">
               Cancel</button>
               <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingSix">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+            <h5 class="mb-0">Invites <span id="count-invites"></span></h5>
+          </a>
+      </div>
+      <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
+        <div class="card-body">
+          {% include "account/controlpanel/user-invites.html" with form=usercfg_form %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="pt-3 pb-3 pl-4" id="headingFive">
+          <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+            <h5 class="mb-0">Preferences</h5>
+          </a>
+      </div>
+      <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
+        <div class="card-body">
+          {% include "account/controlpanel/user-preferences.html" with form=usercfg_form %}
         </div>
       </div>
     </div>
@@ -78,7 +103,7 @@
     <div class="card">
       <div class="pt-3 pb-3 pl-4" id="headingThree">
           <a class="collapsed text-align-left pointer" role="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-            <h5 class="mb-0">API Keys</h5>
+            <h5 class="mb-0">Personal API Keys</h5>
           </a>
       </div>
       <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
@@ -90,8 +115,8 @@
     <div class="card">
       <div class="pt-3 pb-3 pl-4" id="headingFour">
           <a tabindex="0"
-            id="changePwdPopover" 
-            data-container="body" 
+            id="changePwdPopover"
+            data-container="body"
             data-trigger="manual"
             data-toggle="popover"
             data-content="Password successfully changed"
@@ -116,9 +141,12 @@
   <a href="{% url "account:auth-logout" %}" class="btn btn-secondary">{% trans "Logout" %}</a>
   </div>
 </div>
+
+          {% include "account/controlpanel/personal-apikey-modal.html" %}
 <script>
 $(document).ready(function() {
-  var change_information = new account.ChangeInformation();
+  new account.ChangeInformation();
+  new account.UserSettings();
 });
 </script>
 

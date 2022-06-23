@@ -1,5 +1,23 @@
 {% load i18n static %}
-<h5 class="pb-3 border-bottom">Services</h5>
+<h5 class="pb-3 border-bottom">{% trans "Services" %}</h5>
+
+<div
+  class="service-apps-listing pt-3"
+  data-api-base="{% url "applications_api:svcapp-list" %}"
+  data-api-action="">
+  <div class="templates" style="display:none">
+    <div data-template="row" class="service-app">
+      <a class="redirect">
+        <img src="" class="logo" data-logo-url="{% static "common/logos/svc_slug-dark.svg" %}" />
+      </a>
+    </div>
+  </div>
+
+  <div class="service-apps-list list-body center">
+  </div>
+</div>
+
+
 <div
   class="service-listing pt-3"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
@@ -19,6 +37,7 @@
 
 <script>
 $(document).ready(function() {
-  var services = new account.Services();
+  new account.Services();
+  new account.ServiceApplications();
 });
 </script>

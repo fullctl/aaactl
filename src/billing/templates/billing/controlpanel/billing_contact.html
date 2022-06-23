@@ -25,7 +25,7 @@
       <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
     </div>
     <div class="col-6 right">
-      {% if permissions.delete_org_billing__contact %}
+      {% if permissions.delete_org_billing %}
       <button
         type="button"
         data-api-method="DELETE"
@@ -55,7 +55,7 @@
     <tr data-template="row">
       <td scope="col" data-field="custom_name"></td>
       <td scope="col" class="right">
-        {% if permissions.update_org_billing__contact %}
+        {% if permissions.update_org_billing %}
         <button
           data-api-action="payment_method"
           data-api-method="DELETE"

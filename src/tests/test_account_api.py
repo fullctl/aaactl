@@ -16,10 +16,12 @@ def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
 
     response = account_objects.api_client_anon.get(reverse("account_api:user-list"))
 
+    print(response.headers)
+
     assert response.status_code == 403
 
     response = account_objects.api_client_anon.get(
-        reverse("account_api:user-list") + "?key={}".format(account_objects.api_key.key)
+        reverse("account_api:user-list") + f"?key={account_objects.api_key.key}"
     )
 
     assert response.status_code == 200
@@ -38,7 +40,7 @@ def test_api_key_auth_header(db, account_objects, data_account_api_user_list):
 
     response = account_objects.api_client_anon.get(
         reverse("account_api:user-list"),
-        HTTP_AUTHORIZATION="Bearer {}".format(account_objects.api_key.key),
+        HTTP_AUTHORIZATION=f"Bearer {account_objects.api_key.key}",
     )
 
     assert response.status_code == 200
@@ -261,7 +263,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     )
 
     if data_account_api_org_userdel.name == "test0":
-        assert account_objects.org.user_set.count() == 1
+        assert account_objects.org.orguser_set.count() == 1
 
     # test user not part of org
 

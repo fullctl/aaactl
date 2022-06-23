@@ -20,7 +20,7 @@ class PaypalProcessor(PaymentProcessor):
         return self.user_payment_opt.data.get("approval_url")
 
     def __init__(self, user_payment_opt, **kwargs):
-        self.plan_id = None
+        self.plan_id = user_payment_opt.data.get("plan_id")
         self.plan = None
         self.agreement = None
 
@@ -34,10 +34,6 @@ class PaypalProcessor(PaymentProcessor):
             )
 
         super().__init__(user_payment_opt, **kwargs)
-
-    def load(self, user_payment_opt):
-        super().load(user_payment_opt)
-        self.plan_id = user_payment_opt.data.get("plan_id")
 
     def require_billing_plan(self, subs, **kwargs):
         if self.plan_id:
@@ -64,7 +60,7 @@ class PaypalProcessor(PaymentProcessor):
 
         payload["merchant_preferences"]["setup_fee"] = {
             "currency": self.default_currency,
-            "value": "{:.2f}".format(setup_fee),
+            "value": f"{setup_fee:.2f}",
         }
 
         for sub in subs:
@@ -81,7 +77,7 @@ class PaypalProcessor(PaymentProcessor):
             self.user_payment_opt.data["plan_id"] = self.plan_id
             self.user_payment_opt.save()
         else:
-            raise IOError(billing_plan.error)
+            raise OSError(billing_plan.error)
 
         return self.plan_id
 
@@ -109,18 +105,18 @@ class PaypalProcessor(PaymentProcessor):
 
                     self.user_payment_opt.save()
         else:
-            raise IOError(billing_agreement.error)
+            raise OSError(billing_agreement.error)
 
     def sub_to_paydef(self, sub):
 
         return {
             "amount": {
                 "currency": self.default_currency,
-                "value": "{:.2f}".format(sub.price),
+                "value": f"{sub.price:.2f}",
             },
             "cycles": "0",
             "frequency": sub.cycle.upper(),
-            "frequency_interval": "{}".format(sub.cycle_frequency),
+            "frequency_interval": f"{sub.cycle_frequency}",
             "name": sub.prod.description,
             "type": "REGULAR",
         }
@@ -142,4 +138,4 @@ class PaypalProcessor(PaymentProcessor):
         print(payload)
 
         if not billing_plan.replace(payload):
-            raise IOError(billing_plan.error)
+            raise OSError(billing_plan.error)

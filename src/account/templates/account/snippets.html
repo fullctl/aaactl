@@ -1,0 +1,23 @@
+<!-- snippets -->
+
+{% if google_analytics_id %}
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '{{ google_analytics_id }}');
+</script>
+{% endif %}
+
+
+{% if cloudflare_analytics_id %}
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "{{ cloudflare_analytics_id }}"'></script>
+<!-- End Cloudflare Web Analytics -->
+{% endif %}
+
+
+<!-- /snippets -->

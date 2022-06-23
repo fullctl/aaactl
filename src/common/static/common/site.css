@@ -10,6 +10,7 @@
   --darkest-gray: #2C2E30;
   --highlight-success: #7ED321;
   --hightlight-warning: #D0021B;
+  --danger: #dc3545;
 }
 
 body {
@@ -32,6 +33,9 @@ h5 {
 
 .right {
   text-align: right;
+}
+.center {
+  text-align: center;
 }
 
 .validation-error {
@@ -65,6 +69,10 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 .right {
   text-align: right;
+}
+
+.marg-top {
+  margin-top: 15px;
 }
 
 .header-outer {
@@ -127,11 +135,18 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 img.small-logo{
   height: 55.49px;
-  width: 195.82px;
   color: var(--lighter-gray);
   z-index: 10;
   margin-left: 8px;
 }
+
+img.smaller-logo{
+  height: 35.49px;
+  color: var(--lighter-gray);
+  z-index: 10;
+  margin-left: 8px;
+}
+
 
 .footer-links{
   padding-left: 120px;
@@ -154,10 +169,16 @@ img.small-logo{
   width: 210px;
 }
 
+.social-id {
+  font-size: 12px;
+}
+
+img.login-oauth-fix-height,
 img.login-peeringdb {
   height: 40px;
 }
 
+img.login-oauth-fix-width,
 img.login-google {
   width: 40px;
 }
@@ -184,8 +205,8 @@ img.linked-auth-peering {
 }
 
 /* Remove default button styling for dropdown button*/
-#dropdownMenuLink, 
-#dropdownMenuLink:hover, 
+#dropdownMenuLink,
+#dropdownMenuLink:hover,
 #dropdownMenuLink:active,
 #dropdownMenuLink:focus{
   box-shadow: none;
@@ -223,7 +244,7 @@ Place content inside of this. */
 /* Styles the entire dropdown menu that
 appears when the header is clicked.*/
 .org-select-menu {
-  min-width: 288px; 
+  min-width: 288px;
   border-radius: 0px;
   border: none;
   position: relative;
@@ -238,6 +259,7 @@ appears when the header is clicked.*/
   color: var(--text-accent);
   padding-left: .75rem;
   padding-right: .75rem;
+  cursor: pointer;
 }
 /* Custom css-only caret*/
 .caret {
@@ -313,6 +335,12 @@ appears when the header is clicked.*/
   background-color: var(--dark-gray);
   border: 1px solid var(--darkest-gray);
   border-radius: 100px;
+}
+
+.user-info button.danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
 }
 
 .card {
@@ -440,6 +468,11 @@ table.table-sm {
   color: var(--dark-gray);
 }
 
+.btn-square.btn-danger {
+  background-color: #dc3534;
+  color: #fff;
+}
+
 .user-badge {
   font-size: 14px;
   line-height: 20px;
@@ -486,6 +519,26 @@ table.table-sm {
   height: 28px;
 }
 
+.service-apps-list {
+  text-align: center;
+}
+
+.service-app {
+  display: inline-block;
+  background-color: #4a4d50;
+  padding: 5px;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+
+.service-app a {
+  border: none;
+}
+
+.service-app img {
+  height: 25px;
+}
+
 .service-list td {
   padding: .3rem 1rem;
 }
@@ -505,7 +558,7 @@ table.table-sm {
   background-color: var(--white);
   border: none;
   padding: .2rem .5rem;
-  width: 100%; 
+  width: 100%;
   height: 100%;
   resize: none;
 }
@@ -547,3 +600,38 @@ table.table-sm {
 .pointer:hover{
   cursor: pointer;
 }
+
+/*
+ * personal invites
+ */
+
+div.invites-list-body + div.no-invites {
+  display: none;
+}
+
+div.invites-list-body:empty + div.no-invites {
+  display: block;
+}
+
+/*
+ * error page
+ */
+
+div.page_error {
+  text-align: center;
+  margin: 50px;
+}
+
+td.status {
+  padding: 3px;
+}
+.status-ok {
+  background-color: darkgreen;
+  color: #fff;
+}
+.status-failure {
+  background-color: darkred;
+  color: #fff;
+  text-decoration: underline;
+}
+

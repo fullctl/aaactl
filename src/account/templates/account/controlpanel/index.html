@@ -10,14 +10,14 @@
       <div class="col-xs-12 col-sm-auto pl-0">
         <h2>Account Dashboard</h2>
       </div>
-      <div class="col-xs-12 col-sm-auto pl-0">  
-        <div 
+      <div class="col-xs-12 col-sm-auto pl-0">
+        <div
           class="dropdown org-select"
           data-api-base="{% url "account_api:org-list" %}">
           <div class="custom-divider">
             <a class="btn org-select-dropdown-header clearfix"
                 href="#" id="dropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
-            <div class="dropdown-menu org-select-menu dd-box-shadow list-body" 
+            <div class="dropdown-menu org-select-menu dd-box-shadow list-body"
                  aria-labelledby="dropdownMenuLink"></div>
             {% include "account/controlpanel/create-org-modal.html" %}
           </div>
@@ -25,16 +25,19 @@
               <a data-template="row" class="dropdown-item org-item">
                 <span data-field="label"></span>
               </a>
-          </div> 
+              <a data-template="btn_make_default" class="dropdown-item org-item" data-api-base="{% url "account_api:user-set-default-org" %}">
+                <span>{% trans "Set as primary organization" %}</span>
+              </a>
+          </div>
        </div>
       <div class="ml-2 small-links">
-          {% if permissions.update_org_manage %}
+          {% if permissions.update_org_org %}
           <a href="javascript:void(0)" role="button" data-toggle="modal" data-target="#editOrgModal">Organization Settings</a>
           {% endif %}
-          {% if permissions.update_org_manage and permissions.read_org_billing__contact %}
+          {% if permissions.update_org_org and permissions.read_org_billing %}
           <span> | </span>
           {% endif %}
-          {% if permissions.read_org_billing__contact %}
+          {% if permissions.read_org_billing %}
           <a href="{% url "billing:billing-contacts" %}">Billing</a>
           {% endif %}
       </div>
@@ -64,13 +67,13 @@
         {% endif %}
       </div>
     </div>
-    {% if permissions.read_org_users %}
+    {% if permissions.read_org_user %}
     <div class="row user-container">
       <div class="col-12 pl-0">
         {% block users %}
         {% include "account/controlpanel/user-list.html" %}
         {% include "account/controlpanel/pending-user-list.html" %}
-        {% if permissions.create_org_users and request.selected_org.user != request.user %}
+        {% if permissions.create_org_user and request.selected_org.user != request.user %}
           <div class="text-center">
             <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#inviteModal">
               + Invite Users to Your Organization
@@ -82,7 +85,25 @@
       </div>
     </div>
     {% endif %}
-    {% if permissions.read_org_billing__service %}
+    {% if permissions.read_org_orgkey %}
+    <div class="row key-container">
+      <div class="col-12 pl-0">
+        {% block orgkeys %}
+        {% include "account/controlpanel/org-apikey-list.html" %}
+        {% if permissions.create_org_orgkey %}
+          <div class="text-center">
+            <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#orgApiKeyModal">
+              {% trans "+ Create API Key" %}
+            </button>
+          </div>
+          {% include "account/controlpanel/org-apikey-modal.html" %}
+        {% endif %}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if permissions.read_org_billing %}
     <div class="row service-container">
       <div class="col-12 pl-0">
         {% block services %}
@@ -91,7 +112,7 @@
       </div>
     </div>
     {% endif %}
-    {% if permissions.read_org_billing__orderhistory %}
+    {% if permissions.read_org_billing %}
     <div class="row order-history-container">
       <div class="col-12 pl-0 pr-0">
         <h5>Order History</h5>
@@ -131,8 +152,17 @@
 {% block javascript %}
 {{ super }}
 <script>
+{% if request.selected_org %}
+account.org = {
+  "id": {{ request.selected_org.id }},
+  "slug": "{{ request.selected_org.slug }}"
+}
+{% endif %}
+
 $(document).ready(function() {
   window.controlpanel = new account.ControlPanel();
 });
 </script>
 {% endblock %}
+
+

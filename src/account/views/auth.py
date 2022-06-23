@@ -1,7 +1,6 @@
 from urllib.parse import urlparse
 
-import django_grainy.helpers
-import grainy.core
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as fn_login
@@ -11,7 +10,6 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
-from oauth2_provider.decorators import protected_resource
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 
 import account.forms
@@ -59,14 +57,16 @@ def login(request):
             if user is not None:
                 fn_login(request, user)
 
-                return redirect(redirect_next)
+                # redirect_next is alraedy cleaned and validated
+                # through valid_redirect at this point
+                return redirect(redirect_next)  # lgtm[py/url-redirection]
             else:
                 messages.error(request, _("Login failed: Wrong username / password"))
 
     else:
         form = account.forms.Login()
 
-    env.update(login_form=form)
+    env.update(login_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED)
 
     return render(request, "account/auth/login.html", env)
 
@@ -100,7 +100,9 @@ def register(request):
     else:
         form = account.forms.RegisterUser()
 
-    env.update(register_form=form)
+    env.update(
+        register_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED
+    )
 
     return render(request, "account/auth/register.html", env)
 
@@ -173,7 +175,7 @@ def confirm_email(request, secret):
 oauth_profile_scopes = ["profile", "api_keys", "provider:peeringdb"]
 
 
-@protected_resource(scopes=oauth_profile_scopes)
+# @protected_resource(scopes=oauth_profile_scopes)
 def oauth_profile(request):
 
     from account.rest.serializers import Serializers
@@ -188,7 +190,7 @@ def oauth_profile(request):
     oauth_provider_passthru = []
 
     for social_auth in user.social_auth.all():
-        key = "provider:{}".format(social_auth.provider)
+        key = f"provider:{social_auth.provider}"
         verify, _ = oauth.verify_request(request, scopes=[key])
         if verify:
             oauth_provider_passthru.append(social_auth)
@@ -200,39 +202,24 @@ def oauth_profile(request):
 
     data = dict(
         id=user.id,
+        user_name=user.username,
         given_name=user.first_name,
         family_name=user.last_name,
-        name="{} {}".format(user.first_name, user.last_name),
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        name=f"{user.first_name} {user.last_name}",
         # TODO: dont assume oauth implies verification
         verified_user=True,
         organizations=[
             Serializers.org(instance=org.org, context={"user": user}).data
-            for org in user.org_set.all()
+            for org in user.orguser_set.all()
         ],
     )
 
+    print(data)
+
     if oauth_email:
         data.update(dict(email=user.email))
-
-    if oauth_api_keys:
-        api_keys = []
-        referer = request.GET.get("referer")
-        referer_namespace = grainy.core.Namespace(referer)
-
-        for api_key in user.key_set.all():
-            matched = False
-            row = {"key": api_key.key, "perms": {}}
-            for perms in api_key.grainy_permissions.all():
-                namespace = grainy.core.Namespace(perms.namespace)
-                row["perms"][perms.namespace] = django_grainy.helpers.str_flags(
-                    perms.permission
-                )
-                if matched or namespace.match(referer_namespace, partial=True):
-                    matched = True
-            if matched:
-                api_keys.append(row)
-
-        data.update(api_keys=api_keys)
 
     for social_auth in oauth_provider_passthru:
         provider = social_auth.provider

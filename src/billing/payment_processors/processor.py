@@ -6,13 +6,13 @@ import reversion
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from fullctl.django.util import host_url
 
 MAP = {}
 
 
 def register(cls):
     MAP[cls.id] = cls
-    print("MAP UPDATED", MAP)
     return cls
 
 
@@ -20,20 +20,20 @@ def get_processor(_id):
     return MAP[_id]
 
 
-class PaymentProcessor(object):
+class PaymentProcessor:
     id = "_processor"
     name = "Payment Processor Interface"
 
     @property
     def agreement_cancel_url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("billing:agreement-cancel", args=(self.id,))
+            host_url(), reverse("billing:agreement-cancel", args=(self.id,))
         )
 
     @property
     def agreement_success_url(self):
         return "{}{}".format(
-            settings.HOST_URL, reverse("billing:agreement-success", args=(self.id,))
+            host_url(), reverse("billing:agreement-success", args=(self.id,))
         )
 
     @property
@@ -67,9 +67,6 @@ class PaymentProcessor(object):
         return self.payment_method.data
 
     def __init__(self, payment_method, **kwargs):
-        self.load(payment_method)
-
-    def load(self, payment_method):
         self.payment_method = payment_method
 
     def save(self):

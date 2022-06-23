@@ -3,7 +3,6 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 
 from applications.service_bridge import Bridge
-
 from common.models import HandleRefModel
 
 # Create your models here.
@@ -17,6 +16,14 @@ class Service(HandleRefModel):
 
     invite_redirect = models.URLField(max_length=255, null=True, blank=True)
     api_host = models.URLField(max_length=255, null=True, blank=True)
+    logo = models.URLField(max_length=255, null=True, blank=True)
+    group = models.CharField(
+        max_length=255,
+        default="fullctl",
+        blank=True,
+        null=True,
+        help_text=_("Put apps in the same group to enable app switching between them"),
+    )
 
     class Meta:
         db_table = "applications_service"

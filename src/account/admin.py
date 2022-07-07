@@ -21,9 +21,14 @@ from account.models import (
     OrganizationManagedPermission,
     OrganizationUser,
     PasswordReset,
+    UserSettings,
 )
 
 # registered models
+
+@admin.register(UserSettings)
+class UserSettingsAdmin(admin.ModelAdmin):
+    list_display = ("user", "email_confirmed")
 
 
 class InlineAPIKeyPermission(admin.TabularInline):

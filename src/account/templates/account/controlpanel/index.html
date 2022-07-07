@@ -46,7 +46,7 @@
     </div>
     <div class="row">
       <div class="col pl-0 mt-4 mb-4">
-        {% if not user.usercfg.email_confirmed %}
+        {% if not user.usercfg.email_confirmed and enable_email_confirmation %}
         <div class="alert alert-warning">
           <div class="row">
             <div class="col-6">

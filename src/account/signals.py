@@ -82,8 +82,7 @@ def set_permissions(sender, **kwargs):
             mperm.auto_grant(org)
     else:
         for org in Organization.objects.all():
-            if not mperm.managable_for_org(org):
-                mperm.revoke(org)
+            mperm.revoke(org)
             mperm.auto_grant(org)
 
 

@@ -8,7 +8,7 @@ from common.models import HandleRefModel
 # Create your models here.
 
 
-@grainy_model("svc")
+@grainy_model("service", namespace_instance="service.{instance.slug}")
 class Service(HandleRefModel):
 
     slug = models.CharField(max_length=16, unique=True)
@@ -40,7 +40,7 @@ class Service(HandleRefModel):
         return Bridge(self, org)
 
 
-@grainy_model("svc")
+@grainy_model("service")
 class ServiceAPIEndpoint(HandleRefModel):
 
     svcapp = models.ForeignKey(

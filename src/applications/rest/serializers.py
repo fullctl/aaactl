@@ -1,23 +1,15 @@
 from rest_framework import serializers
 
 import applications.models as models
-from common.rest import HANDLEREF_FIELDS
 
+from fullctl.django.rest.core import HANDLEREF_FIELDS
+from fullctl.django.rest.decorators import serializer_registry
+from fullctl.django.rest.serializers import ModelSerializer
 
-class Serializers:
-    pass
-
-
-def register(cls):
-    if not hasattr(cls, "ref_tag"):
-        cls.ref_tag = cls.Meta.model.HandleRef.tag
-        cls.Meta.fields += HANDLEREF_FIELDS
-    setattr(Serializers, cls.ref_tag, cls)
-    return cls
-
+Serializers, register = serializer_registry()
 
 @register
-class Service(serializers.ModelSerializer):
+class Service(ModelSerializer):
     class Meta:
         model = models.Service
         fields = ["name", "slug", "api_host", "invite_redirect"]

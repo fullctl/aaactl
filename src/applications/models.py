@@ -4,6 +4,7 @@ from django_grainy.decorators import grainy_model
 
 from applications.service_bridge import Bridge
 from common.models import HandleRefModel
+from account.models import Organization
 
 # Create your models here.
 
@@ -14,8 +15,8 @@ class Service(HandleRefModel):
     slug = models.CharField(max_length=16, unique=True)
     name = models.CharField(max_length=255, unique=True)
 
-    invite_redirect = models.URLField(max_length=255, null=True, blank=True)
-    api_host = models.URLField(max_length=255, null=True, blank=True)
+    invite_redirect = models.URLField(_("Service URL"), max_length=255, null=True, help_text=_("URL used to redirect users to the service."))
+    api_host = models.URLField(_("API URL"), max_length=255, null=True, blank=True)
     logo = models.URLField(max_length=255, null=True, blank=True)
     group = models.CharField(
         max_length=255,
@@ -24,6 +25,8 @@ class Service(HandleRefModel):
         null=True,
         help_text=_("Put apps in the same group to enable app switching between them"),
     )
+
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name="services", help_text=_("Service application is exclusive to this organization"))
 
     class Meta:
         db_table = "applications_service"

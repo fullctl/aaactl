@@ -23,7 +23,7 @@ class Services(viewsets.ViewSet):
         else:
             org_id = "?"
 
-        for service in Service.objects.filter(status="ok", group="fullctl").order_by("name"):
+        for service in Service.objects.filter(status="ok").order_by("name"):
             if request.perms.check(service.Grainy.namespace(service) + f".{org_id}", "r", ignore_grant_all=True):
                 services.append(service)
 

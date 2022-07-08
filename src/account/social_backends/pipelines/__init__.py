@@ -50,5 +50,3 @@ def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):
         usercfg, _ = UserSettings.objects.get_or_create(user=user)
         usercfg.email_confirmed = True
         usercfg.save()
-
-

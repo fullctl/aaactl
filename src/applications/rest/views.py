@@ -11,7 +11,6 @@ class Services(viewsets.ViewSet):
     serializer_class = Serializers.svcapp
     queryset = Serializers.svcapp.Meta.model.objects.all()
 
-
     def list(self, request):
 
         services = []
@@ -28,9 +27,12 @@ class Services(viewsets.ViewSet):
             if service.org_id and org_id != service.org_id:
                 continue
 
-            if request.perms.check(service.Grainy.namespace(service) + f".{org_id}", "r", ignore_grant_all=True):
+            if request.perms.check(
+                service.Grainy.namespace(service) + f".{org_id}",
+                "r",
+                ignore_grant_all=True,
+            ):
                 services.append(service)
-
 
         serializer = Serializers.svcapp(
             services,

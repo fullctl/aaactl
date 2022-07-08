@@ -1,12 +1,11 @@
-from rest_framework import serializers
-
-import applications.models as models
-
-from fullctl.django.rest.core import HANDLEREF_FIELDS
+# from rest_framework import serializers
 from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
 
+import applications.models as models
+
 Serializers, register = serializer_registry()
+
 
 @register
 class Service(ModelSerializer):

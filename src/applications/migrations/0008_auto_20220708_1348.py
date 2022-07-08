@@ -6,18 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0007_service_org'),
+        ("applications", "0007_service_org"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='service',
-            name='api_host',
-            field=models.URLField(blank=True, max_length=255, null=True, verbose_name='API URL'),
+            model_name="service",
+            name="api_host",
+            field=models.URLField(
+                blank=True, max_length=255, null=True, verbose_name="API URL"
+            ),
         ),
         migrations.AlterField(
-            model_name='service',
-            name='invite_redirect',
-            field=models.URLField(help_text='URL used to redirect users to the service.', max_length=255, null=True, verbose_name='Service URL'),
+            model_name="service",
+            name="invite_redirect",
+            field=models.URLField(
+                help_text="URL used to redirect users to the service.",
+                max_length=255,
+                null=True,
+                verbose_name="Service URL",
+            ),
         ),
     ]

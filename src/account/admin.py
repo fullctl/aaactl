@@ -26,6 +26,7 @@ from account.models import (
 
 # registered models
 
+
 @admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):
     list_display = ("user", "email_confirmed")

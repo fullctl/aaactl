@@ -485,7 +485,11 @@ account.ServiceApplications = twentyc.cls.define(
         let redirect_url = data.invite_redirect.replace("{org.slug}", account.org.slug)
         let img= row.find("img.logo")
         row.find("a.redirect").attr("href", redirect_url);
-        img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+        if(!data.logo) {
+          img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+        } else {
+          img.attr("src", data.logo);
+        }
       };
 
       this.rest_api_list.load();

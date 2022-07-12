@@ -2,6 +2,7 @@ import datetime
 import secrets
 
 import reversion
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -453,6 +454,10 @@ class EmailConfirmation(HandleRefModel):
 
     @classmethod
     def start(cls, user):
+
+        if not settings.ENABLE_EMAIL_CONFIRMATION:
+            return
+
         try:
             user.emconf.delete()
         except cls.DoesNotExist:

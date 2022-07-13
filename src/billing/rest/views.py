@@ -134,9 +134,9 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def orders(self, request, pk, org):
         queryset = models.OrderHistory.objects.filter(billcon__org=org)
-        queryset = queryset.prefetch_related("orderitem_set").select_related("billcon")
+        queryset = queryset.prefetch_related("order_history_item_set").select_related("billcon")
         queryset = queryset.order_by("-processed")
-        serializer = Serializers.order(queryset, many=True)
+        serializer = Serializers.order_history(queryset, many=True)
         return Response(serializer.data)
 
 

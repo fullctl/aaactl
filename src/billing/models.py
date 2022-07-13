@@ -785,7 +785,7 @@ class OrderHistory(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "order"
+        tag = "order_history"
 
     class Meta:
         db_table = "billing_order_history"
@@ -822,8 +822,8 @@ class OrderHistory(HandleRefModel):
     @property
     def price(self):
         price = 0
-        for orderitem in self.orderitem_set.all():
-            price += orderitem.price
+        for order_history_item in self.order_history_item_set.all():
+            price += order_history_item.price
         return price
 
     @property
@@ -842,13 +842,13 @@ class OrderHistory(HandleRefModel):
 class OrderHistoryItem(HandleRefModel):
 
     order = models.ForeignKey(
-        OrderHistory, on_delete=models.CASCADE, related_name="orderitem_set"
+        OrderHistory, on_delete=models.CASCADE, related_name="order_history_item_set"
     )
 
     subscription_cycle_product = models.OneToOneField(
         SubscriptionCycleProduct,
         on_delete=models.SET_NULL,
-        related_name="orderitem",
+        related_name="order_history_item",
         null=True,
         blank=True,
     )
@@ -860,7 +860,7 @@ class OrderHistoryItem(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "orderitem"
+        tag = "order_history_item"
 
     class Meta:
         db_table = "billing_order_history_item"
@@ -1072,8 +1072,7 @@ class Order(Transaction):
     order_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
-        # Doing ord for now because "order" is taken
-        tag = "ord"
+        tag = "order"
 
     class Meta:
         db_table = "billing_order"

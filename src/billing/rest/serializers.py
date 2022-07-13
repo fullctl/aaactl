@@ -86,7 +86,7 @@ class OrderHistory(serializers.ModelSerializer):
     def get_items(self, order_history):
         return [
             {"description": item.description, "price": item.price}
-            for item in order_history.orderitem_set.all()
+            for item in order_history.order_history_item_set.all()
         ]
 
 

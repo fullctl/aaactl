@@ -96,7 +96,7 @@ class Product(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price charge on initial setup / purchase. For recurring pricing this could specify a setup fee. For non-recurring pricing, this is the product price."
+            "Price charge on initial setup / purchase. For recurring_product pricing this could specify a setup fee. For non-recurring_product pricing, this is the product price."
         ),
     )
 
@@ -115,8 +115,8 @@ class Product(HandleRefModel):
         verbose_name_plural = _("Products")
 
     @property
-    def is_recurring(self):
-        return hasattr(self, "recurring") and bool(self.recurring.id)
+    def is_recurring_product(self):
+        return hasattr(self, "recurring_product") and bool(self.recurring_product.id)
 
     def __str__(self):
         return f"{self.name}({self.id})"
@@ -172,7 +172,7 @@ class RecurringProduct(HandleRefModel):
 
     # product information
     product = models.OneToOneField(
-        Product, on_delete=models.CASCADE, related_name="recurring"
+        Product, on_delete=models.CASCADE, related_name="recurring_product"
     )
 
     # metered or fixed
@@ -188,7 +188,7 @@ class RecurringProduct(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price in the context of recurring charges. For fixed recurring pricing this would be the price charged each cycle. For metered pricing this would be the usage price per metered unit."
+            "Price in the context of recurring_product charges. For fixed recurring_product pricing this would be the price charged each cycle. For metered pricing this would be the usage price per metered unit."
         ),
     )
 
@@ -214,7 +214,7 @@ class RecurringProduct(HandleRefModel):
 
     data = models.JSONField(
         help_text=_(
-            "Arbitrary extra data you want to define for this recurring product"
+            "Arbitrary extra data you want to define for this recurring_product product"
         ),
         blank=True,
         default=dict,
@@ -228,11 +228,11 @@ class RecurringProduct(HandleRefModel):
         # unique_together = ["product", "cycle"]
 
     class HandleRef:
-        tag = "recurring"
+        tag = "recurring_product"
 
     @property
     def name(self):
-        return f"{self.product.name}.recurring"
+        return f"{self.product.name}.recurring_product"
 
     @property
     def type_description(self):
@@ -656,17 +656,17 @@ class SubscriptionCycleProduct(HandleRefModel):
         price of the product in the subscription cycle
         """
 
-        recurring = self.subproduct.product.recurring
-        if recurring.type == "metered":
-            price = float(self.usage) * float(recurring.price)
+        recurring_product = self.subproduct.product.recurring_product
+        if recurring_product.type == "metered":
+            price = float(self.usage) * float(recurring_product.price)
         else:
-            price = recurring.price
+            price = recurring_product.price
 
         # apply modifiers
 
         for mod in self.subproduct.modifier_set.all():
             if mod.is_valid:
-                price = mod.apply(price, recurring.price)
+                price = mod.apply(price, recurring_product.price)
 
         return price
 

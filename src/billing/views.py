@@ -161,7 +161,7 @@ def setup(request, **kwargs):
         env.update(
             form_init=form_init,
             product=form_init.product_instance,
-            recurring=form_init.recurring_instance,
+            recurring_product=form_init.recurring_product_instance,
             test_init=test_init,
         )
 

@@ -24,15 +24,15 @@ def test_product_group(db, billing_objects):
 
 
 def test_recurring_products(db, billing_objects):
-    assert billing_objects.product.is_recurring is False
-    assert billing_objects.product_sub_fixed.is_recurring is True
-    assert billing_objects.product_sub_metered.is_recurring is True
+    assert billing_objects.product.is_recurring_product is False
+    assert billing_objects.product_sub_fixed.is_recurring_product is True
+    assert billing_objects.product_sub_metered.is_recurring_product is True
 
 
 def test_recurring_product_type(db, billing_objects):
-    assert billing_objects.product_sub_fixed.recurring.type_description == "Fixed Price"
+    assert billing_objects.product_sub_fixed.recurring_product.type_description == "Fixed Price"
     assert (
-        billing_objects.product_sub_metered.recurring.type_description
+        billing_objects.product_sub_metered.recurring_product.type_description
         == "Metered Usage"
     )
 

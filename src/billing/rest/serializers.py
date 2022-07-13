@@ -93,7 +93,7 @@ class OrderHistory(serializers.ModelSerializer):
 @register
 class Subscription(serializers.ModelSerializer):
 
-    recurring = RecurringProduct(read_only=True)
+    recurring_product = RecurringProduct(read_only=True)
     items = serializers.SerializerMethodField()
     cycle = serializers.SerializerMethodField()
     name = serializers.CharField(read_only=True, source="group.name")
@@ -102,7 +102,7 @@ class Subscription(serializers.ModelSerializer):
         model = models.Subscription
         fields = [
             "name",
-            "recurring",
+            "recurring_product",
             "org",
             "cycle_interval",
             "cycle",
@@ -124,12 +124,12 @@ class Subscription(serializers.ModelSerializer):
         return [
             {
                 "description": subproduct.product.description,
-                "type": subproduct.product.recurring.type_description,
+                "type": subproduct.product.recurring_product.type_description,
                 "usage": subproduct.cycle_usage,
                 "cost": subproduct.cycle_cost,
                 "name": subproduct.product.name,
-                "unit_name": subproduct.product.recurring.unit,
-                "unit_name_plural": subproduct.product.recurring.unit_plural,
+                "unit_name": subproduct.product.recurring_product.unit,
+                "unit_name_plural": subproduct.product.recurring_product.unit_plural,
             }
             for subproduct in sub.subproduct_set.all()
         ]
@@ -234,7 +234,7 @@ class BillingSetup(serializers.Serializer):
                 setattr(pay_method, field, data.get(field))
             pay_method.save()
 
-        if product and product.is_recurring:
+        if product and product.is_recurring_product:
             sub = models.Subscription.get_or_create(
                 org,
                 product.group,

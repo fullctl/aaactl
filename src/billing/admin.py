@@ -44,14 +44,14 @@ class RecurringProductInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(BaseAdmin):
-    list_display = ("name", "group", "component", "description", "price", "recurring")
+    list_display = ("name", "group", "component", "description", "price", "recurring_product")
     search_fields = ("name", "component", "group")
-    readonly_fields = BaseAdmin.readonly_fields + ("recurring",)
+    readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
     inlines = (ProductModifierInline, RecurringProductInline)
     form = ProductForm
 
-    def recurring(self, obj):
-        if obj.is_recurring:
+    def recurring_product(self, obj):
+        if obj.is_recurring_product:
             return _("Yes")
         return _("No")
 

@@ -24,9 +24,9 @@ class BillingSetupInitForm(forms.Form):
         self.product_instance = product
 
         try:
-            self.recurring_instance = product.recurring
+            self.recurring_product_instance = product.recurring_product
         except ObjectDoesNotExist:
-            self.recurring_instance = None
+            self.recurring_product_instance = None
 
         return cleaned_data
 

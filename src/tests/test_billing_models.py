@@ -49,7 +49,7 @@ def test_subscription_products(db, billing_objects):
     """
     subscription = billing_objects.monthly_subscription
     product_sub_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_sub_fixed)
+    subscription.add_product(product_sub_fixed)
     assert SubscriptionProduct.objects.filter(sub=subscription).count() == 2
 
 
@@ -129,7 +129,7 @@ def test_subcycle_charge(db, billing_objects, mocker):
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 
@@ -154,7 +154,7 @@ def test_subcycle_charge_exists(db, billing_objects, mocker):
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 
@@ -190,30 +190,30 @@ def test_calc_subscription_charge(db, billing_objects):
     # Create product subscriptions
 
     product_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_fixed)
-    fixed_subprod = product_fixed.sub_set.first()
+    subscription.add_product(product_fixed)
+    fixed_subproduct = product_fixed.sub_set.first()
 
     product_metered = billing_objects.product_sub_metered
-    subscription.add_prod(product_metered)
-    metered_subprod = product_metered.sub_set.first()
+    subscription.add_product(product_metered)
+    metered_subproduct = product_metered.sub_set.first()
 
     # Create Subscription Cycle Products
-    fixed_cycleprod = SubscriptionCycleProduct.objects.create(
-        cycle=cycle, subprod=fixed_subprod, usage=1
+    fixed_cycleproduct = SubscriptionCycleProduct.objects.create(
+        cycle=cycle, subproduct=fixed_subproduct, usage=1
     )
 
-    assert fixed_cycleprod.price == 125.99
+    assert fixed_cycleproduct.price == 125.99
 
-    metered_cycleprod = SubscriptionCycleProduct.objects.create(
-        cycle=cycle, subprod=metered_subprod, usage=0
+    metered_cycleproduct = SubscriptionCycleProduct.objects.create(
+        cycle=cycle, subproduct=metered_subproduct, usage=0
     )
 
     # Adjust usage
-    assert metered_cycleprod.price == 0
-    metered_cycleprod.usage = 50
-    metered_cycleprod.save()
+    assert metered_cycleproduct.price == 0
+    metered_cycleproduct.usage = 50
+    metered_cycleproduct.save()
 
-    assert metered_cycleprod.price == 25
+    assert metered_cycleproduct.price == 25
 
     # Get price for whole cycle
     assert cycle.price == 150.99
@@ -235,7 +235,7 @@ def test_order_history(db, billing_objects, mocker):
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 

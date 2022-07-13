@@ -108,7 +108,7 @@ def setup_test(request):
 
     test_init = {
         "redirect": "https://dev2.20c.com:8041/.../prefix",
-        "prod": "fullctl.prefixctl.prefixes",
+        "product": "fullctl.prefixctl.prefixes",
         "email": request.user.email,
         "test_charge": True,
     }
@@ -122,7 +122,7 @@ def setup_test(request):
 def setup(request, **kwargs):
 
     test_init = kwargs.get("test_init")
-    real_init = {"email": request.user.email, "prod": request.GET.get("prod")}
+    real_init = {"email": request.user.email, "product": request.GET.get("product")}
     billing_address_init = {}
 
     env = {}
@@ -144,7 +144,7 @@ def setup(request, **kwargs):
 
     if test_init:
         form_init = BillingSetupInitForm(test_init, initial=test_init)
-    elif request.GET.get("prod"):
+    elif request.GET.get("product"):
         form_init = BillingSetupInitForm(request.GET, initial=real_init)
     else:
         form_init = None
@@ -160,7 +160,7 @@ def setup(request, **kwargs):
 
         env.update(
             form_init=form_init,
-            prod=form_init.prod_instance,
+            product=form_init.product_instance,
             recurring=form_init.recurring_instance,
             test_init=test_init,
         )
@@ -169,7 +169,7 @@ def setup(request, **kwargs):
     # available for selection
 
     payopt = PaymentMethod.get_for_org(org).first()
-    if payopt and "prod" in env:
+    if payopt and "product" in env:
         env.update(
             form_payopt_select=SelectPaymentMethodForm(
                 org, initial={"payment_method": payopt.id}

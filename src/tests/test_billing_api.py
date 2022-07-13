@@ -183,9 +183,9 @@ def test_get_orders(billing_objects, charge_objects):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_get_products(billing_objects, data_billing_api_prod):
-    response = billing_objects.api_client.get(reverse("billing_api:prod-list"))
+def test_get_products(billing_objects, data_billing_api_product):
+    response = billing_objects.api_client.get(reverse("billing_api:product-list"))
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == strip_api_fields(
-        data_billing_api_prod.expected
+        data_billing_api_product.expected
     )

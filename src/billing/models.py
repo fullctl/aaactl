@@ -45,7 +45,7 @@ class ProductGroup(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "prodgrp"
+        tag = "product_group"
 
     class Meta:
         db_table = "billing_product_group"
@@ -84,7 +84,7 @@ class Product(HandleRefModel):
 
     group = models.ForeignKey(
         ProductGroup,
-        related_name="prod_set",
+        related_name="product_set",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -107,7 +107,7 @@ class Product(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "prod"
+        tag = "product"
 
     class Meta:
         db_table = "billing_product"
@@ -171,7 +171,7 @@ class RecurringProduct(HandleRefModel):
     """
 
     # product information
-    prod = models.OneToOneField(
+    product = models.OneToOneField(
         Product, on_delete=models.CASCADE, related_name="recurring"
     )
 
@@ -225,14 +225,14 @@ class RecurringProduct(HandleRefModel):
         verbose_name = _("Recurring Product Settings")
         verbose_name_plural = _("Recurring Product Settings")
         # FIXME: why is this weird on postgres
-        # unique_together = ["prod", "cycle"]
+        # unique_together = ["product", "cycle"]
 
     class HandleRef:
         tag = "recurring"
 
     @property
     def name(self):
-        return f"{self.prod.name}.recurring"
+        return f"{self.product.name}.recurring"
 
     @property
     def type_description(self):
@@ -257,7 +257,7 @@ class ProductModifier(HandleRefModel):
     of the same product
     """
 
-    prod = models.ForeignKey(
+    product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="modifier_set"
     )
     type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
@@ -268,7 +268,7 @@ class ProductModifier(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "prodmod"
+        tag = "product_modified"
 
     class Meta:
         db_table = "billing_product_modifier"
@@ -356,9 +356,9 @@ class Subscription(HandleRefModel):
         return self.cycle_set.filter(start__lte=date, end__gte=date).first()
 
     @reversion.create_revision()
-    def add_prod(self, prod):
-        subprod, _ = SubscriptionProduct.objects.get_or_create(sub=self, prod=prod)
-        return subprod
+    def add_product(self, product):
+        subproduct, _ = SubscriptionProduct.objects.get_or_create(sub=self, product=product)
+        return subproduct
 
     @reversion.create_revision()
     def end_cycle(self):
@@ -414,10 +414,10 @@ class SubscriptionProduct(HandleRefModel):
     """
 
     sub = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="subprod_set"
+        Subscription, on_delete=models.CASCADE, related_name="subproduct_set"
     )
 
-    prod = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sub_set")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sub_set")
 
     data = models.JSONField(
         default=dict,
@@ -426,7 +426,7 @@ class SubscriptionProduct(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "subprod"
+        tag = "subproduct"
 
     class Meta:
         db_table = "billing_subscription_product"
@@ -439,8 +439,8 @@ class SubscriptionProduct(HandleRefModel):
         if not cycle:
             return 0
         try:
-            cycleprod = cycle.cycleprod_set.get(subprod=self)
-            return cycleprod.price
+            cycleproduct = cycle.cycleproduct_set.get(subproduct=self)
+            return cycleproduct.price
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
 
@@ -450,13 +450,13 @@ class SubscriptionProduct(HandleRefModel):
         if not cycle:
             return 0
         try:
-            cycleprod = cycle.cycleprod_set.get(subprod=self)
-            return cycleprod.usage
+            cycleproduct = cycle.cycleproduct_set.get(subproduct=self)
+            return cycleproduct.usage
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
 
     def __str__(self):
-        return f"{self.sub} - {self.prod.name}"
+        return f"{self.sub} - {self.product.name}"
 
 
 @reversion.register()
@@ -492,7 +492,7 @@ class SubscriptionCycle(HandleRefModel):
         """
 
         price = 0
-        for charge in self.cycleprod_set.all():
+        for charge in self.cycleproduct_set.all():
             price += float(charge.price)
         return price
 
@@ -515,20 +515,20 @@ class SubscriptionCycle(HandleRefModel):
     def __str__(self):
         return f"{self.sub} {self.start} - {self.end}"
 
-    def update_usage(self, subprod, usage):
+    def update_usage(self, subproduct, usage):
 
         """
         Set the usage for a subscription product in this cycle
         """
 
-        cycleprod, created = SubscriptionCycleProduct.objects.get_or_create(
+        cycleproduct, created = SubscriptionCycleProduct.objects.get_or_create(
             cycle=self,
-            subprod=subprod,
+            subproduct=subproduct,
         )
 
         if usage is not None:
-            cycleprod.usage = usage
-        cycleprod.save()
+            cycleproduct.usage = usage
+        cycleproduct.save()
 
     def charge(self):
 
@@ -567,24 +567,24 @@ class SubscriptionCycle(HandleRefModel):
         self._create_payment(user, invoice_number)
 
     def _create_orders(self, user, order_number):
-        for subprod in self.sub.subprod_set.all():
+        for subproduct in self.sub.subproduct_set.all():
             Order.objects.create(
                 user=user,
                 amount=self.price,
                 subscription=self.sub,
-                product=subprod.prod,
+                product=subproduct.product,
                 description=self.sub.charge_description,
                 order_number=order_number,
             )
 
     def _create_invoices(self, user, invoice_number):
-        for subprod in self.sub.subprod_set.all():
+        for subproduct in self.sub.subproduct_set.all():
             Invoice.objects.create(
                 # Not sure how we want to access this
                 user=user,
                 amount=self.price,
                 subscription=self.sub,
-                product=subprod.prod,
+                product=subproduct.product,
                 description=self.sub.charge_description,
                 invoice_number=invoice_number,
             )
@@ -632,10 +632,10 @@ class SubscriptionCycleProduct(HandleRefModel):
     """
 
     cycle = models.ForeignKey(
-        SubscriptionCycle, on_delete=models.CASCADE, related_name="cycleprod_set"
+        SubscriptionCycle, on_delete=models.CASCADE, related_name="cycleproduct_set"
     )
-    subprod = models.ForeignKey(
-        SubscriptionProduct, on_delete=models.CASCADE, related_name="cycleprod_set"
+    subproduct = models.ForeignKey(
+        SubscriptionProduct, on_delete=models.CASCADE, related_name="cycleproduct_set"
     )
     usage = models.PositiveIntegerField(
         default=0, help_text=_("Usage attributed to cycle for this product")
@@ -647,7 +647,7 @@ class SubscriptionCycleProduct(HandleRefModel):
         verbose_name_plural = _("Subscription Cycle Product")
 
     class HandleRef:
-        tag = "cycleprod"
+        tag = "cycleproduct"
 
     @property
     def price(self):
@@ -656,7 +656,7 @@ class SubscriptionCycleProduct(HandleRefModel):
         price of the product in the subscription cycle
         """
 
-        recurring = self.subprod.prod.recurring
+        recurring = self.subproduct.product.recurring
         if recurring.type == "metered":
             price = float(self.usage) * float(recurring.price)
         else:
@@ -664,14 +664,14 @@ class SubscriptionCycleProduct(HandleRefModel):
 
         # apply modifiers
 
-        for mod in self.subprod.modifier_set.all():
+        for mod in self.subproduct.modifier_set.all():
             if mod.is_valid:
                 price = mod.apply(price, recurring.price)
 
         return price
 
     def __str__(self):
-        return f"{self.subprod}"
+        return f"{self.subproduct}"
 
 
 @reversion.register()
@@ -683,7 +683,7 @@ class SubscriptionProductModifier(HandleRefModel):
     entirely.
     """
 
-    subprod = models.ForeignKey(
+    subproduct = models.ForeignKey(
         SubscriptionProduct, on_delete=models.CASCADE, related_name="modifier_set"
     )
     type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
@@ -804,12 +804,12 @@ class OrderHistory(HandleRefModel):
         order.save()
 
         try:
-            for cycleprod in chg.cyclechg.cycle.cycleprod_set.all():
+            for cycleproduct in chg.cyclechg.cycle.cycleproduct_set.all():
                 OrderHistoryItem.objects.create(
                     order=order,
-                    cycleprod=cycleprod,
-                    description=cycleprod.subprod.prod.description,
-                    price=cycleprod.price,
+                    cycleproduct=cycleproduct,
+                    description=cycleproduct.subproduct.product.description,
+                    price=cycleproduct.price,
                 )
 
         except SubscriptionCycleCharge.DoesNotExist:
@@ -845,7 +845,7 @@ class OrderHistoryItem(HandleRefModel):
         OrderHistory, on_delete=models.CASCADE, related_name="orderitem_set"
     )
 
-    cycleprod = models.OneToOneField(
+    cycleproduct = models.OneToOneField(
         SubscriptionCycleProduct,
         on_delete=models.SET_NULL,
         related_name="orderitem",

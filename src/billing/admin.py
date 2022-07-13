@@ -58,8 +58,8 @@ class ProductAdmin(BaseAdmin):
 
 @admin.register(ProductModifier)
 class ProductModifieradmin(BaseAdmin):
-    list_display = ("prod", "type", "value", "duration", "code")
-    search_fields = ("prod__name", "code")
+    list_display = ("product", "type", "value", "duration", "code")
+    search_fields = ("product__name", "code")
 
 
 class SubscriptionProductModifierInline(admin.TabularInline):
@@ -76,14 +76,14 @@ class SubscriptionCycleInline(admin.TabularInline):
 
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
-    fields = ("prod",)
+    fields = ("product",)
     extra = 0
 
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
     list_display = ("group", "org", "cycle", "cycle_start")
-    search_fields = ("group__name", "prod__name", "org__name")
+    search_fields = ("group__name", "product__name", "org__name")
     inlines = (
         SubscriptionProductInline,
         SubscriptionCycleInline,
@@ -103,7 +103,7 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
     list_display = ("sub", "start", "end", "charged", "organization_name")
-    search_fields = ("sub__prod__name", "sub__org__name", "group__name", "sub__id")
+    search_fields = ("sub__product__name", "sub__org__name", "group__name", "sub__id")
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
@@ -112,14 +112,14 @@ class SubscriptionCycleAdmin(BaseAdmin):
 
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
-    list_display = ("subprod", "type", "value", "valid", "source")
-    search_fields = ("subprod__name", "subprod__sub__org___name")
+    list_display = ("subproduct", "type", "value", "valid", "source")
+    search_fields = ("subproduct__name", "subproduct__sub__org___name")
 
 
 class OrderHistoryItemInline(admin.TabularInline):
     model = OrderHistoryItem
     extra = 0
-    fields = ("cycleprod", "description", "price")
+    fields = ("cycleproduct", "description", "price")
 
 
 @admin.register(OrderHistory)

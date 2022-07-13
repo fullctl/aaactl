@@ -53,8 +53,8 @@ class Command(BaseCommand):
                 sub.start_cycle()
                 self.log(f"-- started new billing cycle: {sub.cycle}")
 
-            for subprod in sub.subprod_set.all():
-                self.collect(subprod, sub.cycle)
+            for subproduct in sub.subproduct_set.all():
+                self.collect(subproduct, sub.cycle)
 
             for cycle in sub.cycle_set.filter(status="ok"):
                 if not cycle.ended:
@@ -79,20 +79,20 @@ class Command(BaseCommand):
                         if cyclechg:
                             cyclechg.chg.sync_status()
 
-    def collect(self, subprod, cycle):
+    def collect(self, subproduct, cycle):
 
         org = cycle.sub.org
 
-        service = subprod.prod.component
+        service = subproduct.product.component
         if not service:
-            cycle.update_usage(subprod, None)
+            cycle.update_usage(subproduct, None)
             return
         bridge = service.bridge(org)
-        product = subprod.prod.name
+        product = subproduct.product.name
 
         try:
             usage = bridge.usage(product)
             self.log(f"{org} -> {product}: {usage}")
-            cycle.update_usage(subprod, usage)
+            cycle.update_usage(subproduct, usage)
         except KeyError as exc:
             self.log(f"{exc}")

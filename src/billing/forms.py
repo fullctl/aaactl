@@ -8,23 +8,23 @@ from billing.models import PaymentMethod, Product
 
 
 class BillingSetupInitForm(forms.Form):
-    prod = forms.CharField(widget=forms.HiddenInput(), required=False)
+    product = forms.CharField(widget=forms.HiddenInput(), required=False)
     cycle = forms.CharField(widget=forms.HiddenInput(), required=False)
     redirect = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def clean(self):
         cleaned_data = super().clean()
-        prod_name = cleaned_data.get("prod")
+        product_name = cleaned_data.get("product")
 
         try:
-            prod = Product.objects.get(name=prod_name)
+            product = Product.objects.get(name=product_name)
         except Product.DoesNotExist:
-            raise forms.ValidationError(_("Unknown product: {}").format(prod_name))
+            raise forms.ValidationError(_("Unknown product: {}").format(product_name))
 
-        self.prod_instance = prod
+        self.product_instance = product
 
         try:
-            self.recurring_instance = prod.recurring
+            self.recurring_instance = product.recurring
         except ObjectDoesNotExist:
             self.recurring_instance = None
 

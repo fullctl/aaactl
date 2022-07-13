@@ -42,7 +42,7 @@ class PaypalProcessor(PaymentProcessor):
         setup_fee = 0.0
 
         for sub in subs:
-            setup_fee += float(sub.prod.price)
+            setup_fee += float(sub.product.price)
 
         payload = {
             "description": self.agreement_description,
@@ -117,7 +117,7 @@ class PaypalProcessor(PaymentProcessor):
             "cycles": "0",
             "frequency": sub.cycle.upper(),
             "frequency_interval": f"{sub.cycle_frequency}",
-            "name": sub.prod.description,
+            "name": sub.product.description,
             "type": "REGULAR",
         }
 

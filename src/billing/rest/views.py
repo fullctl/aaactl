@@ -122,7 +122,7 @@ class Organization(viewsets.ViewSet):
             return Response({"product": [f"Unknown product: {name}"]}, status=400)
 
         sub = models.Subscription.get_or_create(org, product.group)
-        sub.add_prod(product)
+        sub.add_product(product)
         if not sub.cycle:
             sub.start_cycle()
 
@@ -143,10 +143,10 @@ class Organization(viewsets.ViewSet):
 @route
 class Product(viewsets.ViewSet):
 
-    serializer_class = Serializers.prod
+    serializer_class = Serializers.product
     queryset = models.Product.objects.all()
 
     def list(self, request):
         queryset = models.Product.objects.filter(status="ok")
-        serializer = Serializers.prod(queryset, many=True)
+        serializer = Serializers.product(queryset, many=True)
         return Response(serializer.data)

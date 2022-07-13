@@ -34,12 +34,12 @@ class Product(serializers.ModelSerializer):
 @register
 class RecurringProduct(serializers.ModelSerializer):
 
-    prod = Product(read_only=True)
+    product = Product(read_only=True)
 
     class Meta:
         model = models.RecurringProduct
 
-        fields = ["prod", "type", "price", "unit"]
+        fields = ["product", "type", "price", "unit"]
 
 
 @register
@@ -123,15 +123,15 @@ class Subscription(serializers.ModelSerializer):
             return []
         return [
             {
-                "description": subprod.prod.description,
-                "type": subprod.prod.recurring.type_description,
-                "usage": subprod.cycle_usage,
-                "cost": subprod.cycle_cost,
-                "name": subprod.prod.name,
-                "unit_name": subprod.prod.recurring.unit,
-                "unit_name_plural": subprod.prod.recurring.unit_plural,
+                "description": subproduct.product.description,
+                "type": subproduct.product.recurring.type_description,
+                "usage": subproduct.cycle_usage,
+                "cost": subproduct.cycle_cost,
+                "name": subproduct.product.name,
+                "unit_name": subproduct.product.recurring.unit,
+                "unit_name_plural": subproduct.product.recurring.unit_plural,
             }
-            for subprod in sub.subprod_set.all()
+            for subproduct in sub.subproduct_set.all()
         ]
 
 
@@ -149,7 +149,7 @@ class BillingSetup(serializers.Serializer):
 
     # Setup init data (forms.BillingSetupInitForm)
 
-    prod = serializers.CharField(required=False)
+    product = serializers.CharField(required=False)
     redirect = serializers.CharField(required=False, allow_blank=True)
 
     # Payment option (forms.SelectPaymentMethodForm)
@@ -174,7 +174,7 @@ class BillingSetup(serializers.Serializer):
 
     agreement_tos = serializers.BooleanField(required=True)
 
-    def validate_prod(self, value):
+    def validate_product(self, value):
         try:
             return models.Product.objects.get(name=value)
         except models.Product.DoesNotExist:
@@ -221,7 +221,7 @@ class BillingSetup(serializers.Serializer):
 
         pay_method = data["payment_method"]
         processor = data["processor"]
-        prod = data.get("prod")
+        product = data.get("product")
         user = self.context.get("user")
         org = self.context.get("org")
 
@@ -234,10 +234,10 @@ class BillingSetup(serializers.Serializer):
                 setattr(pay_method, field, data.get(field))
             pay_method.save()
 
-        if prod and prod.is_recurring:
+        if product and product.is_recurring:
             sub = models.Subscription.get_or_create(
                 org,
-                prod.group,
+                product.group,
                 # TODO: allow to specify?
                 "month",
             )
@@ -247,8 +247,8 @@ class BillingSetup(serializers.Serializer):
             if not sub.cycle:
                 sub.start_cycle()
 
-            if not sub.subprod_set.filter(prod=prod).exists():
-                sub.add_prod(prod)
+            if not sub.subproduct_set.filter(product=product).exists():
+                sub.add_product(product)
 
         models.Subscription.set_payment_method(org, pay_method)
 

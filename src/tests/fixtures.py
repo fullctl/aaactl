@@ -67,7 +67,7 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
+            product=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
         )
 
         self.product_sub_metered = Product.objects.create(
@@ -79,14 +79,14 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_metered,
+            product=self.product_sub_metered,
             type="metered",
             price=0.50,
             data={"foo": "bar"},
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="reduction",
             value=10,
             duration=30,
@@ -94,7 +94,7 @@ class BillingObjects:
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="quantity",
             value=2,
             duration=30,
@@ -111,7 +111,7 @@ class BillingObjects:
             pay=None,  # Set none to start
         )
 
-        self.monthly_subscription.add_prod(self.product_sub_metered)
+        self.monthly_subscription.add_product(self.product_sub_metered)
 
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
@@ -121,7 +121,7 @@ class BillingObjects:
             pay=None,  # Set none to start
         )
 
-        self.yearly_subscription.add_prod(self.product_sub_metered)
+        self.yearly_subscription.add_product(self.product_sub_metered)
 
         self.billing_contact = BillingContact.objects.create(
             org=self.org, name="William Contact", email="billcon@localhost"
@@ -283,8 +283,8 @@ def charge_objects(billing_objects, mocker):
     subscription = billing_objects.monthly_subscription
 
     product_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_fixed)
-    fixed_subprod = product_fixed.sub_set.first()
+    subscription.add_product(product_fixed)
+    fixed_subproduct = product_fixed.sub_set.first()
 
     subscription.pay = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
@@ -292,7 +292,7 @@ def charge_objects(billing_objects, mocker):
     subcycle = subscription.cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        cycle=subcycle, subprod=fixed_subprod, usage=1
+        cycle=subcycle, subproduct=fixed_subproduct, usage=1
     )
 
     subcycle.charge()

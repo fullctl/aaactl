@@ -144,7 +144,7 @@ def accept_invite(request, secret):
     set_selected_org(request, invite.org)
 
     if invite.service:
-        return redirect(invite.service.invite_redirect.format(org=invite.org))
+        return redirect(invite.service.service_url.format(org=invite.org))
     else:
         return redirect("/")
 

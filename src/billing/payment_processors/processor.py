@@ -74,19 +74,19 @@ class PaymentProcessor:
         self.billing_contact_customer.save()
 
     @reversion.create_revision()
-    def sync_charge(self, chg):
-        if chg.status == "pending":
-            return self._sync_charge(chg)
-        return chg.status
+    def sync_charge(self, payment_charge):
+        if payment_charge.status == "pending":
+            return self._sync_charge(payment_charge)
+        return payment_charge.status
 
-    def _sync_charge(self, chg, status=None):
+    def _sync_charge(self, payment_charge, status=None):
         if status:
-            chg.status = status
-            chg.save()
+            payment_charge.status = status
+            payment_charge.save()
 
             try:
-                chg.subscription_cycle_charge.status = status
-                chg.subscription_cycle_charge.save()
+                payment_charge.subscription_cycle_charge.status = status
+                payment_charge.subscription_cycle_charge.save()
             except ObjectDoesNotExist:
                 pass
 

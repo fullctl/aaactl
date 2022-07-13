@@ -135,7 +135,7 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
 
     subscriptionsubscription_cycle.charge()
     subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    payment_charge = subscriptionsubscription_cycle_charge.chg
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
     assert subscriptionsubscription_cycle_charge.subscription_cycle == subscriptionsubscription_cycle
     assert payment_charge.price == subscriptionsubscription_cycle.price
@@ -167,7 +167,7 @@ def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocke
 
     # Now we set status of payment charge from ok to pending
     subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    payment_charge = subscriptionsubscription_cycle_charge.chg
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
     payment_charge.status = "ok"
     payment_charge.save()
     subscriptionsubscription_cycle.refresh_from_db()
@@ -242,9 +242,9 @@ def test_order_history(db, billing_objects, mocker):
     subscriptionsubscription_cycle.charge()
 
     subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    payment_charge = subscriptionsubscription_cycle_charge.chg
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
-    order_history = OrderHistory.create_from_chg(payment_charge)
+    order_history = OrderHistory.create_from_payment_charge(payment_charge)
     assert order_history
 
 

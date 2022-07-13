@@ -510,7 +510,7 @@ class SubscriptionCycle(HandleRefModel):
         Has this subscription_cycle been charged already ?
         """
 
-        return self.subscription_cycle_charge_set.filter(chg__status="ok").exists()
+        return self.subscription_cycle_charge_set.filter(payment_charge__status="ok").exists()
 
     def __str__(self):
         return f"{self.subscription} {self.start} - {self.end}"
@@ -545,17 +545,17 @@ class SubscriptionCycle(HandleRefModel):
         if not self.price:
             return
 
-        pending_chg = self.subscription_cycle_charge_set.filter(chg__status="pending").first()
-        if pending_chg:
-            return pending_chg
+        pending_payment_charge = self.subscription_cycle_charge_set.filter(payment_charge__status="pending").first()
+        if pending_payment_charge:
+            return pending_payment_charge
 
-        chg = PaymentCharge.objects.create(
+        payment_charge = PaymentCharge.objects.create(
             pay=self.subscription.pay, price=self.price, description=self.subscription.charge_description
         )
-        self.subscription.pay.processor_instance.charge(chg)
+        self.subscription.pay.processor_instance.charge(payment_charge)
 
         return SubscriptionCycleCharge.objects.create(
-            subscription_cycle=self, chg=chg, status="pending"
+            subscription_cycle=self, payment_charge=payment_charge, status="pending"
         )
 
     def create_transactions(self, user):
@@ -610,7 +610,7 @@ class SubscriptionCycleCharge(HandleRefModel):
     subscription_cycle = models.ForeignKey(
         SubscriptionCycle, on_delete=models.CASCADE, related_name="subscription_cycle_charge_set"
     )
-    chg = models.OneToOneField(
+    payment_charge = models.OneToOneField(
         "billing.PaymentCharge", on_delete=models.CASCADE, related_name="subscription_cycle_charge"
     )
 
@@ -760,7 +760,7 @@ class OrderHistory(HandleRefModel):
         related_name="order_set",
     )
 
-    chg = models.OneToOneField(
+    payment_charge = models.OneToOneField(
         "billing.PaymentCharge",
         on_delete=models.SET_NULL,
         related_name="order",
@@ -793,18 +793,18 @@ class OrderHistory(HandleRefModel):
         verbose_name_plural = _("Order History Entries")
 
     @classmethod
-    def create_from_chg(cls, chg):
+    def create_from_payment_charge(cls, payment_charge):
         order = cls(
-            chg=chg,
-            billing_contact=chg.pay.billing_contact,
-            billed_to=chg.pay.name,
+            payment_charge=payment_charge,
+            billing_contact=payment_charge.pay.billing_contact,
+            billed_to=payment_charge.pay.name,
             processed=datetime.datetime.now(),
             order_id=unique_order_history_id(),
         )
         order.save()
 
         try:
-            for subscription_cycle_product in chg.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all():
+            for subscription_cycle_product in payment_charge.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all():
                 OrderHistoryItem.objects.create(
                     order=order,
                     subscription_cycle_product=subscription_cycle_product,
@@ -814,7 +814,7 @@ class OrderHistory(HandleRefModel):
 
         except SubscriptionCycleCharge.DoesNotExist:
             OrderHistoryItem.objects.create(
-                order=order, price=chg.price, description=chg.description
+                order=order, price=payment_charge.price, description=payment_charge.description
             )
 
         return order
@@ -828,12 +828,12 @@ class OrderHistory(HandleRefModel):
 
     @property
     def description(self):
-        return self.chg.description
+        return self.payment_charge.description
 
     @property
     def organization_name(self):
         try:
-            return self.chg.subscription_cycle_charge.subscription_cycle.subscription.org.name
+            return self.payment_charge.subscription_cycle_charge.subscription_cycle.subscription.org.name
         except SubscriptionCycleCharge.DoesNotExist:
             return "-"
 
@@ -973,7 +973,7 @@ class PaymentMethod(HandleRefModel):
 class PaymentCharge(HandleRefModel):
 
     pay = models.ForeignKey(
-        PaymentMethod, on_delete=models.CASCADE, related_name="chg_set"
+        PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
     )
     price = models.DecimalField(
         default=0.0,
@@ -990,7 +990,7 @@ class PaymentCharge(HandleRefModel):
         verbose_name_plural = _("Payment Charges")
 
     class HandleRef:
-        tag = "chg"
+        tag = "payment_charge"
 
     def __str__(self):
         return f"{self.pay.name} Charge {self.id}"
@@ -1000,7 +1000,7 @@ class PaymentCharge(HandleRefModel):
         self.status = "ok"
         self.save()
 
-        OrderHistory.create_from_chg(self)
+        OrderHistory.create_from_payment_charge(self)
 
     @reversion.create_revision()
     def sync_status(self):

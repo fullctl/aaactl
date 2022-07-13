@@ -298,9 +298,9 @@ def charge_objects(billing_objects, mocker):
     subscriptionsubscription_cycle.charge()
 
     subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    payment_charge = subscriptionsubscription_cycle_charge.chg
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
-    order_history = OrderHistory.create_from_chg(payment_charge)
+    order_history = OrderHistory.create_from_payment_charge(payment_charge)
 
     return {
         "subscription": subscription,

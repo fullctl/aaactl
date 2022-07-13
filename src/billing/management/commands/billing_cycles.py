@@ -77,7 +77,7 @@ class Command(BaseCommand):
 
                     with reversion.create_revision():
                         if subscription_cycle_charge:
-                            subscription_cycle_charge.chg.sync_status()
+                            subscription_cycle_charge.payment_charge.sync_status()
 
     def collect(self, subscription_product, subscription_cycle):
 

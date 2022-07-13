@@ -75,7 +75,7 @@ def test_stripe_setup_card(billing_objects, mocker):
 @pytest.mark.django_db
 def test_stripe_sync_charge_success(billing_objects, mocker):
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)
-    chg = models.PaymentCharge.objects.create(
+    payment_charge = models.PaymentCharge.objects.create(
         pay=billing_objects.payment_method,
         price=100,
         description="Test payment",
@@ -86,5 +86,5 @@ def test_stripe_sync_charge_success(billing_objects, mocker):
         "billing.payment_processors.stripe.stripe.Charge.retrieve",
         return_value={"status": "succeeded"},
     )
-    stripe.sync_charge(chg)
-    assert chg.status == "ok"
+    stripe.sync_charge(payment_charge)
+    assert payment_charge.status == "ok"

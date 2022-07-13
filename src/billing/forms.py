@@ -9,7 +9,7 @@ from billing.models import PaymentMethod, Product
 
 class BillingSetupInitForm(forms.Form):
     product = forms.CharField(widget=forms.HiddenInput(), required=False)
-    cycle = forms.CharField(widget=forms.HiddenInput(), required=False)
+    subscription_cycle = forms.CharField(widget=forms.HiddenInput(), required=False)
     redirect = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def clean(self):

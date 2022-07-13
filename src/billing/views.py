@@ -88,7 +88,7 @@ def services(request):
         billcon__org=request.selected_org, status="ok"
     ).exists()
 
-    services = request.selected_org.sub_set.filter(status="ok")
+    services = request.selected_org.subscription_set.filter(status="ok")
     env = dict(
         services=services,
         billing_is_setup=billing_is_setup,

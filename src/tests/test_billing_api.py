@@ -146,9 +146,9 @@ def test_delete_billing_contact(billing_objects):
 @pytest.mark.django_db
 def test_delete_active_billing_contact(billing_objects):
     # Connect payment method to subscription, ie make billing contact active
-    sub = billing_objects.monthly_subscription
-    sub.pay = billing_objects.payment_method
-    sub.save()
+    subscription = billing_objects.monthly_subscription
+    subscription.pay = billing_objects.payment_method
+    subscription.save()
     assert billing_objects.billing_contact.active
 
     url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])

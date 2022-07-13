@@ -40,7 +40,7 @@ class ProductGroup(HandleRefModel):
         null=True,
         blank=True,
         help_text=_(
-            "If specified, sets a day of the month to be used as the anchor point for subscription cycles"
+            "If specified, sets a day of the month to be used as the anchor point for subscription subscription_cycles"
         ),
     )
 
@@ -188,7 +188,7 @@ class RecurringProduct(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price in the context of recurring_product charges. For fixed recurring_product pricing this would be the price charged each cycle. For metered pricing this would be the usage price per metered unit."
+            "Price in the context of recurring_product charges. For fixed recurring_product pricing this would be the price charged each subscription_cycle. For metered pricing this would be the usage price per metered unit."
         ),
     )
 
@@ -225,7 +225,7 @@ class RecurringProduct(HandleRefModel):
         verbose_name = _("Recurring Product Settings")
         verbose_name_plural = _("Recurring Product Settings")
         # FIXME: why is this weird on postgres
-        # unique_together = ["product", "cycle"]
+        # unique_together = ["product", "subscription_cycle"]
 
     class HandleRef:
         tag = "recurring_product"
@@ -285,27 +285,27 @@ class Subscription(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        account.models.Organization, on_delete=models.CASCADE, related_name="sub_set"
+        account.models.Organization, on_delete=models.CASCADE, related_name="subscription_set"
     )
 
     group = models.ForeignKey(
-        ProductGroup, related_name="sub_set", on_delete=models.CASCADE
+        ProductGroup, related_name="subscription_set", on_delete=models.CASCADE
     )
 
-    cycle_interval = models.CharField(
+    subscription_cycle_interval = models.CharField(
         max_length=255, choices=const.BILLING_CYCLE_CHOICES, default="month"
     )
-    cycle_start = models.DateTimeField(
-        help_text=_("Start of billing cycle"), blank=True, null=True
+    subscription_cycle_start = models.DateTimeField(
+        help_text=_("Start of billing subscription_cycle"), blank=True, null=True
     )
-    cycle_frequency = models.PositiveIntegerField(default=1)
+    subscription_cycle_frequency = models.PositiveIntegerField(default=1)
 
     pay = models.ForeignKey(
         "billing.PaymentMethod",
         on_delete=models.SET_NULL,
         null=True,
-        related_name="sub_set",
-        help_text=_("User payment option that will be charged by this sub"),
+        related_name="subscription_set",
+        help_text=_("User payment option that will be charged by this subscription"),
     )
 
     data = models.JSONField(
@@ -313,7 +313,7 @@ class Subscription(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "sub"
+        tag = "subscription"
 
     class Meta:
         db_table = "billing_subscription"
@@ -321,20 +321,20 @@ class Subscription(HandleRefModel):
         verbose_name_plural = _("Subscriptions")
 
     @classmethod
-    def get_or_create(cls, org, group, cycle="month"):
+    def get_or_create(cls, org, group, subscription_cycle="month"):
 
-        sub, created_sub = cls.objects.get_or_create(
-            org=org, group=group, cycle_interval=cycle
+        subscription, created_subscription = cls.objects.get_or_create(
+            org=org, group=group, subscription_cycle_interval=subscription_cycle
         )
 
-        return sub
+        return subscription
 
     @classmethod
     def set_payment_method(cls, org, pay=None, replace=None):
         if not pay:
             pay = PaymentMethod.get_for_org(org).first()
 
-        qset = org.sub_set
+        qset = org.subscription_set
         if replace:
             qset = qset.filter(pay=replace)
 
@@ -342,8 +342,8 @@ class Subscription(HandleRefModel):
             qset.update(pay=pay)
 
     @property
-    def cycle(self):
-        return self.get_cycle(datetime.date.today())
+    def subscription_cycle(self):
+        return self.get_subscription_cycle(datetime.date.today())
 
     @property
     def charge_description(self):
@@ -352,58 +352,58 @@ class Subscription(HandleRefModel):
     def __str__(self):
         return f"{self.group.name} : {self.org}"
 
-    def get_cycle(self, date):
-        return self.cycle_set.filter(start__lte=date, end__gte=date).first()
+    def get_subscription_cycle(self, date):
+        return self.subscription_cycle_set.filter(start__lte=date, end__gte=date).first()
 
     @reversion.create_revision()
     def add_product(self, product):
-        subproduct, _ = SubscriptionProduct.objects.get_or_create(sub=self, product=product)
-        return subproduct
+        subscription_product, _ = SubscriptionProduct.objects.get_or_create(subscription=self, product=product)
+        return subscription_product
 
     @reversion.create_revision()
-    def end_cycle(self):
+    def end_subscription_cycle(self):
         """
-        end current subscription cycle prematurely
+        end current subscription subscription_cycle prematurely
         """
 
-        if not self.cycle:
+        if not self.subscription_cycle:
             return
-        self.cycle.end = datetime.date.today()
-        self.cycle.save()
-        self.cycle.charge()
-        self.start_cycle()
+        self.subscription_cycle.end = datetime.date.today()
+        self.subscription_cycle.save()
+        self.subscription_cycle.charge()
+        self.start_subscription_cycle()
 
-    def start_cycle(self, start=None, force=False):
+    def start_subscription_cycle(self, start=None, force=False):
         if not start:
             start = datetime.date.today()
 
-        cycle_anchor = self.group.subscription_cycle_anchor
+        subscription_cycle_anchor = self.group.subscription_cycle_anchor
 
-        if self.cycle_interval == "month":
-            if cycle_anchor:
-                start = start.replace(day=cycle_anchor.day)
+        if self.subscription_cycle_interval == "month":
+            if subscription_cycle_anchor:
+                start = start.replace(day=subscription_cycle_anchor.day)
             end = start + dateutil.relativedelta.relativedelta(months=1)
 
-        elif self.cycle_interval == "year":
+        elif self.subscription_cycle_interval == "year":
             end = start + dateutil.relativedelta.relativedelta(years=1)
 
-        if self.cycle:
+        if self.subscription_cycle:
             if not force:
                 raise OSError(
                     _(
-                        "Currently have an active cycle, pass `force` = True to end and start a new one"
+                        "Currently have an active subscription_cycle, pass `force` = True to end and start a new one"
                     )
                 )
             else:
-                self.end_cycle()
+                self.end_subscription_cycle()
 
-        if not self.cycle_start:
-            self.cycle_start = start
+        if not self.subscription_cycle_start:
+            self.subscription_cycle_start = start
             self.save()
 
-        cycle = SubscriptionCycle.objects.create(sub=self, start=start, end=end)
+        subscription_cycle = SubscriptionCycle.objects.create(subscription=self, start=start, end=end)
 
-        return cycle
+        return subscription_cycle
 
 
 @reversion.register()
@@ -413,11 +413,11 @@ class SubscriptionProduct(HandleRefModel):
     Links a product to a subscription
     """
 
-    sub = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="subproduct_set"
+    subscription = models.ForeignKey(
+        Subscription, on_delete=models.CASCADE, related_name="subscription_product_set"
     )
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sub_set")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="subscription_set")
 
     data = models.JSONField(
         default=dict,
@@ -426,7 +426,7 @@ class SubscriptionProduct(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "subproduct"
+        tag = "subscription_product"
 
     class Meta:
         db_table = "billing_subscription_product"
@@ -434,43 +434,43 @@ class SubscriptionProduct(HandleRefModel):
         verbose_name_plural = _("Subscription Products")
 
     @property
-    def cycle_cost(self):
-        cycle = self.sub.cycle
-        if not cycle:
+    def subscription_cycle_cost(self):
+        subscription_cycle = self.subscription.subscription_cycle
+        if not subscription_cycle:
             return 0
         try:
-            cycleproduct = cycle.cycleproduct_set.get(subproduct=self)
-            return cycleproduct.price
+            subscription_cycle_product = subscription_cycle.subscription_cycle_product_set.get(subscription_product=self)
+            return subscription_cycle_product.price
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
 
     @property
-    def cycle_usage(self):
-        cycle = self.sub.cycle
-        if not cycle:
+    def subscription_cycle_usage(self):
+        subscription_cycle = self.subscription.subscription_cycle
+        if not subscription_cycle:
             return 0
         try:
-            cycleproduct = cycle.cycleproduct_set.get(subproduct=self)
-            return cycleproduct.usage
+            subscription_cycle_product = subscription_cycle.subscription_cycle_product_set.get(subscription_product=self)
+            return subscription_cycle_product.usage
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
 
     def __str__(self):
-        return f"{self.sub} - {self.product.name}"
+        return f"{self.subscription} - {self.product.name}"
 
 
 @reversion.register()
 class SubscriptionCycle(HandleRefModel):
 
     """
-    Describes a billing cycle for a subscription with a specified
+    Describes a billing subscription_cycle for a subscription with a specified
     start and end date.
 
-    Once the end date is reached, the cycle will be billed.
+    Once the end date is reached, the subscription_cycle will be billed.
     """
 
-    sub = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="cycle_set"
+    subscription = models.ForeignKey(
+        Subscription, on_delete=models.CASCADE, related_name="subscription_cycle_set"
     )
 
     start = models.DateField()
@@ -482,24 +482,24 @@ class SubscriptionCycle(HandleRefModel):
         verbose_name_plural = _("Subscription Cycles")
 
     class HandleRef:
-        tag = "cycle"
+        tag = "subscription_cycle"
 
     @property
     def price(self):
 
         """
-        The current total of the cycle
+        The current total of the subscription_cycle
         """
 
         price = 0
-        for charge in self.cycleproduct_set.all():
+        for charge in self.subscription_cycle_product_set.all():
             price += float(charge.price)
         return price
 
     @property
     def ended(self):
         """
-        Has this cycle ended?
+        Has this subscription_cycle ended?
         """
 
         return self.end < datetime.date.today()
@@ -507,33 +507,33 @@ class SubscriptionCycle(HandleRefModel):
     @property
     def charged(self):
         """
-        Has this cycle been charged already ?
+        Has this subscription_cycle been charged already ?
         """
 
-        return self.cyclechg_set.filter(chg__status="ok").exists()
+        return self.subscription_cycle_charge_set.filter(chg__status="ok").exists()
 
     def __str__(self):
-        return f"{self.sub} {self.start} - {self.end}"
+        return f"{self.subscription} {self.start} - {self.end}"
 
-    def update_usage(self, subproduct, usage):
+    def update_usage(self, subscription_product, usage):
 
         """
-        Set the usage for a subscription product in this cycle
+        Set the usage for a subscription product in this subscription_cycle
         """
 
-        cycleproduct, created = SubscriptionCycleProduct.objects.get_or_create(
-            cycle=self,
-            subproduct=subproduct,
+        subscription_cycle_product, created = SubscriptionCycleProduct.objects.get_or_create(
+            subscription_cycle=self,
+            subscription_product=subscription_product,
         )
 
         if usage is not None:
-            cycleproduct.usage = usage
-        cycleproduct.save()
+            subscription_cycle_product.usage = usage
+        subscription_cycle_product.save()
 
     def charge(self):
 
         """
-        Charge the cost of the cycle to the customer's payment method
+        Charge the cost of the subscription_cycle to the customer's payment method
         """
 
         if self.charged:
@@ -545,17 +545,17 @@ class SubscriptionCycle(HandleRefModel):
         if not self.price:
             return
 
-        pending_chg = self.cyclechg_set.filter(chg__status="pending").first()
+        pending_chg = self.subscription_cycle_charge_set.filter(chg__status="pending").first()
         if pending_chg:
             return pending_chg
 
         chg = PaymentCharge.objects.create(
-            pay=self.sub.pay, price=self.price, description=self.sub.charge_description
+            pay=self.subscription.pay, price=self.price, description=self.subscription.charge_description
         )
-        self.sub.pay.processor_instance.charge(chg)
+        self.subscription.pay.processor_instance.charge(chg)
 
         return SubscriptionCycleCharge.objects.create(
-            cycle=self, chg=chg, status="pending"
+            subscription_cycle=self, chg=chg, status="pending"
         )
 
     def create_transactions(self, user):
@@ -567,25 +567,25 @@ class SubscriptionCycle(HandleRefModel):
         self._create_payment(user, invoice_number)
 
     def _create_orders(self, user, order_number):
-        for subproduct in self.sub.subproduct_set.all():
+        for subscription_product in self.subscription.subscription_product_set.all():
             Order.objects.create(
                 user=user,
                 amount=self.price,
-                subscription=self.sub,
-                product=subproduct.product,
-                description=self.sub.charge_description,
+                subscription=self.subscription,
+                product=subscription_product.product,
+                description=self.subscription.charge_description,
                 order_number=order_number,
             )
 
     def _create_invoices(self, user, invoice_number):
-        for subproduct in self.sub.subproduct_set.all():
+        for subscription_product in self.subscription.subscription_product_set.all():
             Invoice.objects.create(
                 # Not sure how we want to access this
                 user=user,
                 amount=self.price,
-                subscription=self.sub,
-                product=subproduct.product,
-                description=self.sub.charge_description,
+                subscription=self.subscription,
+                product=subscription_product.product,
+                description=self.subscription.charge_description,
                 invoice_number=invoice_number,
             )
 
@@ -593,8 +593,8 @@ class SubscriptionCycle(HandleRefModel):
         payment = Payment.objects.create(
             user=user,
             amount=self.price,
-            billing_contact=self.sub.pay.billcon,
-            payment_method=self.sub.pay,
+            billing_contact=self.subscription.pay.billcon,
+            payment_method=self.subscription.pay,
             invoice_number=invoice_number,
         )
         return payment
@@ -604,14 +604,14 @@ class SubscriptionCycle(HandleRefModel):
 class SubscriptionCycleCharge(HandleRefModel):
 
     """
-    Describes a billing charge made for a subscription cycle
+    Describes a billing charge made for a subscription subscription_cycle
     """
 
-    cycle = models.ForeignKey(
-        SubscriptionCycle, on_delete=models.CASCADE, related_name="cyclechg_set"
+    subscription_cycle = models.ForeignKey(
+        SubscriptionCycle, on_delete=models.CASCADE, related_name="subscription_cycle_charge_set"
     )
     chg = models.OneToOneField(
-        "billing.PaymentCharge", on_delete=models.CASCADE, related_name="cyclechg"
+        "billing.PaymentCharge", on_delete=models.CASCADE, related_name="subscription_cycle_charge"
     )
 
     class Meta:
@@ -620,25 +620,25 @@ class SubscriptionCycleCharge(HandleRefModel):
         verbose_name_plural = _("Subscription Cycle Charges")
 
     class HandleRef:
-        tag = "cyclechg"
+        tag = "subscription_cycle_charge"
 
 
 @reversion.register()
 class SubscriptionCycleProduct(HandleRefModel):
 
     """
-    Describes a relationship of a product to a subscription cycle, letting us
-    specify the product's usage for the cycle.
+    Describes a relationship of a product to a subscription subscription_cycle, letting us
+    specify the product's usage for the subscription_cycle.
     """
 
-    cycle = models.ForeignKey(
-        SubscriptionCycle, on_delete=models.CASCADE, related_name="cycleproduct_set"
+    subscription_cycle = models.ForeignKey(
+        SubscriptionCycle, on_delete=models.CASCADE, related_name="subscription_cycle_product_set"
     )
-    subproduct = models.ForeignKey(
-        SubscriptionProduct, on_delete=models.CASCADE, related_name="cycleproduct_set"
+    subscription_product = models.ForeignKey(
+        SubscriptionProduct, on_delete=models.CASCADE, related_name="subscription_cycle_product_set"
     )
     usage = models.PositiveIntegerField(
-        default=0, help_text=_("Usage attributed to cycle for this product")
+        default=0, help_text=_("Usage attributed to subscription_cycle for this product")
     )
 
     class Meta:
@@ -647,16 +647,16 @@ class SubscriptionCycleProduct(HandleRefModel):
         verbose_name_plural = _("Subscription Cycle Product")
 
     class HandleRef:
-        tag = "cycleproduct"
+        tag = "subscription_cycle_product"
 
     @property
     def price(self):
 
         """
-        price of the product in the subscription cycle
+        price of the product in the subscription subscription_cycle
         """
 
-        recurring_product = self.subproduct.product.recurring_product
+        recurring_product = self.subscription_product.product.recurring_product
         if recurring_product.type == "metered":
             price = float(self.usage) * float(recurring_product.price)
         else:
@@ -664,14 +664,14 @@ class SubscriptionCycleProduct(HandleRefModel):
 
         # apply modifiers
 
-        for mod in self.subproduct.modifier_set.all():
+        for mod in self.subscription_product.modifier_set.all():
             if mod.is_valid:
                 price = mod.apply(price, recurring_product.price)
 
         return price
 
     def __str__(self):
-        return f"{self.subproduct}"
+        return f"{self.subscription_product}"
 
 
 @reversion.register()
@@ -683,7 +683,7 @@ class SubscriptionProductModifier(HandleRefModel):
     entirely.
     """
 
-    subproduct = models.ForeignKey(
+    subscription_product = models.ForeignKey(
         SubscriptionProduct, on_delete=models.CASCADE, related_name="modifier_set"
     )
     type = models.CharField(max_length=255, choices=const.BILLING_MODIFIER_TYPES)
@@ -694,7 +694,7 @@ class SubscriptionProductModifier(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "submod"
+        tag = "subscription_product_modifier"
 
     class Meta:
         db_table = "billing_subscription_modifier"
@@ -804,12 +804,12 @@ class OrderHistory(HandleRefModel):
         order.save()
 
         try:
-            for cycleproduct in chg.cyclechg.cycle.cycleproduct_set.all():
+            for subscription_cycle_product in chg.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all():
                 OrderHistoryItem.objects.create(
                     order=order,
-                    cycleproduct=cycleproduct,
-                    description=cycleproduct.subproduct.product.description,
-                    price=cycleproduct.price,
+                    subscription_cycle_product=subscription_cycle_product,
+                    description=subscription_cycle_product.subscription_product.product.description,
+                    price=subscription_cycle_product.price,
                 )
 
         except SubscriptionCycleCharge.DoesNotExist:
@@ -833,7 +833,7 @@ class OrderHistory(HandleRefModel):
     @property
     def organization_name(self):
         try:
-            return self.chg.cyclechg.cycle.sub.org.name
+            return self.chg.subscription_cycle_charge.subscription_cycle.subscription.org.name
         except SubscriptionCycleCharge.DoesNotExist:
             return "-"
 
@@ -845,7 +845,7 @@ class OrderHistoryItem(HandleRefModel):
         OrderHistory, on_delete=models.CASCADE, related_name="orderitem_set"
     )
 
-    cycleproduct = models.OneToOneField(
+    subscription_cycle_product = models.OneToOneField(
         SubscriptionCycleProduct,
         on_delete=models.SET_NULL,
         related_name="orderitem",
@@ -911,7 +911,7 @@ class BillingContact(HandleRefModel):
     @property
     def active(self):
         for pay in self.pay_set.filter(status="ok"):
-            if pay.sub_set.filter(status="ok").exists():
+            if pay.subscription_set.filter(status="ok").exists():
                 return True
         return False
 
@@ -979,7 +979,7 @@ class PaymentCharge(HandleRefModel):
         default=0.0,
         max_digits=6,
         decimal_places=2,
-        help_text=_("Price attributed to cycle for this product"),
+        help_text=_("Price attributed to subscription_cycle for this product"),
     )
     description = models.CharField(max_length=255, null=True, blank=True)
     data = models.JSONField(default=dict, blank=True, help_text=_("Any extra data"))

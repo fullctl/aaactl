@@ -95,7 +95,7 @@ class Subscription(serializers.ModelSerializer):
 
     recurring_product = RecurringProduct(read_only=True)
     items = serializers.SerializerMethodField()
-    cycle = serializers.SerializerMethodField()
+    subscription_cycle = serializers.SerializerMethodField()
     name = serializers.CharField(read_only=True, source="group.name")
 
     class Meta:
@@ -104,34 +104,34 @@ class Subscription(serializers.ModelSerializer):
             "name",
             "recurring_product",
             "org",
-            "cycle_interval",
-            "cycle",
+            "subscription_cycle_interval",
+            "subscription_cycle",
             "pay",
             "items",
         ]
 
-    def get_cycle(self, sub):
-        if not sub.cycle:
+    def get_subscription_cycle(self, subscription):
+        if not subscription.subscription_cycle:
             return None
         return {
-            "start": sub.cycle.start,
-            "end": sub.cycle.end,
+            "start": subscription.subscription_cycle.start,
+            "end": subscription.subscription_cycle.end,
         }
 
-    def get_items(self, sub):
-        if not sub.cycle:
+    def get_items(self, subscription):
+        if not subscription.subscription_cycle:
             return []
         return [
             {
-                "description": subproduct.product.description,
-                "type": subproduct.product.recurring_product.type_description,
-                "usage": subproduct.cycle_usage,
-                "cost": subproduct.cycle_cost,
-                "name": subproduct.product.name,
-                "unit_name": subproduct.product.recurring_product.unit,
-                "unit_name_plural": subproduct.product.recurring_product.unit_plural,
+                "description": subscription_product.product.description,
+                "type": subscription_product.product.recurring_product.type_description,
+                "usage": subscription_product.subscription_cycle_usage,
+                "cost": subscription_product.subscription_cycle_cost,
+                "name": subscription_product.product.name,
+                "unit_name": subscription_product.product.recurring_product.unit,
+                "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
             }
-            for subproduct in sub.subproduct_set.all()
+            for subscription_product in subscription.subscription_product_set.all()
         ]
 
 
@@ -235,20 +235,20 @@ class BillingSetup(serializers.Serializer):
             pay_method.save()
 
         if product and product.is_recurring_product:
-            sub = models.Subscription.get_or_create(
+            subscription = models.Subscription.get_or_create(
                 org,
                 product.group,
                 # TODO: allow to specify?
                 "month",
             )
-            sub.pay = pay_method
-            sub.save()
+            subscription.pay = pay_method
+            subscription.save()
 
-            if not sub.cycle:
-                sub.start_cycle()
+            if not subscription.subscription_cycle:
+                subscription.start_subscription_cycle()
 
-            if not sub.subproduct_set.filter(product=product).exists():
-                sub.add_product(product)
+            if not subscription.subscription_product_set.filter(product=product).exists():
+                subscription.add_product(product)
 
         models.Subscription.set_payment_method(org, pay_method)
 

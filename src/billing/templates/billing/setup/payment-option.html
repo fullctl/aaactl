@@ -14,7 +14,7 @@
 <form action="/billing/setup/payment-option/" method="POST">
 {% csrf_token %}
 {{ form|crispy }}
-<input type="submit" value="Test" name="submit_payment_method">
+<input type="subscriptionmit" value="Test" name="subscriptionmit_payment_method">
 </form>
 
 {% endblock %}

@@ -28,14 +28,14 @@ You have not used any services
 </div>
 {% else %}
 <div class="services">
-{% for sub in services %}
+{% for subscription in services %}
   <div class="row">
     <div class="col-6">
-      <h6 class="organization">{{ sub.group.name }} - {{ sub.organization_name }}<small>{{ sub.cycle.start }} to {{ sub.cycle.end }}</small></h6>
+      <h6 class="organization">{{ subscription.group.name }} - {{ subscription.organization_name }}<small>{{ subscription.subscription_cycle.start }} to {{ subscription.subscription_cycle.end }}</small></h6>
     </div>
     <div class="col-6 right">
     {% if permissions.read_org_billing %}
-      <h6>{% trans "Billed to " %} <small>{{ sub.pay.name }}</small></h6>
+      <h6>{% trans "Billed to " %} <small>{{ subscription.pay.name }}</small></h6>
     {% endif %}
     </div>
   </div>
@@ -49,12 +49,12 @@ You have not used any services
       </tr>
     </thead>
     <tbody>
-    {% for subproduct in sub.subproduct_set.all %}
+    {% for subscription_product in subscription.subscription_product_set.all %}
       <tr>
-        <td>{{ subproduct.product.description }}</td>
-        <td>{{ subproduct.product.recurring_product.type_description }}</td>
-        <td>{{ subproduct.cycle_usage }} {{ subproduct.product.recurring_product.unit_plural }}</td>
-        <td>${{ subproduct.cycle_cost }} USD</td>
+        <td>{{ subscription_product.product.description }}</td>
+        <td>{{ subscription_product.product.recurring_product.type_description }}</td>
+        <td>{{ subscription_product.subscription_cycle_usage }} {{ subscription_product.product.recurring_product.unit_plural }}</td>
+        <td>${{ subscription_product.subscription_cycle_cost }} USD</td>
       </tr>
     {% endfor %}
     </tbody>

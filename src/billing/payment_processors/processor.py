@@ -85,8 +85,8 @@ class PaymentProcessor:
             chg.save()
 
             try:
-                chg.cyclechg.status = status
-                chg.cyclechg.save()
+                chg.subscription_cycle_charge.status = status
+                chg.subscription_cycle_charge.save()
             except ObjectDoesNotExist:
                 pass
 

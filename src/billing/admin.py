@@ -82,7 +82,7 @@ class SubscriptionProductInline(admin.TabularInline):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
-    list_display = ("group", "org", "cycle", "cycle_start")
+    list_display = ("group", "org", "subscription_cycle", "subscription_cycle_start")
     search_fields = ("group__name", "product__name", "org__name")
     inlines = (
         SubscriptionProductInline,
@@ -102,24 +102,24 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
-    list_display = ("sub", "start", "end", "charged", "organization_name")
-    search_fields = ("sub__product__name", "sub__org__name", "group__name", "sub__id")
+    list_display = ("subscription", "start", "end", "charged", "organization_name")
+    search_fields = ("subscription__product__name", "subscription__org__name", "group__name", "subscription__id")
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
-        return obj.sub.org.name
+        return obj.subscription.org.name
 
 
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
-    list_display = ("subproduct", "type", "value", "valid", "source")
-    search_fields = ("subproduct__name", "subproduct__sub__org___name")
+    list_display = ("subscription_product", "type", "value", "valid", "source")
+    search_fields = ("subscription_product__name", "subscription_product__subscription__org___name")
 
 
 class OrderHistoryItemInline(admin.TabularInline):
     model = OrderHistoryItem
     extra = 0
-    fields = ("cycleproduct", "description", "price")
+    fields = ("subscription_cycle_product", "description", "price")
 
 
 @admin.register(OrderHistory)

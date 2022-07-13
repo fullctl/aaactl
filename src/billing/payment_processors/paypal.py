@@ -35,14 +35,14 @@ class PaypalProcessor(PaymentProcessor):
 
         super().__init__(user_payment_opt, **kwargs)
 
-    def require_billing_plan(self, subs, **kwargs):
+    def require_billing_plan(self, subscriptions, **kwargs):
         if self.plan_id:
             return self.plan_id
 
         setup_fee = 0.0
 
-        for sub in subs:
-            setup_fee += float(sub.product.price)
+        for subscription in subscriptions:
+            setup_fee += float(subscription.product.price)
 
         payload = {
             "description": self.agreement_description,
@@ -63,8 +63,8 @@ class PaypalProcessor(PaymentProcessor):
             "value": f"{setup_fee:.2f}",
         }
 
-        for sub in subs:
-            payload["payment_definitions"].append(self.sub_to_paydef(sub))
+        for subscription in subscriptions:
+            payload["payment_definitions"].append(self.subscription_to_paydef(subscription))
 
         billing_plan = BillingPlan(payload, api=self.paypal_api)
 
@@ -107,31 +107,31 @@ class PaypalProcessor(PaymentProcessor):
         else:
             raise OSError(billing_agreement.error)
 
-    def sub_to_paydef(self, sub):
+    def subscription_to_paydef(self, subscription):
 
         return {
             "amount": {
                 "currency": self.default_currency,
-                "value": f"{sub.price:.2f}",
+                "value": f"{subscription.price:.2f}",
             },
-            "cycles": "0",
-            "frequency": sub.cycle.upper(),
-            "frequency_interval": f"{sub.cycle_frequency}",
-            "name": sub.product.description,
+            "subscription_cycles": "0",
+            "frequency": subscription.subscription_cycle.upper(),
+            "frequency_interval": f"{subscription.subscription_cycle_frequency}",
+            "name": subscription.product.description,
             "type": "REGULAR",
         }
 
     @reversion.create_revision()
-    def create_agreement(self, subs, **kwargs):
-        self.require_billing_plan(subs, **kwargs)
+    def create_agreement(self, subscriptions, **kwargs):
+        self.require_billing_plan(subscriptions, **kwargs)
         self.require_billing_agreement()
         self.user_payment_opt.stats = "pending"
         self.user_payment_opt.save()
 
     def update_agreement(self):
         billing_plan = BillingPlan.find(self.plan_id, api=self.paypal_api)
-        subs = self.user_payment_opt.sub_set.all()
-        paydef = [self.sub_to_paydef(sub) for sub in subs]
+        subscriptions = self.user_payment_opt.subscription_set.all()
+        paydef = [self.subscription_to_paydef(subscription) for subscription in subscriptions]
         payload = [{"op": "replace", "path": "/payment_definitions/0", "value": paydef}]
         print(billing_plan["payment_definitions"])
 

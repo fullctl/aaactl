@@ -106,14 +106,14 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def services(self, request, pk, org):
         queryset = models.Subscription.objects.filter(org=org)
-        serializer = Serializers.sub(queryset, many=True)
+        serializer = Serializers.subscription(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["POST"])
     @set_org
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def subscribe(self, request, pk, org, auditlog=None):
+    def subscriptionscribe(self, request, pk, org, auditlog=None):
         name = request.data.get("product")
 
         try:
@@ -121,12 +121,12 @@ class Organization(viewsets.ViewSet):
         except models.Product.DoesNotExist:
             return Response({"product": [f"Unknown product: {name}"]}, status=400)
 
-        sub = models.Subscription.get_or_create(org, product.group)
-        sub.add_product(product)
-        if not sub.cycle:
-            sub.start_cycle()
+        subscription = models.Subscription.get_or_create(org, product.group)
+        subscription.add_product(product)
+        if not subscription.subscription_cycle:
+            subscription.start_subscription_cycle()
 
-        serializer = Serializers.sub(sub)
+        serializer = Serializers.subscription(subscription)
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"])

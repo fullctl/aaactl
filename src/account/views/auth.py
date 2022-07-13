@@ -115,13 +115,13 @@ def start_reset_password(request):
 
 def reset_password(request, secret):
     try:
-        pwdrst = PasswordReset.objects.get(secret=secret)
+        password_reset = PasswordReset.objects.get(secret=secret)
     except PasswordReset.DoesNotExist:
         messages.error(_("Password reset session not found"))
         return redirect("/")
 
     form = account.forms.PasswordReset(initial={"secret": secret})
-    env = {"pwdrst": pwdrst, "form": form}
+    env = {"password_reset": password_reset, "form": form}
 
     return render(request, "account/auth/reset-password.html", env)
 
@@ -129,22 +129,22 @@ def reset_password(request, secret):
 @login_required
 def accept_invite(request, secret):
     try:
-        inv = Invitation.objects.get(secret=secret)
+        invite = Invitation.objects.get(secret=secret)
     except Invitation.DoesNotExist:
         messages.error(request, _("Invitation not found"))
         return redirect("/")
 
-    if inv.expired:
+    if invite.expired:
         messages.error(request, _("The invite has expired"))
         return redirect("/")
 
-    inv.complete(request.user)
-    messages.info(request, _("You have joined {}").format(inv.org.label))
+    invite.complete(request.user)
+    messages.info(request, _("You have joined {}").format(invite.org.label))
 
-    set_selected_org(request, inv.org)
+    set_selected_org(request, invite.org)
 
-    if inv.service:
-        return redirect(inv.service.invite_redirect.format(org=inv.org))
+    if invite.service:
+        return redirect(invite.service.invite_redirect.format(org=invite.org))
     else:
         return redirect("/")
 
@@ -152,12 +152,12 @@ def accept_invite(request, secret):
 @login_required
 def confirm_email(request, secret):
     try:
-        emconf = EmailConfirmation.objects.get(secret=secret)
+        email_confirmation = EmailConfirmation.objects.get(secret=secret)
     except EmailConfirmation.DoesNotExist:
         messages.error(request, _("Email confirmation process not found"))
         return redirect("/")
 
-    if emconf.email != request.user.email:
+    if email_confirmation.email != request.user.email:
         messages.error(
             request,
             _(
@@ -166,7 +166,7 @@ def confirm_email(request, secret):
         )
         return redirect("/")
 
-    emconf.complete()
+    email_confirmation.complete()
     messages.success(request, _("Email address confirmed!"))
 
     return redirect("/")

@@ -19,7 +19,7 @@ account.ControlPanel = twentyc.cls.define(
 
       this.changePassword();
 
-      this.elements.order_history = $('.order-history');
+      this.elements.order_history = $('.order_history-history');
       if(this.elements.order_history.length > 0) {
         this.order_history_list = new twentyc.rest.List(this.elements.order_history);
       }
@@ -56,7 +56,7 @@ account.ControlPanel = twentyc.cls.define(
 
     buildOrderHistory: function() {
 
-      // if the user isn't provisioned to view the order history this
+      // if the user isn't provisioned to view the order_history history this
       // property wont be set and we can just return
       if(!this.order_history_list)
         return;
@@ -80,7 +80,7 @@ account.ControlPanel = twentyc.cls.define(
       this.order_history_list.formatters.order_id = function(value, data) {
         return $('<span>').append(
           $('<a>')
-            .attr('href', '/billing/order-history/details/' + value)
+            .attr('href', '/billing/order_history-history/details/' + value)
             .text('Details')
         );
       }
@@ -350,7 +350,7 @@ account.OrgKeysList = twentyc.cls.define(
   {
     OrgKeysList : function() {
       this.elements = {}
-      this.elements.orgkey_listing = $('.orgkey-listing')
+      this.elements.orgkey_listing = $('.org_key-listing')
 
       this.rest_api_list = new twentyc.rest.List(this.elements.orgkey_listing);
 

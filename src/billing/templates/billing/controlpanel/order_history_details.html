@@ -16,10 +16,10 @@
       </tr>
     </thead>
     <tbody>
-    {% for orderitem in order_history.orderitem_set.all %}
+    {% for order_history_item in order_history.orderitem_set.all %}
       <tr>
-        <td>{{ orderitem.description }}</td>
-        <td>${{ orderitem.price }} USD</td>
+        <td>{{ order_history_item.description }}</td>
+        <td>${{ order_history_item.price }} USD</td>
       </tr>
     {% endfor %}
     </tbody>

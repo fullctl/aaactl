@@ -46,7 +46,7 @@
     </div>
     <div class="row">
       <div class="col pl-0 mt-4 mb-4">
-        {% if not user.usercfg.email_confirmed and enable_email_confirmation %}
+        {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
         <div class="alert alert-warning">
           <div class="row">
             <div class="col-6">
@@ -113,11 +113,11 @@
     </div>
     {% endif %}
     {% if permissions.read_org_billing %}
-    <div class="row order-history-container">
+    <div class="row order_history-history-container">
       <div class="col-12 pl-0 pr-0">
         <h5>Order History</h5>
         <div
-          class="order-history"
+          class="order_history-history"
           data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
           data-api-action="orders">
           <div class="templates" style="display:none">

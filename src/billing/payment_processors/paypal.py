@@ -41,8 +41,8 @@ class PaypalProcessor(PaymentProcessor):
 
         setup_fee = 0.0
 
-        for sub in subs:
-            setup_fee += float(sub.prod.price)
+        for subscription in subs:
+            setup_fee += float(subscription.product.price)
 
         payload = {
             "description": self.agreement_description,
@@ -63,8 +63,8 @@ class PaypalProcessor(PaymentProcessor):
             "value": f"{setup_fee:.2f}",
         }
 
-        for sub in subs:
-            payload["payment_definitions"].append(self.sub_to_paydef(sub))
+        for subscription in subs:
+            payload["payment_definitions"].append(self.sub_to_paydef(subscription))
 
         billing_plan = BillingPlan(payload, api=self.paypal_api)
 
@@ -107,17 +107,17 @@ class PaypalProcessor(PaymentProcessor):
         else:
             raise OSError(billing_agreement.error)
 
-    def sub_to_paydef(self, sub):
+    def sub_to_paydef(self, subscription):
 
         return {
             "amount": {
                 "currency": self.default_currency,
-                "value": f"{sub.price:.2f}",
+                "value": f"{subscription.price:.2f}",
             },
             "cycles": "0",
-            "frequency": sub.cycle.upper(),
-            "frequency_interval": f"{sub.cycle_frequency}",
-            "name": sub.prod.description,
+            "frequency": subscription.subscription_cycle.upper(),
+            "frequency_interval": f"{subscription.cycle_frequency}",
+            "name": subscription.product.description,
             "type": "REGULAR",
         }
 
@@ -131,7 +131,7 @@ class PaypalProcessor(PaymentProcessor):
     def update_agreement(self):
         billing_plan = BillingPlan.find(self.plan_id, api=self.paypal_api)
         subs = self.user_payment_opt.sub_set.all()
-        paydef = [self.sub_to_paydef(sub) for sub in subs]
+        paydef = [self.sub_to_paydef(subscription) for subscription in subs]
         payload = [{"op": "replace", "path": "/payment_definitions/0", "value": paydef}]
         print(billing_plan["payment_definitions"])
 

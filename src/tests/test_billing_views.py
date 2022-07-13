@@ -8,20 +8,20 @@ def test_order_history_details(client_anon, billing_objects, charge_objects):
 
     # Test anon
     anon_response = client_anon.get(
-        reverse("billing:order-history-details", args=[order_item_id])
+        reverse("billing:order_history-history-details", args=[order_item_id])
         + f"?org={billing_objects.org.slug}"
     )
     assert anon_response.status_code == 302
 
-    # Test non-existing order history item
+    # Test non-existing order_history history item
     response = billing_objects.client.get(
-        reverse("billing:order-history-details", args=[100])
+        reverse("billing:order_history-history-details", args=[100])
         + f"?org={billing_objects.org.slug}"
     )
     assert response.status_code == 404
 
     response = billing_objects.client.get(
-        reverse("billing:order-history-details", args=[order_item_id])
+        reverse("billing:order_history-history-details", args=[order_item_id])
         + f"?org={billing_objects.org.slug}"
     )
     assert response.status_code == 200
@@ -65,7 +65,7 @@ def test_setup(client_anon, billing_objects):
 def test_setup_billcon_prepop(billing_objects):
     response = billing_objects.client.get(
         reverse("billing:setup")
-        + f"?billcon={billing_objects.billing_contact.id}"
+        + f"?billing_contact={billing_objects.billing_contact.id}"
         + "&"
         + f"org={billing_objects.org.slug}"
     )

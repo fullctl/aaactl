@@ -31,15 +31,15 @@ def test_api_key_autocreate(db, account_objects):
 def test_emconf_process(db, account_objects):
 
     user = account_objects.user
-    emconf = EmailConfirmation.start(user)
+    email_confirmation = EmailConfirmation.start(user)
 
-    assert user.usercfg.email_confirmed is False
+    assert user.user_settings.email_confirmed is False
 
-    emconf.complete()
+    email_confirmation.complete()
 
-    user.usercfg.refresh_from_db()
+    user.user_settings.refresh_from_db()
 
-    assert user.usercfg.email_confirmed
+    assert user.user_settings.email_confirmed
 
 
 def test_pwdrst_process(db, account_objects):
@@ -48,41 +48,41 @@ def test_pwdrst_process(db, account_objects):
 
     assert authenticate(username=user.username, password="test")
 
-    pwdrst = PasswordReset.start(user)
+    password_reset = PasswordReset.start(user)
 
-    pwdrst.complete("newpassword")
+    password_reset.complete("newpassword")
 
     assert authenticate(username=user.username, password="newpassword")
 
-    assert pwdrst.id is None
+    assert password_reset.id is None
 
 
 def test_inv_process(db, account_objects, account_objects_b):
-    inv = Invitation.objects.create(
+    invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,
         email="test@localhost",
     )
 
-    inv.send()
+    invite.send()
 
-    inv.complete(account_objects_b.user)
+    invite.complete(account_objects_b.user)
 
     assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()
 
 
 def test_inv_user_del(db, account_objects, account_objects_b, capsys):
-    inv = Invitation.objects.create(
+    invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,
         email="test@localhost",
     )
 
     account_objects.user.delete()
-    inv.refresh_from_db()
-    assert inv.created_by is None
+    invite.refresh_from_db()
+    assert invite.created_by is None
 
-    inv.send()
+    invite.send()
 
-    inv.complete(account_objects_b.user)
+    invite.complete(account_objects_b.user)
     assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()

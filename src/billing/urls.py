@@ -13,9 +13,9 @@ urlpatterns = [
     ),
     path("billing-contacts/", billing.views.billing_contacts, name="billing-contacts"),
     path(
-        "order-history/details/<str:id>/",
+        "order_history-history/details/<str:id>/",
         billing.views.order_history_details,
-        name="order-history-details",
+        name="order_history-history-details",
     ),
-    path("order-history/", billing.views.order_history, name="order-history"),
+    path("order_history-history/", billing.views.order_history, name="order_history-history"),
 ]

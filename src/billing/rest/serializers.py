@@ -34,12 +34,12 @@ class Product(serializers.ModelSerializer):
 @register
 class RecurringProduct(serializers.ModelSerializer):
 
-    prod = Product(read_only=True)
+    product = Product(read_only=True)
 
     class Meta:
         model = models.RecurringProduct
 
-        fields = ["prod", "type", "price", "unit"]
+        fields = ["product", "type", "price", "unit"]
 
 
 @register
@@ -50,7 +50,7 @@ class PaymentMethod(serializers.ModelSerializer):
     class Meta:
         model = models.PaymentMethod
         fields = [
-            "billcon",
+            "billing_contact",
             "custom_name",
             "holder",
             "country",
@@ -77,11 +77,11 @@ class BillingContact(FormValidationMixin, serializers.ModelSerializer):
 class OrderHistory(serializers.ModelSerializer):
 
     items = serializers.SerializerMethodField()
-    billcon = BillingContact()
+    billing_contact = BillingContact()
 
     class Meta:
         model = models.OrderHistory
-        fields = ["order_id", "description", "price", "processed", "items", "billcon"]
+        fields = ["order_id", "description", "price", "processed", "items", "billing_contact"]
 
     def get_items(self, order_history):
         return [
@@ -93,45 +93,45 @@ class OrderHistory(serializers.ModelSerializer):
 @register
 class Subscription(serializers.ModelSerializer):
 
-    recurring = RecurringProduct(read_only=True)
+    recurring_product = RecurringProduct(read_only=True)
     items = serializers.SerializerMethodField()
-    cycle = serializers.SerializerMethodField()
+    subscription_cycle = serializers.SerializerMethodField()
     name = serializers.CharField(read_only=True, source="group.name")
 
     class Meta:
         model = models.Subscription
         fields = [
             "name",
-            "recurring",
+            "recurring_product",
             "org",
             "cycle_interval",
-            "cycle",
-            "pay",
+            "subscription_cycle",
+            "payment_method",
             "items",
         ]
 
-    def get_cycle(self, sub):
-        if not sub.cycle:
+    def get_cycle(self, subscription):
+        if not subscription.subscription_cycle:
             return None
         return {
-            "start": sub.cycle.start,
-            "end": sub.cycle.end,
+            "start": subscription.subscription_cycle.start,
+            "end": subscription.subscription_cycle.end,
         }
 
-    def get_items(self, sub):
-        if not sub.cycle:
+    def get_items(self, subscription):
+        if not subscription.subscription_cycle:
             return []
         return [
             {
-                "description": subprod.prod.description,
-                "type": subprod.prod.recurring.type_description,
-                "usage": subprod.cycle_usage,
-                "cost": subprod.cycle_cost,
-                "name": subprod.prod.name,
-                "unit_name": subprod.prod.recurring.unit,
-                "unit_name_plural": subprod.prod.recurring.unit_plural,
+                "description": subscription_product.product.description,
+                "type": subscription_product.product.recurring_product.type_description,
+                "usage": subscription_product.cycle_usage,
+                "cost": subscription_product.cycle_cost,
+                "name": subscription_product.product.name,
+                "unit_name": subscription_product.product.recurring_product.unit,
+                "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
             }
-            for subprod in sub.subprod_set.all()
+            for subscription_product in subscription.subprod_set.all()
         ]
 
 
@@ -149,7 +149,7 @@ class BillingSetup(serializers.Serializer):
 
     # Setup init data (forms.BillingSetupInitForm)
 
-    prod = serializers.CharField(required=False)
+    product = serializers.CharField(required=False)
     redirect = serializers.CharField(required=False, allow_blank=True)
 
     # Payment option (forms.SelectPaymentMethodForm)
@@ -198,10 +198,10 @@ class BillingSetup(serializers.Serializer):
                     field_errors[field] = _("Input required")
             if field_errors:
                 raise serializers.ValidationError(field_errors)
-            billcon, created = models.BillingContact.objects.get_or_create(
+            billing_contact, created = models.BillingContact.objects.get_or_create(
                 org=org, name=data.get("holder"), email=data.get("email"), status="ok"
             )
-            data["payment_method"] = models.PaymentMethod(billcon=billcon)
+            data["payment_method"] = models.PaymentMethod(billing_contact=billing_contact)
 
         processor = data["processor"] = processors.default()(data["payment_method"])
 
@@ -221,7 +221,7 @@ class BillingSetup(serializers.Serializer):
 
         pay_method = data["payment_method"]
         processor = data["processor"]
-        prod = data.get("prod")
+        product = data.get("product")
         user = self.context.get("user")
         org = self.context.get("org")
 
@@ -234,21 +234,21 @@ class BillingSetup(serializers.Serializer):
                 setattr(pay_method, field, data.get(field))
             pay_method.save()
 
-        if prod and prod.is_recurring:
-            sub = models.Subscription.get_or_create(
+        if product and product.is_recurring:
+            subscription = models.Subscription.get_or_create(
                 org,
-                prod.group,
+                product.group,
                 # TODO: allow to specify?
                 "month",
             )
-            sub.pay = pay_method
-            sub.save()
+            subscription.payment_method = pay_method
+            subscription.save()
 
-            if not sub.cycle:
-                sub.start_cycle()
+            if not subscription.subscription_cycle:
+                subscription.start_cycle()
 
-            if not sub.subprod_set.filter(prod=prod).exists():
-                sub.add_prod(prod)
+            if not subscription.subprod_set.filter(product=product).exists():
+                subscription.add_prod(product)
 
         models.Subscription.set_payment_method(org, pay_method)
 

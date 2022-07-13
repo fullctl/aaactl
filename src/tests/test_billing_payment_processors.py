@@ -13,7 +13,7 @@ def test_processor_default():
 def test_payment_processor_interface(billing_objects):
     payment_processor = bpp.processor.PaymentProcessor(billing_objects.payment_method)
     assert payment_processor.data == {"stripe_card": "5200828282828210"}
-    assert payment_processor.billcon_customer.billcon == billing_objects.billing_contact
+    assert payment_processor.billcon_customer.billing_contact == billing_objects.billing_contact
 
 
 @pytest.mark.django_db
@@ -75,8 +75,8 @@ def test_stripe_setup_card(billing_objects, mocker):
 @pytest.mark.django_db
 def test_stripe_sync_charge_success(billing_objects, mocker):
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)
-    chg = models.PaymentCharge.objects.create(
-        pay=billing_objects.payment_method,
+    payment_charge = models.PaymentCharge.objects.create(
+        payment_method=billing_objects.payment_method,
         price=100,
         description="Test payment",
         status="pending",
@@ -86,5 +86,5 @@ def test_stripe_sync_charge_success(billing_objects, mocker):
         "billing.payment_processors.stripe.stripe.Charge.retrieve",
         return_value={"status": "succeeded"},
     )
-    stripe.sync_charge(chg)
-    assert chg.status == "ok"
+    stripe.sync_charge(payment_charge)
+    assert payment_charge.status == "ok"

@@ -21,11 +21,11 @@
           <a class="btn btn-primary btn-sm" href="{% url "billing:setup" %}">{% trans "Add" %}</a>
         </td>
       </tr>
-    {% for pay in payment_methods %}
+    {% for payment_method in payment_methods %}
       <tr>
-        <td>{{ pay.name }}</td>
+        <td>{{ payment_method.name }}</td>
         <td class="right">
-          <a href="{% url "billing:payment_method" pay.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
+          <a href="{% url "billing:payment_method" payment_method.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
         </td>
       </tr>
     {% endfor %}

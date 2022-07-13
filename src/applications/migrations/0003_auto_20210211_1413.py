@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=24)),
                 ("path", models.CharField(max_length=255)),
                 (
-                    "svcapp",
+                    "service_application",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="api_endpoint_set",

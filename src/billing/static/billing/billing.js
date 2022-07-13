@@ -9,8 +9,8 @@ billing.BillingContact = twentyc.cls.define(
   {
     BillingContact : function() {
       this.elements = {}
-      this.elements.pay_list = $('.pay-listing')
-      this.elements.billcon_form = $('form.billcon')
+      this.elements.pay_list = $('.payment_method-listing')
+      this.elements.billcon_form = $('form.billing_contact')
 
       this.rest_api_pay_list = new twentyc.rest.List(this.elements.pay_list);
       this.rest_api_pay_list.load()

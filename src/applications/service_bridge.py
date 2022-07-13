@@ -75,7 +75,7 @@ class Bridge(client.Bridge):
 
     def sync_orguser(self):
         path = self._endpoint(
-            "sync_orguser", default="service-bridge/aaactl-sync/orguser/{user_id}/"
+            "sync_orguser", default="service-bridge/aaactl-sync/org_user/{user_id}/"
         )
 
         data = {

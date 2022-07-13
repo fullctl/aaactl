@@ -50,8 +50,8 @@ class UserInformation(viewsets.ViewSet):
     @user_endpoint()
     @disable_api_key
     def user_settings(self, request):
-        serializer = Serializers.usercfg(
-            instance=request.user.usercfg,
+        serializer = Serializers.user_settings(
+            instance=request.user.user_settings,
             data=request.data,
             many=False,
             context={"user": request.user, "request": request},
@@ -85,9 +85,9 @@ class UserInformation(viewsets.ViewSet):
     @user_endpoint()
     def resend_confirmation_mail(self, request):
 
-        usercfg, created = models.UserSettings.objects.get_or_create(user=request.user)
+        user_settings, created = models.UserSettings.objects.get_or_create(user=request.user)
 
-        if usercfg.email_confirmed:
+        if user_settings.email_confirmed:
             return Response(
                 {"non_field_errors": [_("Email address already confirmed")]}, status=400
             )
@@ -111,7 +111,7 @@ class UserInformation(viewsets.ViewSet):
     def invites(self, request):
         user = request.user
         queryset = models.Invitation.objects.filter(email=user.email)
-        serializer = Serializers.inv(queryset, many=True)
+        serializer = Serializers.invite(queryset, many=True)
         return Response(serializer.data)
 
     @action(
@@ -122,7 +122,7 @@ class UserInformation(viewsets.ViewSet):
     def accept_invite(self, request, invite_id=None):
         user = request.user
         invite = models.Invitation.objects.get(email=user.email, id=invite_id)
-        serializer = Serializers.inv(invite)
+        serializer = Serializers.invite(invite)
         data = serializer.data
         invite.complete(user)
         return Response(data)
@@ -135,7 +135,7 @@ class UserInformation(viewsets.ViewSet):
     def reject_invite(self, request, invite_id=None):
         user = request.user
         invite = models.Invitation.objects.get(email=user.email, id=invite_id)
-        serializer = Serializers.inv(invite)
+        serializer = Serializers.invite(invite)
         data = serializer.data
         invite.delete()
         return Response(data)
@@ -270,7 +270,7 @@ class Organization(viewsets.ViewSet):
     @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
     def users(self, request, pk, org):
-        serializer = Serializers.orguser(
+        serializer = Serializers.org_user(
             org.orguser_set.all(),
             many=True,
             context={
@@ -286,10 +286,10 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
     def user(self, request, pk, org, auditlog=None):
-        orguser = models.OrganizationUser.objects.get(
+        org_user = models.OrganizationUser.objects.get(
             id=request.data.get("id"), org=org
         )
-        if orguser.user == request.user:
+        if org_user.user == request.user:
             return Response(
                 {
                     "non_field_errors": [
@@ -301,9 +301,9 @@ class Organization(viewsets.ViewSet):
                 status=400,
             )
 
-        org.remove_user(orguser.user)
+        org.remove_user(org_user.user)
 
-        return Response(Serializers.orguser(instance=orguser, many=False).data)
+        return Response(Serializers.org_user(instance=org_user, many=False).data)
 
     @action(detail=True, methods=["PUT"])
     @set_org
@@ -313,7 +313,7 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.orguserperm(
             data={
                 "org": org.id,
-                "orguser": request.data.get("id"),
+                "org_user": request.data.get("id"),
                 "component": request.data.get("component"),
                 "permissions": request.data.get("permissions"),
             },
@@ -327,9 +327,9 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
-    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def keys(self, request, pk, org):
-        serializer = Serializers.orgkey(
+        serializer = Serializers.org_key(
             org.orgkey_set.filter(managed=True),
             many=True,
             context={
@@ -343,23 +343,23 @@ class Organization(viewsets.ViewSet):
     @action(detail=True, methods=["PUT"])
     @set_org
     @auditlog()
-    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def set_key_permissions(self, request, pk, org, auditlog=None):
-        serializer = Serializers.orgkeyperm(
+        serializer = Serializers.org_key_permission(
             data={
                 "org": org.id,
-                "orgkey": request.data.get("id"),
+                "org_key": request.data.get("id"),
                 "component": request.data.get("component"),
                 "permissions": request.data.get("permissions"),
             },
             many=False,
         )
 
-        orgkey = models.OrganizationAPIKey.objects.get(
+        org_key = models.OrganizationAPIKey.objects.get(
             org=org, id=request.data.get("id")
         )
 
-        if not orgkey.managed:
+        if not org_key.managed:
             return Response({"id": ["not a managed key"]}, status=400)
 
         if not serializer.is_valid():
@@ -371,39 +371,39 @@ class Organization(viewsets.ViewSet):
     @action(detail=True, methods=["DELETE"])
     @set_org
     @auditlog()
-    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def key(self, request, pk, org, auditlog=None):
-        orgkey = models.OrganizationAPIKey.objects.get(
+        org_key = models.OrganizationAPIKey.objects.get(
             id=request.data.get("id"), org=org
         )
-        response = Response(Serializers.orgkey(instance=orgkey, many=False).data)
-        orgkey.delete()
+        response = Response(Serializers.org_key(instance=org_key, many=False).data)
+        org_key.delete()
 
         return response
 
     @action(detail=True, methods=["POST"])
     @set_org
     @auditlog()
-    @grainy_endpoint("orgkey.{org.id}", explicit=False)
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def create_key(self, request, pk, org, auditlog=None):
         context = {"user": request.user, "org": org}
         data = dict(request.data)
         data.update(org=org.id)
-        serializer = Serializers.orgkey(data=data, many=False, context=context)
+        serializer = Serializers.org_key(data=data, many=False, context=context)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
-        orgkey = serializer.save()
+        org_key = serializer.save()
 
         for mperm in models.ManagedPermission.objects.all():
-            mperm.auto_grant_key(orgkey)
-        return Response(Serializers.orgkey(orgkey, many=False).data)
+            mperm.auto_grant_key(org_key)
+        return Response(Serializers.org_key(org_key, many=False).data)
 
     @action(detail=True, methods=["GET"])
     @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)
-        serializer = Serializers.inv(invitations, many=True)
+        serializer = Serializers.invite(invitations, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["POST"])
@@ -412,11 +412,11 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invite(self, request, pk, org, auditlog=None):
         context = {"user": request.user, "org": org}
-        serializer = Serializers.inv(data=request.data, many=False, context=context)
+        serializer = Serializers.invite(data=request.data, many=False, context=context)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
-        inv = serializer.save()
-        return Response(Serializers.inv(inv, many=False).data)
+        invite = serializer.save()
+        return Response(Serializers.invite(invite, many=False).data)
 
     def get_throttles(self):
         if self.action in ["invite"]:
@@ -426,7 +426,7 @@ class Organization(viewsets.ViewSet):
 
 @route
 class PasswordReset(viewsets.ViewSet):
-    ref_tag = "pwdrst"
+    ref_tag = "password_reset"
     serializer_class = Serializers.start_pwdrst
     queryset = models.PasswordReset.objects.all()
 
@@ -438,20 +438,20 @@ class PasswordReset(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        pwdrst = serializer.save()
-        return Response(Serializers.start_pwdrst(pwdrst, many=False).data)
+        password_reset = serializer.save()
+        return Response(Serializers.start_pwdrst(password_reset, many=False).data)
 
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     @reversion.create_revision()
     def complete(self, request):
-        serializer = Serializers.pwdrst(data=request.data, many=False)
+        serializer = Serializers.password_reset(data=request.data, many=False)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        pwdrst = serializer.save()
+        password_reset = serializer.save()
         messages.info(request, _("Password has been updated"))
-        return Response(Serializers.pwdrst(pwdrst, many=False).data)
+        return Response(Serializers.password_reset(password_reset, many=False).data)
 
     def get_throttles(self):
         if self.action in ["start"]:

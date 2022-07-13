@@ -18,7 +18,7 @@
 <div class="alert alert-warning">
 <p>TESTING MODE</p>
 <p>This form is currently auto-initialized to mimic a  billing setup process as it would be initiated from PrefixCTL</p>
-<p>This will also perform a test charge that you can review in your order history</p>
+<p>This will also perform a test charge that you can review in your order_history history</p>
 {% if request.GET.verbose %}
 <ul>
 {% for k,v in test_init.items %}
@@ -119,8 +119,8 @@
 </div>
 <div class="col-xs-12 col-lg-12">
 
-{% if recurring %}
-<div class="review-order">
+{% if recurring_product %}
+<div class="review-order_history">
 <h4>Review Order</h4>
 
 <div class="alert alert-info">
@@ -130,11 +130,11 @@
   </div>
 </div>
 
-<h6>{{ recurring.prod.group }} Subscription</h6>
+<h6>{{ recurring_product.product.group }} Subscription</h6>
 <div class="row">
-  <div class="col-xs-12 col-md-4">{{ recurring.prod.description }}</div>
-  <div class="col-xs-12 col-md-4">{{ recurring.type_description }}</div>
-  <div class="col-xs-12 col-md-4">${{ recurring.price }} USD / {{ recurring.unit }}</div>
+  <div class="col-xs-12 col-md-4">{{ recurring_product.product.description }}</div>
+  <div class="col-xs-12 col-md-4">{{ recurring_product.type_description }}</div>
+  <div class="col-xs-12 col-md-4">${{ recurring_product.price }} USD / {{ recurring_product.unit }}</div>
 </div>
 </div>
 <div style="margin-bottom: 15px;"></div>

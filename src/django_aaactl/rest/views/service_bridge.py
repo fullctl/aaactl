@@ -11,7 +11,7 @@ class AaactlDataViewSet(DataViewSet):
 
     """
     Extend a new version of the data set view
-    in order to use the aaactl grainy_endpoint decorator
+    in order_history to use the aaactl grainy_endpoint decorator
     on the list and retrieve methods
     """
 
@@ -45,4 +45,4 @@ class Service(AaactlDataViewSet):
     allow_unfiltered = True
 
     queryset = application_models.Service.objects.filter(status="ok")
-    serializer_class = Serializers.svcapp
+    serializer_class = Serializers.service_application

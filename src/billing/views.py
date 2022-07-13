@@ -108,7 +108,7 @@ def setup_test(request):
 
     test_init = {
         "redirect": "https://dev2.20c.com:8041/.../prefix",
-        "prod": "fullctl.prefixctl.prefixes",
+        "product": "fullctl.prefixctl.prefixes",
         "email": request.user.email,
         "test_charge": True,
     }
@@ -122,21 +122,21 @@ def setup_test(request):
 def setup(request, **kwargs):
 
     test_init = kwargs.get("test_init")
-    real_init = {"email": request.user.email, "prod": request.GET.get("prod")}
+    real_init = {"email": request.user.email, "product": request.GET.get("product")}
     billing_address_init = {}
 
     env = {}
     org = request.selected_org
 
-    # If `billcon` parameter is specified attempt
+    # If `billing_contact` parameter is specified attempt
     # to load existing billing contact and prefill
     # the name and email fields from it
 
-    billcon = request.GET.get("billcon")
-    if billcon:
+    billing_contact = request.GET.get("billing_contact")
+    if billing_contact:
         try:
-            billcon = BillingContact.objects.get(id=billcon, org=org)
-            billing_address_init.update(holder=billcon.name, email=billcon.email)
+            billing_contact = BillingContact.objects.get(id=billing_contact, org=org)
+            billing_address_init.update(holder=billing_contact.name, email=billing_contact.email)
         except BillingContact.DoesNotExist:
             pass
 
@@ -144,7 +144,7 @@ def setup(request, **kwargs):
 
     if test_init:
         form_init = BillingSetupInitForm(test_init, initial=test_init)
-    elif request.GET.get("prod"):
+    elif request.GET.get("product"):
         form_init = BillingSetupInitForm(request.GET, initial=real_init)
     else:
         form_init = None
@@ -160,8 +160,8 @@ def setup(request, **kwargs):
 
         env.update(
             form_init=form_init,
-            prod=form_init.prod_instance,
-            recurring=form_init.recurring_instance,
+            product=form_init.prod_instance,
+            recurring_product=form_init.recurring_instance,
             test_init=test_init,
         )
 
@@ -169,7 +169,7 @@ def setup(request, **kwargs):
     # available for selection
 
     payopt = PaymentMethod.get_for_org(org).first()
-    if payopt and "prod" in env:
+    if payopt and "product" in env:
         env.update(
             form_payopt_select=SelectPaymentMethodForm(
                 org, initial={"payment_method": payopt.id}
@@ -182,7 +182,7 @@ def setup(request, **kwargs):
     payment_processor_id = request.GET.get("processor", list(PROCESSORS.keys())[0])
     payment_processor = PROCESSORS[payment_processor_id]
     env.update(
-        payment_processor=payment_processor(PaymentMethod(billcon=BillingContact())),
+        payment_processor=payment_processor(PaymentMethod(billing_contact=BillingContact())),
         form_payopt_create=payment_processor.Form(),
         from_payopt_create_template=payment_processor.Form().template,
         form_billing_address=BillingAddressForm(initial=billing_address_init),

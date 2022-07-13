@@ -59,7 +59,7 @@ class BillingObjects:
         )
 
         self.product_sub_fixed = Product.objects.create(
-            name="test.sub.fixed",
+            name="test.subscription.fixed",
             description="test product: fixed subscription",
             group=self.product_group,
             price=0.00,
@@ -67,11 +67,11 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
+            product=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
         )
 
         self.product_sub_metered = Product.objects.create(
-            name="test.sub.metered",
+            name="test.subscription.metered",
             description="test product: metered subscription",
             group=self.product_group,
             price=0.00,
@@ -79,14 +79,14 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_metered,
+            product=self.product_sub_metered,
             type="metered",
             price=0.50,
             data={"foo": "bar"},
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="reduction",
             value=10,
             duration=30,
@@ -94,7 +94,7 @@ class BillingObjects:
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="quantity",
             value=2,
             duration=30,
@@ -108,7 +108,7 @@ class BillingObjects:
             group=self.product_group,
             cycle_interval="month",
             cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
         self.monthly_subscription.add_prod(self.product_sub_metered)
@@ -118,17 +118,17 @@ class BillingObjects:
             group=self.product_group,
             cycle_interval="year",
             cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
         self.yearly_subscription.add_prod(self.product_sub_metered)
 
         self.billing_contact = BillingContact.objects.create(
-            org=self.org, name="William Contact", email="billcon@localhost"
+            org=self.org, name="William Contact", email="billing_contact@localhost"
         )
 
         self.payment_method = PaymentMethod.objects.create(
-            billcon=self.billing_contact,
+            billing_contact=self.billing_contact,
             custom_name="Test Customer",
             processor="stripe",
             holder="William Contact",
@@ -286,19 +286,19 @@ def charge_objects(billing_objects, mocker):
     subscription.add_prod(product_fixed)
     fixed_subprod = product_fixed.sub_set.first()
 
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        cycle=subcycle, subprod=fixed_subprod, usage=1
+        subscription_cycle=subcycle, subscription_product=fixed_subprod, usage=1
     )
 
     subcycle.charge()
 
     subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.chg
+    payment_charge = subcycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_chg(payment_charge)
 
@@ -328,7 +328,7 @@ def create_money_transaction_data(billing_objects):
 
 
 @pytest.fixture
-def order(billing_objects):
+def order_history(billing_objects):
     from billing.models import Order
 
     data = create_transaction_data(billing_objects)
@@ -339,8 +339,8 @@ def order(billing_objects):
             "order_number": 132,
         }
     )
-    order = Order.objects.create(**data)
-    return order
+    order_history = Order.objects.create(**data)
+    return order_history
 
 
 @pytest.fixture
@@ -388,10 +388,10 @@ def withdrawal(billing_objects):
 
 
 @pytest.fixture
-def ledger(withdrawal, order, invoice):
+def ledger(withdrawal, order_history, invoice):
     import billing.models
 
     withdrawal = billing.models.Ledger(content_object=withdrawal).save()
-    order = billing.models.Ledger(content_object=order).save()
+    order_history = billing.models.Ledger(content_object=order_history).save()
     invoice = billing.models.Ledger(content_object=invoice).save()
-    return [withdrawal, order, invoice]
+    return [withdrawal, order_history, invoice]

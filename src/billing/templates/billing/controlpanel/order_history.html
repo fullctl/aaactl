@@ -13,7 +13,7 @@ You have not made any payments
 {% endblocktrans %}
 </div>
 {% else %}
-<div class="order-history">
+<div class="order_history-history">
   <table class="table table-sm">
     <thead>
       <tr>
@@ -24,12 +24,12 @@ You have not made any payments
       </tr>
     </thead>
     <tbody>
-    {% for order in order_history %}
+    {% for order_history in order_history %}
       <tr>
-        <td>{{ order.description }}</td>
-        <td>${{ order.price }} USD</td>
-        <td>{{ order.processed|date:"Y-m-d" }}</td>
-        <td><a href="{% url "billing:order-history-details" id=order.order_id %}">{{ order.orderitem_set.count }} {% trans "items" %}</a></td>
+        <td>{{ order_history.description }}</td>
+        <td>${{ order_history.price }} USD</td>
+        <td>{{ order_history.processed|date:"Y-m-d" }}</td>
+        <td><a href="{% url "billing:order_history-history-details" id=order_history.order_id %}">{{ order_history.orderitem_set.count }} {% trans "items" %}</a></td>
       </tr>
     {% endfor %}
     </tbody>

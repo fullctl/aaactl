@@ -49,17 +49,17 @@ class PaymentProcessor:
         return settings.BILLING_AGREEMENT_DESCRIPTION
 
     @property
-    def billcon(self):
-        return self.payment_method.billcon
+    def billing_contact(self):
+        return self.payment_method.billing_contact
 
     @property
     def billcon_customer(self):
         try:
-            return self.payment_method.billcon.customer
+            return self.payment_method.billing_contact.customer
         except ObjectDoesNotExist:
             from billing.models import CustomerData
 
-            customer, created = CustomerData.objects.get_or_create(billcon=self.billcon)
+            customer, created = CustomerData.objects.get_or_create(billing_contact=self.billing_contact)
             return customer
 
     @property
@@ -74,19 +74,19 @@ class PaymentProcessor:
         self.billcon_customer.save()
 
     @reversion.create_revision()
-    def sync_charge(self, chg):
-        if chg.status == "pending":
-            return self._sync_charge(chg)
-        return chg.status
+    def sync_charge(self, payment_charge):
+        if payment_charge.status == "pending":
+            return self._sync_charge(payment_charge)
+        return payment_charge.status
 
-    def _sync_charge(self, chg, status=None):
+    def _sync_charge(self, payment_charge, status=None):
         if status:
-            chg.status = status
-            chg.save()
+            payment_charge.status = status
+            payment_charge.save()
 
             try:
-                chg.cyclechg.status = status
-                chg.cyclechg.save()
+                payment_charge.subscription_cycle_charge.status = status
+                payment_charge.subscription_cycle_charge.save()
             except ObjectDoesNotExist:
                 pass
 

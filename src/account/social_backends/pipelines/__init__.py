@@ -47,6 +47,6 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):
 
     if user.email and user.email == details.get("email"):
-        usercfg, _ = UserSettings.objects.get_or_create(user=user)
-        usercfg.email_confirmed = True
-        usercfg.save()
+        user_settings, _ = UserSettings.objects.get_or_create(user=user)
+        user_settings.email_confirmed = True
+        user_settings.save()

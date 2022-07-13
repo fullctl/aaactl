@@ -8,4 +8,4 @@ def test_create_personal_org(db, account_objects):
 
 
 def test_create_user_config(db, account_objects):
-    assert account_objects.user.usercfg
+    assert account_objects.user.user_settings

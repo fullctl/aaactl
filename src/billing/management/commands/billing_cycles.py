@@ -46,53 +46,53 @@ class Command(BaseCommand):
     def progress_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
-        for sub in qset:
-            self.log(f"checking subscription {sub} ...")
+        for subscription in qset:
+            self.log(f"checking subscription {subscription} ...")
 
-            if not sub.cycle:
-                sub.start_cycle()
-                self.log(f"-- started new billing cycle: {sub.cycle}")
+            if not subscription.subscription_cycle:
+                subscription.start_cycle()
+                self.log(f"-- started new billing subscription_cycle: {subscription.subscription_cycle}")
 
-            for subprod in sub.subprod_set.all():
-                self.collect(subprod, sub.cycle)
+            for subscription_product in subscription.subprod_set.all():
+                self.collect(subscription_product, subscription.subscription_cycle)
 
-            for cycle in sub.cycle_set.filter(status="ok"):
-                if not cycle.ended:
+            for subscription_cycle in subscription.cycle_set.filter(status="ok"):
+                if not subscription_cycle.ended:
                     continue
-                if not sub.pay_id:
-                    Subscription.set_payment_method(sub.org)
-                if not sub.pay_id:
+                if not subscription.pay_id:
+                    Subscription.set_payment_method(subscription.org)
+                if not subscription.pay_id:
                     self.log(
-                        f"-- no payment method set, unable to charge previous cycle for org {sub.org}"
+                        f"-- no payment method set, unable to charge previous subscription_cycle for org {subscription.org}"
                     )
                     break
-                if not cycle.charged:
-                    self.log(f"-- charging ${cycle.price} for previous cycle: {cycle}")
+                if not subscription_cycle.charged:
+                    self.log(f"-- charging ${subscription_cycle.price} for previous subscription_cycle: {subscription_cycle}")
 
                     if not self.commit:
                         continue
 
                     with reversion.create_revision():
-                        cyclechg = cycle.charge()
+                        subscription_cycle_charge = subscription_cycle.charge()
 
                     with reversion.create_revision():
-                        if cyclechg:
-                            cyclechg.chg.sync_status()
+                        if subscription_cycle_charge:
+                            subscription_cycle_charge.payment_charge.sync_status()
 
-    def collect(self, subprod, cycle):
+    def collect(self, subscription_product, subscription_cycle):
 
-        org = cycle.sub.org
+        org = subscription_cycle.subscription.org
 
-        service = subprod.prod.component
+        service = subscription_product.product.component
         if not service:
-            cycle.update_usage(subprod, None)
+            subscription_cycle.update_usage(subscription_product, None)
             return
         bridge = service.bridge(org)
-        product = subprod.prod.name
+        product = subscription_product.product.name
 
         try:
             usage = bridge.usage(product)
             self.log(f"{org} -> {product}: {usage}")
-            cycle.update_usage(subprod, usage)
+            subscription_cycle.update_usage(subscription_product, usage)
         except KeyError as exc:
             self.log(f"{exc}")

@@ -26,7 +26,7 @@ def index(request):
     create_orgkey_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()
     usercfg_form = account.forms.UserSettings(
-        initial={"opt_promotions": user.usercfg.opt_promotions}
+        initial={"opt_promotions": user.user_settings.opt_promotions}
     )
 
     if user.has_usable_password():

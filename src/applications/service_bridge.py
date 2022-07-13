@@ -28,7 +28,7 @@ class Bridge(client.Bridge):
 
         self.service = service
 
-        super().__init__(service.api_host, api_key.key, org_slug)
+        super().__init__(service.api_url, api_key.key, org_slug)
 
     def usage(self, product_name):
         # this should stay {org} and not {org_id} so it uses the org slug

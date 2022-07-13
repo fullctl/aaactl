@@ -10,4 +10,4 @@ Serializers, register = serializer_registry()
 class Service(ModelSerializer):
     class Meta:
         model = application_models.Service
-        fields = ["id", "name", "slug", "invite_redirect", "api_host", "group", "logo"]
+        fields = ["id", "name", "slug", "service_url", "api_url", "group", "logo"]

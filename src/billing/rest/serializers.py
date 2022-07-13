@@ -81,7 +81,14 @@ class OrderHistory(serializers.ModelSerializer):
 
     class Meta:
         model = models.OrderHistory
-        fields = ["order_id", "description", "price", "processed", "items", "billing_contact"]
+        fields = [
+            "order_id",
+            "description",
+            "price",
+            "processed",
+            "items",
+            "billing_contact",
+        ]
 
     def get_items(self, order_history):
         return [
@@ -201,7 +208,9 @@ class BillingSetup(serializers.Serializer):
             billing_contact, created = models.BillingContact.objects.get_or_create(
                 org=org, name=data.get("holder"), email=data.get("email"), status="ok"
             )
-            data["payment_method"] = models.PaymentMethod(billing_contact=billing_contact)
+            data["payment_method"] = models.PaymentMethod(
+                billing_contact=billing_contact
+            )
 
         processor = data["processor"] = processors.default()(data["payment_method"])
 
@@ -247,7 +256,9 @@ class BillingSetup(serializers.Serializer):
             if not subscription.subscription_cycle:
                 subscription.start_subscription_cycle()
 
-            if not subscription.subscription_product_set.filter(product=product).exists():
+            if not subscription.subscription_product_set.filter(
+                product=product
+            ).exists():
                 subscription.add_product(product)
 
         models.Subscription.set_payment_method(org, payment_method)

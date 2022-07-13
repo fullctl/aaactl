@@ -17,7 +17,8 @@ def test_confirm_email(db, account_objects):
     email_confirmation = models.EmailConfirmation.start(account_objects.user)
 
     response = account_objects.client.get(
-        reverse("account:auth-confirm-email", args=(email_confirmation.secret,)), follow=True
+        reverse("account:auth-confirm-email", args=(email_confirmation.secret,)),
+        follow=True,
     )
 
     assert response.status_code == 200

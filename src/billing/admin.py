@@ -44,7 +44,14 @@ class RecurringProductInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(BaseAdmin):
-    list_display = ("name", "group", "component", "description", "price", "recurring_product")
+    list_display = (
+        "name",
+        "group",
+        "component",
+        "description",
+        "price",
+        "recurring_product",
+    )
     search_fields = ("name", "component", "group")
     readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
     inlines = (ProductModifierInline, RecurringProductInline)
@@ -103,7 +110,12 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
     list_display = ("subscription", "start", "end", "charged", "organization_name")
-    search_fields = ("subscription__product__name", "subscription__org__name", "group__name", "subscription__id")
+    search_fields = (
+        "subscription__product__name",
+        "subscription__org__name",
+        "group__name",
+        "subscription__id",
+    )
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
@@ -113,7 +125,10 @@ class SubscriptionCycleAdmin(BaseAdmin):
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
     list_display = ("subscription_product", "type", "value", "valid", "source")
-    search_fields = ("subscription_product__name", "subscription_product__subscription__org___name")
+    search_fields = (
+        "subscription_product__name",
+        "subscription_product__subscription__org___name",
+    )
 
 
 class OrderHistoryItemInline(admin.TabularInline):
@@ -148,7 +163,15 @@ class PaymentMethodAdmin(BaseAdmin):
 
 @admin.register(PaymentCharge)
 class PaymentChargeAdmin(BaseAdmin):
-    list_display = ("id", "payment_method", "billing_contact", "price", "status", "created", "updated")
+    list_display = (
+        "id",
+        "payment_method",
+        "billing_contact",
+        "price",
+        "status",
+        "created",
+        "updated",
+    )
     search_fields = ("payment_method__billing_contact__name",)
 
     def billing_contact(self, obj):

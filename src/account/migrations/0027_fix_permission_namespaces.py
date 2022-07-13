@@ -13,6 +13,7 @@ PERMISSION_CHANGES = [
     ("orgkey", "org_key"),
 ]
 
+
 def _rename_forward(qset):
     for mperm in qset:
         for old_ns, new_ns in PERMISSION_CHANGES:
@@ -20,14 +21,13 @@ def _rename_forward(qset):
                 mperm.namespace = mperm.namespace.replace(f"{old_ns}.", f"{new_ns}.")
                 mperm.save()
 
+
 def _rename_backward(qset):
     for mperm in qset:
         for new_ns, old_ns in PERMISSION_CHANGES:
             if mperm.namespace.startswith(f"{old_ns}."):
                 mperm.namespace = mperm.namespace.replace(f"{old_ns}.", f"{new_ns}.")
                 mperm.save()
-
-
 
 
 def forwards(apps, schema_editor):
@@ -41,7 +41,10 @@ def forwards(apps, schema_editor):
     ]
 
     for model in models:
-        _rename_forward(getattr(model, "objects", getattr(model, "handleref", None)).all())
+        _rename_forward(
+            getattr(model, "objects", getattr(model, "handleref", None)).all()
+        )
+
 
 def backwards(apps, schema_editor):
 
@@ -54,16 +57,16 @@ def backwards(apps, schema_editor):
     ]
 
     for model in models:
-        _rename_backward(getattr(model, "objects", getattr(model, "handleref", None)).all())
+        _rename_backward(
+            getattr(model, "objects", getattr(model, "handleref", None)).all()
+        )
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0026_reftag_pass_2'),
-        ('django_grainy', '0001_initial'),
+        ("account", "0026_reftag_pass_2"),
+        ("django_grainy", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunPython(forwards, backwards)
-    ]
+    operations = [migrations.RunPython(forwards, backwards)]

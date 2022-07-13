@@ -440,7 +440,9 @@ class EmailConfirmation(HandleRefModel):
         get_user_model(), on_delete=models.CASCADE, related_name="email_confirmation"
     )
 
-    secret = models.CharField(max_length=255, default=generate_email_confirmation_secret)
+    secret = models.CharField(
+        max_length=255, default=generate_email_confirmation_secret
+    )
 
     email = models.EmailField()
 
@@ -667,7 +669,9 @@ class ManagedPermission(HandleRefModel):
             return True
 
         if self.grant_mode == "restricted":
-            return org.org_managed_permission_set.filter(managed_permission=self).exists()
+            return org.org_managed_permission_set.filter(
+                managed_permission=self
+            ).exists()
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
@@ -730,11 +734,15 @@ class OrganizationManagedPermission(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="org_managed_permission_set"
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     managed_permission = models.ForeignKey(
-        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_permission_set"
+        ManagedPermission,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     reason = models.CharField(

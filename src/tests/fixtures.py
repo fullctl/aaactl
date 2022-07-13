@@ -67,7 +67,10 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            product=self.product_subscription_fixed, type="fixed", price=125.99, data={"foo": "bar"}
+            product=self.product_subscription_fixed,
+            type="fixed",
+            price=125.99,
+            data={"foo": "bar"},
         )
 
         self.product_subscription_metered = Product.objects.create(
@@ -101,7 +104,9 @@ class BillingObjects:
             code="TESTQUANTITY",
         )
 
-        self.org = Organization.objects.create(name="Subscription Org", slug="subscription_org")
+        self.org = Organization.objects.create(
+            name="Subscription Org", slug="subscription_org"
+        )
 
         self.monthly_subscription = Subscription.objects.create(
             org=self.org,
@@ -292,12 +297,16 @@ def charge_objects(billing_objects, mocker):
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscriptionsubscription_cycle, subscription_product=fixed_subscription_product, usage=1
+        subscription_cycle=subscriptionsubscription_cycle,
+        subscription_product=fixed_subscription_product,
+        usage=1,
     )
 
     subscriptionsubscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
     payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)

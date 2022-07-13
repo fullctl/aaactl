@@ -285,7 +285,9 @@ class Subscription(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        account.models.Organization, on_delete=models.CASCADE, related_name="subscription_set"
+        account.models.Organization,
+        on_delete=models.CASCADE,
+        related_name="subscription_set",
     )
 
     group = models.ForeignKey(
@@ -353,11 +355,15 @@ class Subscription(HandleRefModel):
         return f"{self.group.name} : {self.org}"
 
     def get_subscription_cycle(self, date):
-        return self.subscription_cycle_set.filter(start__lte=date, end__gte=date).first()
+        return self.subscription_cycle_set.filter(
+            start__lte=date, end__gte=date
+        ).first()
 
     @reversion.create_revision()
     def add_product(self, product):
-        subscription_product, _ = SubscriptionProduct.objects.get_or_create(subscription=self, product=product)
+        subscription_product, _ = SubscriptionProduct.objects.get_or_create(
+            subscription=self, product=product
+        )
         return subscription_product
 
     @reversion.create_revision()
@@ -401,7 +407,9 @@ class Subscription(HandleRefModel):
             self.subscription_cycle_start = start
             self.save()
 
-        subscription_cycle = SubscriptionCycle.objects.create(subscription=self, start=start, end=end)
+        subscription_cycle = SubscriptionCycle.objects.create(
+            subscription=self, start=start, end=end
+        )
 
         return subscription_cycle
 
@@ -417,7 +425,9 @@ class SubscriptionProduct(HandleRefModel):
         Subscription, on_delete=models.CASCADE, related_name="subscription_product_set"
     )
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="subscription_set")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="subscription_set"
+    )
 
     data = models.JSONField(
         default=dict,
@@ -439,7 +449,11 @@ class SubscriptionProduct(HandleRefModel):
         if not subscription_cycle:
             return 0
         try:
-            subscription_cycle_product = subscription_cycle.subscription_cycle_product_set.get(subscription_product=self)
+            subscription_cycle_product = (
+                subscription_cycle.subscription_cycle_product_set.get(
+                    subscription_product=self
+                )
+            )
             return subscription_cycle_product.price
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
@@ -450,7 +464,11 @@ class SubscriptionProduct(HandleRefModel):
         if not subscription_cycle:
             return 0
         try:
-            subscription_cycle_product = subscription_cycle.subscription_cycle_product_set.get(subscription_product=self)
+            subscription_cycle_product = (
+                subscription_cycle.subscription_cycle_product_set.get(
+                    subscription_product=self
+                )
+            )
             return subscription_cycle_product.usage
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
@@ -510,7 +528,9 @@ class SubscriptionCycle(HandleRefModel):
         Has this subscription_cycle been charged already ?
         """
 
-        return self.subscription_cycle_charge_set.filter(payment_charge__status="ok").exists()
+        return self.subscription_cycle_charge_set.filter(
+            payment_charge__status="ok"
+        ).exists()
 
     def __str__(self):
         return f"{self.subscription} {self.start} - {self.end}"
@@ -521,7 +541,10 @@ class SubscriptionCycle(HandleRefModel):
         Set the usage for a subscription product in this subscription_cycle
         """
 
-        subscription_cycle_product, created = SubscriptionCycleProduct.objects.get_or_create(
+        (
+            subscription_cycle_product,
+            created,
+        ) = SubscriptionCycleProduct.objects.get_or_create(
             subscription_cycle=self,
             subscription_product=subscription_product,
         )
@@ -545,12 +568,16 @@ class SubscriptionCycle(HandleRefModel):
         if not self.price:
             return
 
-        pending_payment_charge = self.subscription_cycle_charge_set.filter(payment_charge__status="pending").first()
+        pending_payment_charge = self.subscription_cycle_charge_set.filter(
+            payment_charge__status="pending"
+        ).first()
         if pending_payment_charge:
             return pending_payment_charge
 
         payment_charge = PaymentCharge.objects.create(
-            payment_method=self.subscription.payment_method, price=self.price, description=self.subscription.charge_description
+            payment_method=self.subscription.payment_method,
+            price=self.price,
+            description=self.subscription.charge_description,
         )
         self.subscription.payment_method.processor_instance.charge(payment_charge)
 
@@ -608,10 +635,14 @@ class SubscriptionCycleCharge(HandleRefModel):
     """
 
     subscription_cycle = models.ForeignKey(
-        SubscriptionCycle, on_delete=models.CASCADE, related_name="subscription_cycle_charge_set"
+        SubscriptionCycle,
+        on_delete=models.CASCADE,
+        related_name="subscription_cycle_charge_set",
     )
     payment_charge = models.OneToOneField(
-        "billing.PaymentCharge", on_delete=models.CASCADE, related_name="subscription_cycle_charge"
+        "billing.PaymentCharge",
+        on_delete=models.CASCADE,
+        related_name="subscription_cycle_charge",
     )
 
     class Meta:
@@ -632,13 +663,18 @@ class SubscriptionCycleProduct(HandleRefModel):
     """
 
     subscription_cycle = models.ForeignKey(
-        SubscriptionCycle, on_delete=models.CASCADE, related_name="subscription_cycle_product_set"
+        SubscriptionCycle,
+        on_delete=models.CASCADE,
+        related_name="subscription_cycle_product_set",
     )
     subscription_product = models.ForeignKey(
-        SubscriptionProduct, on_delete=models.CASCADE, related_name="subscription_cycle_product_set"
+        SubscriptionProduct,
+        on_delete=models.CASCADE,
+        related_name="subscription_cycle_product_set",
     )
     usage = models.PositiveIntegerField(
-        default=0, help_text=_("Usage attributed to subscription_cycle for this product")
+        default=0,
+        help_text=_("Usage attributed to subscription_cycle for this product"),
     )
 
     class Meta:
@@ -804,7 +840,11 @@ class OrderHistory(HandleRefModel):
         order.save()
 
         try:
-            for subscription_cycle_product in payment_charge.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all():
+            for (
+                subscription_cycle_product
+            ) in (
+                payment_charge.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all()
+            ):
                 OrderHistoryItem.objects.create(
                     order=order,
                     subscription_cycle_product=subscription_cycle_product,
@@ -814,7 +854,9 @@ class OrderHistory(HandleRefModel):
 
         except SubscriptionCycleCharge.DoesNotExist:
             OrderHistoryItem.objects.create(
-                order=order, price=payment_charge.price, description=payment_charge.description
+                order=order,
+                price=payment_charge.price,
+                description=payment_charge.description,
             )
 
         return order
@@ -833,7 +875,9 @@ class OrderHistory(HandleRefModel):
     @property
     def organization_name(self):
         try:
-            return self.payment_charge.subscription_cycle_charge.subscription_cycle.subscription.org.name
+            return (
+                self.payment_charge.subscription_cycle_charge.subscription_cycle.subscription.org.name
+            )
         except SubscriptionCycleCharge.DoesNotExist:
             return "-"
 

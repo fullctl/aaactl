@@ -85,7 +85,9 @@ class UserInformation(viewsets.ViewSet):
     @user_endpoint()
     def resend_confirmation_mail(self, request):
 
-        user_settings, created = models.UserSettings.objects.get_or_create(user=request.user)
+        user_settings, created = models.UserSettings.objects.get_or_create(
+            user=request.user
+        )
 
         if user_settings.email_confirmed:
             return Response(
@@ -439,7 +441,9 @@ class PasswordReset(viewsets.ViewSet):
             return Response(serializer.errors, status=400)
 
         password_reset = serializer.save()
-        return Response(Serializers.start_password_reset(password_reset, many=False).data)
+        return Response(
+            Serializers.start_password_reset(password_reset, many=False).data
+        )
 
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     @reversion.create_revision()

@@ -64,7 +64,9 @@ class PaypalProcessor(PaymentProcessor):
         }
 
         for subscription in subscriptions:
-            payload["payment_definitions"].append(self.subscription_to_paydef(subscription))
+            payload["payment_definitions"].append(
+                self.subscription_to_paydef(subscription)
+            )
 
         billing_plan = BillingPlan(payload, api=self.paypal_api)
 
@@ -131,7 +133,9 @@ class PaypalProcessor(PaymentProcessor):
     def update_agreement(self):
         billing_plan = BillingPlan.find(self.plan_id, api=self.paypal_api)
         subscriptions = self.user_payment_opt.subscription_set.all()
-        paydef = [self.subscription_to_paydef(subscription) for subscription in subscriptions]
+        paydef = [
+            self.subscription_to_paydef(subscription) for subscription in subscriptions
+        ]
         payload = [{"op": "replace", "path": "/payment_definitions/0", "value": paydef}]
         print(billing_plan["payment_definitions"])
 

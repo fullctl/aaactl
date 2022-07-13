@@ -313,7 +313,9 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     assert_expected(response, strip_api_fields(expected))
 
 
-def test_password_reset_start(db, account_objects, data_account_api_password_reset_start):
+def test_password_reset_start(
+    db, account_objects, data_account_api_password_reset_start
+):
 
     input = json.loads(data_account_api_password_reset_start.input)
     expected = data_account_api_password_reset_start.expected
@@ -325,7 +327,9 @@ def test_password_reset_start(db, account_objects, data_account_api_password_res
     assert_expected(response, expected)
 
 
-def test_password_reset_complete(db, account_objects, data_account_api_password_reset_complete):
+def test_password_reset_complete(
+    db, account_objects, data_account_api_password_reset_complete
+):
 
     password_reset = models.PasswordReset.start(account_objects.user)
 

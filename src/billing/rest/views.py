@@ -47,7 +47,9 @@ class Organization(viewsets.ViewSet):
         if not billing_contact:
             return Response({"billing_contact": ["Required field"]}, status=400)
 
-        queryset = models.PaymentMethod.get_for_org(org).filter(billing_contact_id=billing_contact)
+        queryset = models.PaymentMethod.get_for_org(org).filter(
+            billing_contact_id=billing_contact
+        )
         serializer = Serializers.payment_method(queryset, many=True)
         return Response(serializer.data)
 
@@ -60,7 +62,12 @@ class Organization(viewsets.ViewSet):
             billing_contact__org=org, id=request.data.get("id")
         )
 
-        if payment_method.billing_contact.payment_method_set.filter(status="ok").count() <= 1:
+        if (
+            payment_method.billing_contact.payment_method_set.filter(
+                status="ok"
+            ).count()
+            <= 1
+        ):
             return Response(
                 {
                     "non_field_errors": [
@@ -87,7 +94,9 @@ class Organization(viewsets.ViewSet):
         instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
-            serializer = Serializers.billing_contact(instance=instance, data=request.data)
+            serializer = Serializers.billing_contact(
+                instance=instance, data=request.data
+            )
 
             if not serializer.is_valid():
                 return Response(serializer.errors, status=400)
@@ -134,7 +143,9 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def orders(self, request, pk, org):
         queryset = models.OrderHistory.objects.filter(billing_contact__org=org)
-        queryset = queryset.prefetch_related("order_history_item_set").select_related("billing_contact")
+        queryset = queryset.prefetch_related("order_history_item_set").select_related(
+            "billing_contact"
+        )
         queryset = queryset.order_by("-processed")
         serializer = Serializers.order_history(queryset, many=True)
         return Response(serializer.data)

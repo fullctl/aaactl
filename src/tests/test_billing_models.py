@@ -30,7 +30,10 @@ def test_recurring_products(db, billing_objects):
 
 
 def test_recurring_product_type(db, billing_objects):
-    assert billing_objects.product_subscription_fixed.recurring_product.type_description == "Fixed Price"
+    assert (
+        billing_objects.product_subscription_fixed.recurring_product.type_description
+        == "Fixed Price"
+    )
     assert (
         billing_objects.product_subscription_metered.recurring_product.type_description
         == "Metered Usage"
@@ -129,15 +132,22 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
+    subscriptionsubscription_cycle.update_usage(
+        subscription.subscription_product_set.first(), 1
+    )
 
     assert subscriptionsubscription_cycle.price > 0
 
     subscriptionsubscription_cycle.charge()
-    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
     payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
-    assert subscriptionsubscription_cycle_charge.subscription_cycle == subscriptionsubscription_cycle
+    assert (
+        subscriptionsubscription_cycle_charge.subscription_cycle
+        == subscriptionsubscription_cycle
+    )
     assert payment_charge.price == subscriptionsubscription_cycle.price
     assert payment_charge.description == subscription.charge_description
 
@@ -154,19 +164,27 @@ def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocke
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
+    subscriptionsubscription_cycle.update_usage(
+        subscription.subscription_product_set.first(), 1
+    )
 
     assert subscriptionsubscription_cycle.price > 0
 
     subscriptionsubscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
 
     # Returns charge if charge is still "pending"
-    assert subscriptionsubscription_cycle.charge() == subscriptionsubscription_cycle_charge
+    assert (
+        subscriptionsubscription_cycle.charge() == subscriptionsubscription_cycle_charge
+    )
 
     # Now we set status of payment charge from ok to pending
-    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
     payment_charge = subscriptionsubscription_cycle_charge.payment_charge
     payment_charge.status = "ok"
     payment_charge.save()
@@ -199,13 +217,17 @@ def test_calc_subscription_charge(db, billing_objects):
 
     # Create Subscription Cycle Products
     fixed_subscription_cycle_product = SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscription_cycle, subscription_product=fixed_subscription_product, usage=1
+        subscription_cycle=subscription_cycle,
+        subscription_product=fixed_subscription_product,
+        usage=1,
     )
 
     assert fixed_subscription_cycle_product.price == 125.99
 
     metered_subscription_cycle_product = SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscription_cycle, subscription_product=metered_subscription_product, usage=0
+        subscription_cycle=subscription_cycle,
+        subscription_product=metered_subscription_product,
+        usage=0,
     )
 
     # Adjust usage
@@ -235,13 +257,17 @@ def test_order_history(db, billing_objects, mocker):
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
+    subscriptionsubscription_cycle.update_usage(
+        subscription.subscription_product_set.first(), 1
+    )
 
     assert subscriptionsubscription_cycle.price > 0
 
     subscriptionsubscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
     payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)
@@ -254,7 +280,9 @@ def test_billing_contact(db, billing_objects):
 
 
 @pytest.mark.django_db
-def test_create_transactions_from_subscriptionsubscription_cycle(charge_objects, billing_objects):
+def test_create_transactions_from_subscriptionsubscription_cycle(
+    charge_objects, billing_objects
+):
     subscription_cycle = charge_objects["subscriptionsubscription_cycle"]
     charge_objects["subscription"]
 

@@ -8,8 +8,8 @@ from applications.rest.serializers import Serializers
 
 @route
 class Services(viewsets.ViewSet):
-    serializer_class = Serializers.svcapp
-    queryset = Serializers.svcapp.Meta.model.objects.all()
+    serializer_class = Serializers.service_application
+    queryset = Serializers.service_application.Meta.model.objects.all()
 
     def list(self, request):
 
@@ -34,7 +34,7 @@ class Services(viewsets.ViewSet):
             ):
                 services.append(service)
 
-        serializer = Serializers.svcapp(
+        serializer = Serializers.service_application(
             services,
             many=True,
         )

@@ -45,4 +45,4 @@ class Service(AaactlDataViewSet):
     allow_unfiltered = True
 
     queryset = application_models.Service.objects.filter(status="ok")
-    serializer_class = Serializers.svcapp
+    serializer_class = Serializers.service_application

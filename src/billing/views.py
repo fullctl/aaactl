@@ -68,7 +68,7 @@ def billing_contact(request, id):
 
     try:
         billing_contact = request.selected_org.billing_contact_set.get(id=id)
-    except request.user.pay_set.model.DoesNotExist:
+    except request.user.payment_method_set.model.DoesNotExist:
         raise Http404(_("Billing contact not found"))
 
     env = dict(
@@ -88,7 +88,7 @@ def services(request):
         billing_contact__org=request.selected_org, status="ok"
     ).exists()
 
-    services = request.selected_org.sub_set.filter(status="ok")
+    services = request.selected_org.subscription_set.filter(status="ok")
     env = dict(
         services=services,
         billing_is_setup=billing_is_setup,
@@ -162,19 +162,19 @@ def setup(request, **kwargs):
 
         env.update(
             form_init=form_init,
-            product=form_init.prod_instance,
-            recurring_product=form_init.recurring_instance,
+            product=form_init.product_instance,
+            recurring_product=form_init.recurring_product_instance,
             test_init=test_init,
         )
 
     # if the user already has a payment method set up make it
     # available for selection
 
-    payopt = PaymentMethod.get_for_org(org).first()
-    if payopt and "product" in env:
+    payment_methodopt = PaymentMethod.get_for_org(org).first()
+    if payment_methodopt and "product" in env:
         env.update(
-            form_payopt_select=SelectPaymentMethodForm(
-                org, initial={"payment_method": payopt.id}
+            form_payment_methodopt_select=SelectPaymentMethodForm(
+                org, initial={"payment_method": payment_methodopt.id}
             )
         )
 
@@ -187,8 +187,8 @@ def setup(request, **kwargs):
         payment_processor=payment_processor(
             PaymentMethod(billing_contact=BillingContact())
         ),
-        form_payopt_create=payment_processor.Form(),
-        from_payopt_create_template=payment_processor.Form().template,
+        form_payment_methodopt_create=payment_processor.Form(),
+        from_payment_methodopt_create_template=payment_processor.Form().template,
         form_billing_address=BillingAddressForm(initial=billing_address_init),
         form_agreements=BillingAgreementsForm(),
     )

@@ -212,7 +212,7 @@ def oauth_profile(request):
         verified_user=True,
         organizations=[
             Serializers.org(instance=org.org, context={"user": user}).data
-            for org in user.orguser_set.all()
+            for org in user.org_user_set.all()
         ],
     )
 

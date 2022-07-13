@@ -14,19 +14,19 @@ class BillingSetupInitForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        prod_name = cleaned_data.get("product")
+        product_name = cleaned_data.get("product")
 
         try:
-            product = Product.objects.get(name=prod_name)
+            product = Product.objects.get(name=product_name)
         except Product.DoesNotExist:
-            raise forms.ValidationError(_("Unknown product: {}").format(prod_name))
+            raise forms.ValidationError(_("Unknown product: {}").format(product_name))
 
-        self.prod_instance = product
+        self.product_instance = product
 
         try:
-            self.recurring_instance = product.recurring_product
+            self.recurring_product_instance = product.recurring_product
         except ObjectDoesNotExist:
-            self.recurring_instance = None
+            self.recurring_product_instance = None
 
         return cleaned_data
 

@@ -111,7 +111,7 @@ class Subscription(serializers.ModelSerializer):
             "name",
             "recurring_product",
             "org",
-            "cycle_interval",
+            "subscription_cycle_interval",
             "subscription_cycle",
             "payment_method",
             "items",
@@ -132,13 +132,13 @@ class Subscription(serializers.ModelSerializer):
             {
                 "description": subscription_product.product.description,
                 "type": subscription_product.product.recurring_product.type_description,
-                "usage": subscription_product.cycle_usage,
-                "cost": subscription_product.cycle_cost,
+                "usage": subscription_product.subscription_cycle_usage,
+                "cost": subscription_product.subscription_cycle_cost,
                 "name": subscription_product.product.name,
                 "unit_name": subscription_product.product.recurring_product.unit,
                 "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
             }
-            for subscription_product in subscription.subproduct_set.all()
+            for subscription_product in subscription.subscriptionproduct_set.all()
         ]
 
 
@@ -181,7 +181,7 @@ class BillingSetup(serializers.Serializer):
 
     agreement_tos = serializers.BooleanField(required=True)
 
-    def validate_prod(self, value):
+    def validate_product(self, value):
         try:
             return models.Product.objects.get(name=value)
         except models.Product.DoesNotExist:
@@ -228,7 +228,7 @@ class BillingSetup(serializers.Serializer):
     def save(self):
         data = self.validated_data
 
-        pay_method = data["payment_method"]
+        payment_method_method = data["payment_method"]
         processor = data["processor"]
         product = data.get("product")
         user = self.context.get("user")
@@ -237,28 +237,28 @@ class BillingSetup(serializers.Serializer):
         reversion.set_user(user)
         reversion.set_comment("Billing setup completed")
 
-        if not pay_method.id:
-            pay_method.processor = processor.id
+        if not payment_method_method.id:
+            payment_method_method.processor = processor.id
             for field in self.required_billing_address_fields:
-                setattr(pay_method, field, data.get(field))
-            pay_method.save()
+                setattr(payment_method_method, field, data.get(field))
+            payment_method_method.save()
 
-        if product and product.is_recurring:
+        if product and product.is_recurring_product:
             subscription = models.Subscription.get_or_create(
                 org,
                 product.group,
                 # TODO: allow to specify?
                 "month",
             )
-            subscription.payment_method = pay_method
+            subscription.payment_method = payment_method_method
             subscription.save()
 
             if not subscription.subscription_cycle:
                 subscription.start_subscription_cycle()
 
-            if not subscription.subproduct_set.filter(product=product).exists():
-                subscription.add_prod(product)
+            if not subscription.subscriptionproduct_set.filter(product=product).exists():
+                subscription.add_product(product)
 
-        models.Subscription.set_payment_method(org, pay_method)
+        models.Subscription.set_payment_method(org, payment_method_method)
 
         processor.setup_billing(**data.get("processor_data"))

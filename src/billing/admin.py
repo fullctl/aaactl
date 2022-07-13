@@ -58,7 +58,7 @@ class ProductAdmin(BaseAdmin):
     form = ProductForm
 
     def recurring_product(self, obj):
-        if obj.is_recurring:
+        if obj.is_recurring_product:
             return _("Yes")
         return _("No")
 
@@ -66,7 +66,7 @@ class ProductAdmin(BaseAdmin):
 @admin.register(ProductModifier)
 class ProductModifieradmin(BaseAdmin):
     list_display = ("product", "type", "value", "duration", "code")
-    search_fields = ("prod__name", "code")
+    search_fields = ("product__name", "code")
 
 
 class SubscriptionProductModifierInline(admin.TabularInline):
@@ -89,8 +89,8 @@ class SubscriptionProductInline(admin.TabularInline):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
-    list_display = ("group", "org", "subscription_cycle", "cycle_start")
-    search_fields = ("group__name", "prod__name", "org__name")
+    list_display = ("group", "org", "subscription_cycle", "subscription_cycle_start")
+    search_fields = ("group__name", "product__name", "org__name")
     inlines = (
         SubscriptionProductInline,
         SubscriptionCycleInline,
@@ -110,7 +110,7 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
     list_display = ("subscription", "start", "end", "charged", "organization_name")
-    search_fields = ("sub__product__name", "sub__org__name", "group__name", "sub__id")
+    search_fields = ("subscription__product__name", "subscription__org__name", "group__name", "subscription__id")
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
@@ -120,13 +120,13 @@ class SubscriptionCycleAdmin(BaseAdmin):
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
     list_display = ("subscription_product", "type", "value", "valid", "source")
-    search_fields = ("subproduct__name", "subproduct__subscription__org___name")
+    search_fields = ("subscriptionproduct__name", "subscriptionproduct__subscription__org___name")
 
 
 class OrderHistoryItemInline(admin.TabularInline):
     model = OrderHistoryItem
     extra = 0
-    fields = ("cycleprod", "description", "price")
+    fields = ("subscription_cycle_product", "description", "price")
 
 
 @admin.register(OrderHistory)
@@ -164,7 +164,7 @@ class PaymentChargeAdmin(BaseAdmin):
         "created",
         "updated",
     )
-    search_fields = ("pay__billing_contact__name",)
+    search_fields = ("payment_method__billing_contact__name",)
 
     def billing_contact(self, obj):
         return obj.payment_method.billing_contact

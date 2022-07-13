@@ -273,7 +273,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("user.{org.id}", explicit=False)
     def users(self, request, pk, org):
         serializer = Serializers.org_user(
-            org.orguser_set.all(),
+            org.org_user_set.all(),
             many=True,
             context={
                 "user": request.user,
@@ -312,7 +312,7 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
     def set_permissions(self, request, pk, org, auditlog=None):
-        serializer = Serializers.orguserperm(
+        serializer = Serializers.org_userperm(
             data={
                 "org": org.id,
                 "org_user": request.data.get("id"),
@@ -332,7 +332,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("org_key.{org.id}", explicit=False)
     def keys(self, request, pk, org):
         serializer = Serializers.org_key(
-            org.orgkey_set.filter(managed=True),
+            org.org_key_set.filter(managed=True),
             many=True,
             context={
                 "user": request.user,
@@ -404,8 +404,8 @@ class Organization(viewsets.ViewSet):
     @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
-        invitations = models.Invitation.objects.filter(org__slug=pk)
-        serializer = Serializers.invite(invitations, many=True)
+        inviteitations = models.Invitation.objects.filter(org__slug=pk)
+        serializer = Serializers.invite(inviteitations, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["POST"])
@@ -429,19 +429,19 @@ class Organization(viewsets.ViewSet):
 @route
 class PasswordReset(viewsets.ViewSet):
     ref_tag = "password_reset"
-    serializer_class = Serializers.start_pwdrst
+    serializer_class = Serializers.start_password_reset
     queryset = models.PasswordReset.objects.all()
 
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     @reversion.create_revision()
     def start(self, request):
-        serializer = Serializers.start_pwdrst(data=request.data, many=False)
+        serializer = Serializers.start_password_reset(data=request.data, many=False)
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
         password_reset = serializer.save()
-        return Response(Serializers.start_pwdrst(password_reset, many=False).data)
+        return Response(Serializers.start_password_reset(password_reset, many=False).data)
 
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     @reversion.create_revision()

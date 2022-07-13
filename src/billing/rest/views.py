@@ -62,7 +62,7 @@ class Organization(viewsets.ViewSet):
             billing_contact__org=org, id=request.data.get("id")
         )
 
-        if payment_method.billing_contact.pay_set.filter(status="ok").count() <= 1:
+        if payment_method.billing_contact.payment_method_set.filter(status="ok").count() <= 1:
             return Response(
                 {
                     "non_field_errors": [
@@ -117,7 +117,7 @@ class Organization(viewsets.ViewSet):
     @set_org
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def subscribe(self, request, pk, org, auditlog=None):
+    def subscriptionscribe(self, request, pk, org, auditlog=None):
         name = request.data.get("product")
 
         try:
@@ -126,7 +126,7 @@ class Organization(viewsets.ViewSet):
             return Response({"product": [f"Unknown product: {name}"]}, status=400)
 
         subscription = models.Subscription.get_or_create(org, product.group)
-        subscription.add_prod(product)
+        subscription.add_product(product)
         if not subscription.subscription_cycle:
             subscription.start_subscription_cycle()
 

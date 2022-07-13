@@ -104,13 +104,13 @@ class BillingObjects:
             code="TESTQUANTITY",
         )
 
-        self.org = Organization.objects.create(name="Subscription Org", slug="sub_org")
+        self.org = Organization.objects.create(name="Subscription Org", slug="subscription_org")
 
         self.monthly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
-            cycle_interval="month",
-            cycle_start=None,  # Set none to start
+            subscription_cycle_interval="month",
+            subscription_cycle_start=None,  # Set none to start
             payment_method=None,  # Set none to start
         )
 
@@ -119,8 +119,8 @@ class BillingObjects:
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
-            cycle_interval="year",
-            cycle_start=None,  # Set none to start
+            subscription_cycle_interval="year",
+            subscription_cycle_start=None,  # Set none to start
             payment_method=None,  # Set none to start
         )
 
@@ -287,28 +287,28 @@ def charge_objects(billing_objects, mocker):
 
     product_fixed = billing_objects.product_subscription_fixed
     subscription.add_product(product_fixed)
-    fixed_subproduct = product_fixed.sub_set.first()
+    fixed_subscriptionproduct = product_fixed.subscription_set.first()
 
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
-    subcycle = subscription.cycle_set.first()
+    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subcycle, subscription_product=fixed_subproduct, usage=1
+        subscription_cycle=subscriptionsubscription_cycle, subscription_product=fixed_subscriptionproduct, usage=1
     )
 
-    subcycle.charge()
+    subscriptionsubscription_cycle.charge()
 
-    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subsubscription_cycle_charge.payment_charge
+    subscriptionsubscription_cycle_charge = subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
-    order_history = OrderHistory.create_from_chg(payment_charge)
+    order_history = OrderHistory.create_from_payment_charge(payment_charge)
 
     return {
         "subscription": subscription,
-        "subcycle": subcycle,
-        "subsubscription_cycle_charge": subsubscription_cycle_charge,
+        "subscriptionsubscription_cycle": subscriptionsubscription_cycle,
+        "subscriptionsubscription_cycle_charge": subscriptionsubscription_cycle_charge,
         "payment_charge": payment_charge,
         "order_history": order_history,
     }

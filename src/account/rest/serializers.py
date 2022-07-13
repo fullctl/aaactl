@@ -54,7 +54,7 @@ class PermissionNamespacesMixin:
             for mperm in mperms:
 
                 if mperm.grant_mode == "restricted":
-                    if not mperm.org_managed_perm_set.filter(org=org).exists():
+                    if not mperm.org_managed_permission_set.filter(org=org).exists():
                         continue
 
                 r.append((mperm.namespace, mperm.description))
@@ -156,7 +156,7 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
 @register
 class OrganizationUserPermissions(PermissionSetterMixin):
-    ref_tag = "orguserperm"
+    ref_tag = "org_userperm"
     rel_fld = "org_user"
 
     org_user = serializers.PrimaryKeyRelatedField(
@@ -412,7 +412,7 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
 @register
 class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
 
-    ref_tag = "start_pwdrst"
+    ref_tag = "start_password_reset"
     required_context = []
     form = forms.StartPasswordReset
 

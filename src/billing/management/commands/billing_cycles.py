@@ -11,7 +11,7 @@ class Rollback(Exception):
 
 # FIXME: use fullctl.django base command
 class Command(BaseCommand):
-    help = "Progresses billing cycles"
+    help = "Progresses billing subscription_cycles"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -55,15 +55,15 @@ class Command(BaseCommand):
                     f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
                 )
 
-            for subscription_product in subscription.subproduct_set.all():
+            for subscription_product in subscription.subscriptionproduct_set.all():
                 self.collect(subscription_product, subscription.subscription_cycle)
 
-            for subscription_cycle in subscription.cycle_set.filter(status="ok"):
+            for subscription_cycle in subscription.subscription_cycle_set.filter(status="ok"):
                 if not subscription_cycle.ended:
                     continue
-                if not subscription.pay_id:
+                if not subscription.payment_method_id:
                     Subscription.set_payment_method(subscription.org)
-                if not subscription.pay_id:
+                if not subscription.payment_method_id:
                     self.log(
                         f"-- no payment method set, unable to charge previous subscription_cycle for org {subscription.org}"
                     )

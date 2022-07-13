@@ -100,7 +100,7 @@ class Organization(HandleRefModel):
         """
 
         try:
-            return user.orguser_set.get(org__user_id=user.id).org
+            return user.org_user_set.get(org__user_id=user.id).org
         except OrganizationUser.DoesNotExist:
             pass
 
@@ -126,7 +126,7 @@ class Organization(HandleRefModel):
         organization will be returned,
         """
 
-        default_org = user.orguser_set.filter(is_default=True)
+        default_org = user.org_user_set.filter(is_default=True)
 
         if default_org.exists():
             return default_org.first().org
@@ -150,7 +150,7 @@ class Organization(HandleRefModel):
 
     @property
     def users(self):
-        for org_user in self.orguser_set.all():
+        for org_user in self.org_user_set.all():
             yield org_user.user
 
     @property
@@ -173,7 +173,7 @@ class Organization(HandleRefModel):
         org_user, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
 
-            if user.orguser_set.count() == 2:
+            if user.org_user_set.count() == 2:
                 # switch from personal org to real org as primary org
                 org_user.is_default = True
                 org_user.save()
@@ -192,7 +192,7 @@ class Organization(HandleRefModel):
 
     @reversion.create_revision()
     def remove_user(self, user):
-        self.orguser_set.filter(user=user).delete()
+        self.org_user_set.filter(user=user).delete()
         for mperm in ManagedPermission.objects.all():
             mperm.revoke_user(self, user)
 
@@ -216,7 +216,7 @@ class Organization(HandleRefModel):
         Makes this organization the default organization for the user
         """
 
-        org_user = user.orguser_set.filter(org=self).first()
+        org_user = user.org_user_set.filter(org=self).first()
 
         if not org_user:
             raise KeyError("Not a member of this organization")
@@ -229,10 +229,10 @@ class Organization(HandleRefModel):
 @reversion.register
 class OrganizationUser(HandleRefModel):
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="orguser_set"
+        get_user_model(), on_delete=models.CASCADE, related_name="org_user_set"
     )
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orguser_set"
+        Organization, on_delete=models.CASCADE, related_name="org_user_set"
     )
 
     is_default = models.BooleanField(
@@ -253,7 +253,7 @@ class OrganizationUser(HandleRefModel):
 
     def save(self, **kwargs):
         if self.is_default:
-            self.user.orguser_set.exclude(id=self.id).update(is_default=False)
+            self.user.org_user_set.exclude(id=self.id).update(is_default=False)
         super().save(**kwargs)
 
 
@@ -383,7 +383,7 @@ class OrganizationAPIKey(APIKeyBase):
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orgkey_set"
+        Organization, on_delete=models.CASCADE, related_name="org_key_set"
     )
     email = models.EmailField()
 
@@ -570,14 +570,14 @@ def generate_invite_secret():
         if not Invitation.objects.filter(secret=secret).exists():
             return secret
         i += 1
-    raise OSError(_("Unable to generate unique invitation secret"))
+    raise OSError(_("Unable to generate unique inviteitation secret"))
 
 
 @reversion.register
 class ManagedPermission(HandleRefModel):
 
     """
-    Describes a custom permission definition, allowing
+    Describes a customerom permission definition, allowing
     to add app / service specific permissions to be managed
     through aaactl
     """
@@ -639,7 +639,7 @@ class ManagedPermission(HandleRefModel):
     @classmethod
     def grant_all_user(cls, user, admin=False):
         mperms = [mperm for mperm in cls.objects.all()]
-        for org_user in user.orguser_set.all():
+        for org_user in user.org_user_set.all():
             for mperm in mperms:
                 if admin:
                     mperm.auto_grant_admin(org_user.org, org_user.user)
@@ -654,7 +654,7 @@ class ManagedPermission(HandleRefModel):
     @classmethod
     def revoke_all_user(cls, user):
         mperms = [mperm for mperm in cls.objects.all()]
-        for org_user in user.orguser_set.all():
+        for org_user in user.org_user_set.all():
             for mperm in mperms:
                 mperm.revoke_user(org_user.org, org_user.user)
 
@@ -667,7 +667,7 @@ class ManagedPermission(HandleRefModel):
             return True
 
         if self.grant_mode == "restricted":
-            return org.org_managed_perm_set.filter(managed_permission=self).exists()
+            return org.org_managed_permission_set.filter(managed_permission=self).exists()
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
@@ -683,14 +683,14 @@ class ManagedPermission(HandleRefModel):
             else:
                 self.auto_grant_user(org, user)
 
-        for key in org.orgkey_set.all():
+        for key in org.org_key_set.all():
             self.auto_grant_key(key)
 
     def revoke(self, org):
         for user in org.users:
             self.revoke_user(org, user)
 
-        for key in org.orgkey_set.all():
+        for key in org.org_key_set.all():
             self.revoke_key(key)
 
     def revoke_user(self, org, user):
@@ -730,11 +730,11 @@ class OrganizationManagedPermission(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        Organization, on_delete=models.CASCADE, related_name="org_managed_permission_set"
     )
 
     managed_permission = models.ForeignKey(
-        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_permission_set"
     )
 
     reason = models.CharField(
@@ -743,10 +743,10 @@ class OrganizationManagedPermission(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "org_managed_permission"
+        tag = "org_managed_permissionission"
 
     class Meta:
-        db_table = "account_org_managed_perms"
+        db_table = "account_org_managed_permissions"
         verbose_name = _("Managed permission for organization")
         verbose_name_plural = _("Managed permissions for organization")
 
@@ -758,14 +758,14 @@ class OrganizationManagedPermission(HandleRefModel):
 class Invitation(HandleRefModel):
     secret = models.CharField(max_length=255, default=generate_invite_secret)
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="inv_set"
+        Organization, on_delete=models.CASCADE, related_name="invite_set"
     )
     created_by = models.ForeignKey(
         get_user_model(),
         null=True,
         blank=False,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
     email = models.EmailField()
     service = models.ForeignKey(
@@ -773,11 +773,11 @@ class Invitation(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
 
     class Meta:
-        db_table = "account_invitation"
+        db_table = "account_inviteitation"
         verbose_name = _("Invitation")
         verbose_name_plural = _("Invitations")
 
@@ -800,9 +800,9 @@ class Invitation(HandleRefModel):
 
     def send(self):
         if self.created_by:
-            inviting_person = self.created_by.get_full_name()
+            inviteiting_person = self.created_by.get_full_name()
         else:
-            inviting_person = "[Deleted user]"
+            inviteiting_person = "[Deleted user]"
         email_noreply(
             self.email,
             _("Invitation to join {}").format(self.org.label),
@@ -811,7 +811,7 @@ class Invitation(HandleRefModel):
                 "account/email/invite.txt",
                 {
                     "invite": self,
-                    "inviting_person": inviting_person,
+                    "inviteiting_person": inviteiting_person,
                     "org": self.org,
                     "host": host_url(),
                 },
@@ -820,6 +820,6 @@ class Invitation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self, user):
-        if not self.expired and not self.org.orguser_set.filter(user=user).exists():
+        if not self.expired and not self.org.org_user_set.filter(user=user).exists():
             self.org.add_user(user, "r")
         Invitation.objects.filter(org=self.org, email=self.email).delete()

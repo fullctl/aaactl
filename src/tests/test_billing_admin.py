@@ -1,1 +1,1 @@
-# test_product_recurring
+# test_product_recurring_product

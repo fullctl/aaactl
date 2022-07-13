@@ -106,7 +106,7 @@ def test_delete_payment_methods(billing_objects):
     )
     output_data = response.json()["data"][0]
     assert response.status_code == 200
-    assert set(input_data.items()).issubset(set(output_data.items()))
+    assert set(input_data.items()).issubscriptionset(set(output_data.items()))
     assert models.PaymentMethod.objects.count() == 1
 
 

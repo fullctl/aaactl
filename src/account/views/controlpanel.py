@@ -21,11 +21,11 @@ def index(request):
         },
     )
 
-    invitation_form = account.forms.InviteToOrganization(initial=request.GET)
+    inviteitation_form = account.forms.InviteToOrganization(initial=request.GET)
     create_org_form = account.forms.CreateOrganization()
     create_org_key_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()
-    usercfg_form = account.forms.UserSettings(
+    user_settings_form = account.forms.UserSettings(
         initial={"opt_promotions": user.user_settings.opt_promotions}
     )
 
@@ -54,10 +54,10 @@ def index(request):
         change_pwd_form=change_pwd_form,
         create_org_form=create_org_form,
         edit_org_form=edit_org_form,
-        invitation_form=invitation_form,
+        inviteitation_form=inviteitation_form,
         create_org_key_form=create_org_key_form,
         create_key_form=create_key_form,
-        usercfg_form=usercfg_form,
+        user_settings_form=user_settings_form,
         can_invite=request.perms.check([request.selected_org, "users"], "c"),
     )
 

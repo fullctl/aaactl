@@ -263,7 +263,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     )
 
     if data_account_api_org_userdel.name == "test0":
-        assert account_objects.org.orguser_set.count() == 1
+        assert account_objects.org.org_user_set.count() == 1
 
     # test user not part of org
 

@@ -60,7 +60,7 @@ def backwards(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0024_reftag_refactor'),
+        ('account', '0026_reftag_pass_2'),
         ('django_grainy', '0001_initial'),
     ]
 

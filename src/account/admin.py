@@ -79,7 +79,7 @@ class OrganizationUserInline(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
-    search_fields = ("orguser_set__last_name", "name")
+    search_fields = ("org_user_set__last_name", "name")
     inlines = (OrganizationUserInline,)
 
     def save_formset(self, request, form, formset, change):

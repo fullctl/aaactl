@@ -350,9 +350,9 @@ account.OrgKeysList = twentyc.cls.define(
   {
     OrgKeysList : function() {
       this.elements = {}
-      this.elements.orgkey_listing = $('.orgkey-listing')
+      this.elements.org_key_listing = $('.org_key-listing')
 
-      this.rest_api_list = new twentyc.rest.List(this.elements.orgkey_listing);
+      this.rest_api_list = new twentyc.rest.List(this.elements.org_key_listing);
 
       this.rest_api_list.formatters.permissions = function(value, data) {
         if(!data.manageable.match(/ud/))
@@ -400,10 +400,10 @@ account.OrgKeysList = twentyc.cls.define(
       })
 
       // Modal
-      this.elements.orgkey_form = $('form.create_orgkey');
-      if ( this.elements.orgkey_form.length ){
-        this.rest_orgkey_form = new twentyc.rest.Form(this.elements.orgkey_form);
-        $(this.rest_orgkey_form).on("api-write:success", function() {
+      this.elements.org_key_form = $('form.create_org_key');
+      if ( this.elements.org_key_form.length ){
+        this.rest_org_key_form = new twentyc.rest.Form(this.elements.org_key_form);
+        $(this.rest_org_key_form).on("api-write:success", function() {
           $('#orgApiKeyModal').modal('toggle');
           this.rest_api_list.load();
         }.bind(this));

@@ -127,7 +127,7 @@ class PasswordReset(ChangePasswordBase):
         secret = self.cleaned_data["secret"]
 
         try:
-            self.cleaned_data["pwdrst"] = PasswordResetModel.objects.get(secret=secret)
+            self.cleaned_data["password_reset"] = PasswordResetModel.objects.get(secret=secret)
         except PasswordResetModel.DoesNotExist:
             raise forms.ValidationError(_("Invalid secret"))
 

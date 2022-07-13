@@ -1,4 +1,4 @@
 {
   "status": 200,
-  "response": {"data": [{"org": 2, "orguser": 4, "component": "billing.{org_id}", "permissions": "crud"}], "errors": {}, "profiling": {"queries": 0}}
+  "response": {"data": [{"org": 2, "org_user": 4, "component": "billing.{org_id}", "permissions": "crud"}], "errors": {}, "profiling": {"queries": 0}}
 }

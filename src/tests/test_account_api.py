@@ -110,7 +110,7 @@ def test_user_resend_confirmation_mail(db, account_objects):
 
     assert response.status_code == 200
 
-    account_objects.user.emconf.complete()
+    account_objects.user.email_confirmation.complete()
 
     # test when email has already been confirmed
 
@@ -263,7 +263,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     )
 
     if data_account_api_org_userdel.name == "test0":
-        assert account_objects.org.orguser_set.count() == 1
+        assert account_objects.org.org_user_set.count() == 1
 
     # test user not part of org
 
@@ -313,30 +313,30 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     assert_expected(response, strip_api_fields(expected))
 
 
-def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start):
+def test_password_reset_start(db, account_objects, data_account_api_password_reset_start):
 
-    input = json.loads(data_account_api_pwdrst_start.input)
-    expected = data_account_api_pwdrst_start.expected
+    input = json.loads(data_account_api_password_reset_start.input)
+    expected = data_account_api_password_reset_start.expected
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-start"), data=input["data"]
+        reverse("account_api:password_reset-start"), data=input["data"]
     )
 
     assert_expected(response, expected)
 
 
-def test_password_reset_complete(db, account_objects, data_account_api_pwdrst_complete):
+def test_password_reset_complete(db, account_objects, data_account_api_password_reset_complete):
 
-    pwdrst = models.PasswordReset.start(account_objects.user)
+    password_reset = models.PasswordReset.start(account_objects.user)
 
-    input = json.loads(data_account_api_pwdrst_complete.input)
-    expected = data_account_api_pwdrst_complete.expected
+    input = json.loads(data_account_api_password_reset_complete.input)
+    expected = data_account_api_password_reset_complete.expected
     data = input["data"]
     if data.get("secret") == "$":
-        data["secret"] = pwdrst.secret
+        data["secret"] = password_reset.secret
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-complete"), data=data
+        reverse("account_api:password_reset-complete"), data=data
     )
 
     assert_expected(response, expected)

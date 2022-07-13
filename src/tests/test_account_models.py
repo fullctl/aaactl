@@ -19,7 +19,7 @@ def test_personal_org_user_del(db, account_objects):
 
 
 def test_org_user_add(db, account_objects):
-    assert account_objects.org.orguser_set.filter(user=account_objects.user).exists()
+    assert account_objects.org.org_user_set.filter(user=account_objects.user).exists()
 
 
 def test_api_key_autocreate(db, account_objects):
@@ -28,33 +28,33 @@ def test_api_key_autocreate(db, account_objects):
     assert key.managed is True
 
 
-def test_emconf_process(db, account_objects):
+def test_email_confirmation_process(db, account_objects):
 
     user = account_objects.user
-    emconf = EmailConfirmation.start(user)
+    email_confirmation = EmailConfirmation.start(user)
 
-    assert user.usercfg.email_confirmed is False
+    assert user.user_settings.email_confirmed is False
 
-    emconf.complete()
+    email_confirmation.complete()
 
-    user.usercfg.refresh_from_db()
+    user.user_settings.refresh_from_db()
 
-    assert user.usercfg.email_confirmed
+    assert user.user_settings.email_confirmed
 
 
-def test_pwdrst_process(db, account_objects):
+def test_password_reset_process(db, account_objects):
 
     user = account_objects.user
 
     assert authenticate(username=user.username, password="test")
 
-    pwdrst = PasswordReset.start(user)
+    password_reset = PasswordReset.start(user)
 
-    pwdrst.complete("newpassword")
+    password_reset.complete("newpassword")
 
     assert authenticate(username=user.username, password="newpassword")
 
-    assert pwdrst.id is None
+    assert password_reset.id is None
 
 
 def test_inv_process(db, account_objects, account_objects_b):
@@ -68,7 +68,7 @@ def test_inv_process(db, account_objects, account_objects_b):
 
     inv.complete(account_objects_b.user)
 
-    assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()
+    assert account_objects.org.org_user_set.filter(user=account_objects_b.user).exists()
 
 
 def test_inv_user_del(db, account_objects, account_objects_b, capsys):
@@ -85,4 +85,4 @@ def test_inv_user_del(db, account_objects, account_objects_b, capsys):
     inv.send()
 
     inv.complete(account_objects_b.user)
-    assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()
+    assert account_objects.org.org_user_set.filter(user=account_objects_b.user).exists()

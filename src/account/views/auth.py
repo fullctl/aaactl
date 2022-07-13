@@ -115,13 +115,13 @@ def start_reset_password(request):
 
 def reset_password(request, secret):
     try:
-        pwdrst = PasswordReset.objects.get(secret=secret)
+        password_reset = PasswordReset.objects.get(secret=secret)
     except PasswordReset.DoesNotExist:
         messages.error(_("Password reset session not found"))
         return redirect("/")
 
     form = account.forms.PasswordReset(initial={"secret": secret})
-    env = {"pwdrst": pwdrst, "form": form}
+    env = {"password_reset": password_reset, "form": form}
 
     return render(request, "account/auth/reset-password.html", env)
 
@@ -152,12 +152,12 @@ def accept_invite(request, secret):
 @login_required
 def confirm_email(request, secret):
     try:
-        emconf = EmailConfirmation.objects.get(secret=secret)
+        email_confirmation = EmailConfirmation.objects.get(secret=secret)
     except EmailConfirmation.DoesNotExist:
         messages.error(request, _("Email confirmation process not found"))
         return redirect("/")
 
-    if emconf.email != request.user.email:
+    if email_confirmation.email != request.user.email:
         messages.error(
             request,
             _(
@@ -166,7 +166,7 @@ def confirm_email(request, secret):
         )
         return redirect("/")
 
-    emconf.complete()
+    email_confirmation.complete()
     messages.success(request, _("Email address confirmed!"))
 
     return redirect("/")
@@ -212,7 +212,7 @@ def oauth_profile(request):
         verified_user=True,
         organizations=[
             Serializers.org(instance=org.org, context={"user": user}).data
-            for org in user.orguser_set.all()
+            for org in user.org_user_set.all()
         ],
     )
 

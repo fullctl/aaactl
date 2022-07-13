@@ -124,11 +124,11 @@ class BillingObjects:
         self.yearly_subscription.add_product(self.product_subscription_metered)
 
         self.billing_contact = BillingContact.objects.create(
-            org=self.org, name="William Contact", email="billcon@localhost"
+            org=self.org, name="William Contact", email="billing_contact@localhost"
         )
 
         self.payment_method = PaymentMethod.objects.create(
-            billcon=self.billing_contact,
+            billing_contact=self.billing_contact,
             custom_name="Test Customer",
             processor="stripe",
             holder="William Contact",

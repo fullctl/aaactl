@@ -42,12 +42,12 @@ class Organization(viewsets.ViewSet):
     @set_org
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def payment_methods(self, request, pk, org):
-        billcon = request.GET.get("billcon")
+        billing_contact = request.GET.get("billing_contact")
 
-        if not billcon:
-            return Response({"billcon": ["Required field"]}, status=400)
+        if not billing_contact:
+            return Response({"billing_contact": ["Required field"]}, status=400)
 
-        queryset = models.PaymentMethod.get_for_org(org).filter(billcon_id=billcon)
+        queryset = models.PaymentMethod.get_for_org(org).filter(billing_contact_id=billing_contact)
         serializer = Serializers.pay(queryset, many=True)
         return Response(serializer.data)
 
@@ -57,10 +57,10 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def payment_method(self, request, pk, org, auditlog=None):
         pay = models.PaymentMethod.objects.get(
-            billcon__org=org, id=request.data.get("id")
+            billing_contact__org=org, id=request.data.get("id")
         )
 
-        if pay.billcon.pay_set.filter(status="ok").count() <= 1:
+        if pay.billing_contact.pay_set.filter(status="ok").count() <= 1:
             return Response(
                 {
                     "non_field_errors": [
@@ -84,10 +84,10 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_contact(self, request, pk, org, auditlog=None):
 
-        instance = org.billcon_set.get(id=request.data.get("id"))
+        instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
-            serializer = Serializers.billcon(instance=instance, data=request.data)
+            serializer = Serializers.billing_contact(instance=instance, data=request.data)
 
             if not serializer.is_valid():
                 return Response(serializer.errors, status=400)
@@ -95,7 +95,7 @@ class Organization(viewsets.ViewSet):
 
         elif request.method == "DELETE":
 
-            serializer = Serializers.billcon(instance=instance)
+            serializer = Serializers.billing_contact(instance=instance)
             instance.delete()
             models.Subscription.set_payment_method(org)
 
@@ -133,8 +133,8 @@ class Organization(viewsets.ViewSet):
     @set_org
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def orders(self, request, pk, org):
-        queryset = models.OrderHistory.objects.filter(billcon__org=org)
-        queryset = queryset.prefetch_related("order_history_item_set").select_related("billcon")
+        queryset = models.OrderHistory.objects.filter(billing_contact__org=org)
+        queryset = queryset.prefetch_related("order_history_item_set").select_related("billing_contact")
         queryset = queryset.order_by("-processed")
         serializer = Serializers.order_history(queryset, many=True)
         return Response(serializer.data)

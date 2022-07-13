@@ -124,8 +124,8 @@ class OrderHistoryItemInline(admin.TabularInline):
 
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(BaseAdmin):
-    list_display = ("id", "org", "billcon", "price", "notes", "processed")
-    search_fields = ("billcon__name",)
+    list_display = ("id", "org", "billing_contact", "price", "notes", "processed")
+    search_fields = ("billing_contact__name",)
     inlines = (OrderHistoryItemInline,)
     readonly_fields = ("org",)
 
@@ -141,24 +141,24 @@ class PaymentMethodForm(forms.ModelForm):
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(BaseAdmin):
-    list_display = ("id", "name", "billcon", "processor", "status")
-    search_fields = ("billcon__name",)
+    list_display = ("id", "name", "billing_contact", "processor", "status")
+    search_fields = ("billing_contact__name",)
     form = PaymentMethodForm
 
 
 @admin.register(PaymentCharge)
 class PaymentChargeAdmin(BaseAdmin):
-    list_display = ("id", "pay", "billcon", "price", "status", "created", "updated")
-    search_fields = ("pay__billcon__name",)
+    list_display = ("id", "pay", "billing_contact", "price", "status", "created", "updated")
+    search_fields = ("pay__billing_contact__name",)
 
-    def billcon(self, obj):
-        return obj.pay.billcon
+    def billing_contact(self, obj):
+        return obj.pay.billing_contact
 
 
 @admin.register(CustomerData)
 class CustomerDataAdmin(BaseAdmin):
-    list_dispaly = ("id", "billcon")
-    search_fields = ("billcon_name",)
+    list_dispaly = ("id", "billing_contact")
+    search_fields = ("billing_contact_name",)
 
 
 @admin.register(ProductGroup)

@@ -50,7 +50,7 @@ class PaymentMethod(serializers.ModelSerializer):
     class Meta:
         model = models.PaymentMethod
         fields = [
-            "billcon",
+            "billing_contact",
             "custom_name",
             "holder",
             "country",
@@ -77,11 +77,11 @@ class BillingContact(FormValidationMixin, serializers.ModelSerializer):
 class OrderHistory(serializers.ModelSerializer):
 
     items = serializers.SerializerMethodField()
-    billcon = BillingContact()
+    billing_contact = BillingContact()
 
     class Meta:
         model = models.OrderHistory
-        fields = ["order_id", "description", "price", "processed", "items", "billcon"]
+        fields = ["order_id", "description", "price", "processed", "items", "billing_contact"]
 
     def get_items(self, order_history):
         return [
@@ -185,7 +185,7 @@ class BillingSetup(serializers.Serializer):
         if not value:
             return 0
         try:
-            return models.PaymentMethod.objects.get(id=value, billcon__org=org)
+            return models.PaymentMethod.objects.get(id=value, billing_contact__org=org)
         except models.PaymentMethod.DoesNotExist:
             raise serializers.ValidationError("Payment method not found")
 
@@ -198,10 +198,10 @@ class BillingSetup(serializers.Serializer):
                     field_errors[field] = _("Input required")
             if field_errors:
                 raise serializers.ValidationError(field_errors)
-            billcon, created = models.BillingContact.objects.get_or_create(
+            billing_contact, created = models.BillingContact.objects.get_or_create(
                 org=org, name=data.get("holder"), email=data.get("email"), status="ok"
             )
-            data["payment_method"] = models.PaymentMethod(billcon=billcon)
+            data["payment_method"] = models.PaymentMethod(billing_contact=billing_contact)
 
         processor = data["processor"] = processors.default()(data["payment_method"])
 

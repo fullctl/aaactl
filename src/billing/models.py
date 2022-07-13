@@ -593,7 +593,7 @@ class SubscriptionCycle(HandleRefModel):
         payment = Payment.objects.create(
             user=user,
             amount=self.price,
-            billing_contact=self.subscription.pay.billcon,
+            billing_contact=self.subscription.pay.billing_contact,
             payment_method=self.subscription.pay,
             invoice_number=invoice_number,
         )
@@ -753,7 +753,7 @@ class OrderHistory(HandleRefModel):
     Describes processed orders
     """
 
-    billcon = models.ForeignKey(
+    billing_contact = models.ForeignKey(
         "billing.BillingContact",
         on_delete=models.SET_NULL,
         null=True,
@@ -796,7 +796,7 @@ class OrderHistory(HandleRefModel):
     def create_from_chg(cls, chg):
         order = cls(
             chg=chg,
-            billcon=chg.pay.billcon,
+            billing_contact=chg.pay.billing_contact,
             billed_to=chg.pay.name,
             processed=datetime.datetime.now(),
             order_id=unique_order_history_id(),
@@ -870,13 +870,13 @@ class OrderHistoryItem(HandleRefModel):
 
 @reversion.register()
 class CustomerData(HandleRefModel):
-    billcon = models.OneToOneField(
+    billing_contact = models.OneToOneField(
         "billing.BillingContact", on_delete=models.CASCADE, related_name="customer"
     )
     data = models.JSONField(default=dict, blank=True)
 
     class HandleRef:
-        tag = "cust"
+        tag = "customer"
 
     class Meta:
         db_table = "billing_customer_data"
@@ -884,7 +884,7 @@ class CustomerData(HandleRefModel):
         verbose_name_plural = _("Customer Data")
 
     def __str__(self):
-        return f"{self.billcon.name} <{self.billcon.email}> ({self.id})"
+        return f"{self.billing_contact.name} <{self.billing_contact.email}> ({self.id})"
 
 
 @reversion.register()
@@ -894,7 +894,7 @@ class BillingContact(HandleRefModel):
     org = models.ForeignKey(
         account.models.Organization,
         on_delete=models.CASCADE,
-        related_name="billcon_set",
+        related_name="billing_contact_set",
     )
 
     name = models.CharField(max_length=255)
@@ -906,7 +906,7 @@ class BillingContact(HandleRefModel):
         verbose_name_plural = _("Billing Contacts")
 
     class HandleRef:
-        tag = "billcon"
+        tag = "billing_contact"
 
     @property
     def active(self):
@@ -926,7 +926,7 @@ class PaymentMethod(HandleRefModel):
     Describes a payment option linked to a billing contact
     """
 
-    billcon = models.ForeignKey(
+    billing_contact = models.ForeignKey(
         BillingContact, on_delete=models.CASCADE, related_name="pay_set"
     )
     custom_name = models.CharField(max_length=255, null=True, blank=True)
@@ -951,14 +951,14 @@ class PaymentMethod(HandleRefModel):
 
     @classmethod
     def get_for_org(cls, org, status="ok"):
-        return cls.objects.filter(billcon__org=org, status=status)
+        return cls.objects.filter(billing_contact__org=org, status=status)
 
     @property
     def name(self):
         if self.custom_name:
-            return f"{self.billcon.name}: {self.custom_name}"
+            return f"{self.billing_contact.name}: {self.custom_name}"
 
-        return f"{self.billcon.name}: {self.processor}-{self.id}"
+        return f"{self.billing_contact.name}: {self.processor}-{self.id}"
 
     @property
     def processor_instance(self):

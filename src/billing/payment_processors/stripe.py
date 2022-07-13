@@ -25,7 +25,7 @@ class Stripe(PaymentProcessor):
 
     @property
     def customer(self):
-        return self.billcon_customer.data.get("stripe_customer")
+        return self.billing_contact_customer.data.get("stripe_customer")
 
     @property
     def form(self):
@@ -49,11 +49,11 @@ class Stripe(PaymentProcessor):
             return self.customer
 
         customer = stripe.Customer.create(
-            description=f"billcon{self.payment_method.billcon.id}",
+            description=f"billing_contact{self.payment_method.billing_contact.id}",
             api_key=self.api_key,
         )
 
-        self.billcon_customer.data["stripe_customer"] = customer["id"]
+        self.billing_contact_customer.data["stripe_customer"] = customer["id"]
         self.save()
 
         return customer["id"]

@@ -249,8 +249,8 @@ def test_order_history(db, billing_objects, mocker):
 
 
 def test_billing_contact(db, billing_objects):
-    billcon = billing_objects.billing_contact
-    assert billcon.active is False
+    billing_contact = billing_objects.billing_contact
+    assert billing_contact.active is False
 
 
 @pytest.mark.django_db

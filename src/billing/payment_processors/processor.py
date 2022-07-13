@@ -49,17 +49,17 @@ class PaymentProcessor:
         return settings.BILLING_AGREEMENT_DESCRIPTION
 
     @property
-    def billcon(self):
-        return self.payment_method.billcon
+    def billing_contact(self):
+        return self.payment_method.billing_contact
 
     @property
-    def billcon_customer(self):
+    def billing_contact_customer(self):
         try:
-            return self.payment_method.billcon.customer
+            return self.payment_method.billing_contact.customer
         except ObjectDoesNotExist:
             from billing.models import CustomerData
 
-            customer, created = CustomerData.objects.get_or_create(billcon=self.billcon)
+            customer, created = CustomerData.objects.get_or_create(billing_contact=self.billing_contact)
             return customer
 
     @property
@@ -71,7 +71,7 @@ class PaymentProcessor:
 
     def save(self):
         self.payment_method.save()
-        self.billcon_customer.save()
+        self.billing_contact_customer.save()
 
     @reversion.create_revision()
     def sync_charge(self, chg):

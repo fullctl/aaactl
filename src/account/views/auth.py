@@ -129,22 +129,22 @@ def reset_password(request, secret):
 @login_required
 def accept_invite(request, secret):
     try:
-        inv = Invitation.objects.get(secret=secret)
+        invite = Invitation.objects.get(secret=secret)
     except Invitation.DoesNotExist:
         messages.error(request, _("Invitation not found"))
         return redirect("/")
 
-    if inv.expired:
+    if invite.expired:
         messages.error(request, _("The invite has expired"))
         return redirect("/")
 
-    inv.complete(request.user)
-    messages.info(request, _("You have joined {}").format(inv.org.label))
+    invite.complete(request.user)
+    messages.info(request, _("You have joined {}").format(invite.org.label))
 
-    set_selected_org(request, inv.org)
+    set_selected_org(request, invite.org)
 
-    if inv.service:
-        return redirect(inv.service.invite_redirect.format(org=inv.org))
+    if invite.service:
+        return redirect(invite.service.invite_redirect.format(org=invite.org))
     else:
         return redirect("/")
 

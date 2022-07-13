@@ -49,12 +49,12 @@ def test_reset_password(db, account_objects, client_anon):
 
 def test_accept_invite(db, account_objects, account_objects_b):
 
-    inv = models.Invitation.objects.create(
+    invite = models.Invitation.objects.create(
         org=account_objects.org, created_by=account_objects.user, email="test@localhost"
     )
 
     response = account_objects_b.client.get(
-        reverse("account:accept-invite", args=(inv.secret,)), follow=True
+        reverse("account:accept-invite", args=(invite.secret,)), follow=True
     )
 
     assert response.status_code == 200

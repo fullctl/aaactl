@@ -758,14 +758,14 @@ class OrganizationManagedPermission(HandleRefModel):
 class Invitation(HandleRefModel):
     secret = models.CharField(max_length=255, default=generate_invite_secret)
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="inv_set"
+        Organization, on_delete=models.CASCADE, related_name="invite_set"
     )
     created_by = models.ForeignKey(
         get_user_model(),
         null=True,
         blank=False,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
     email = models.EmailField()
     service = models.ForeignKey(
@@ -773,7 +773,7 @@ class Invitation(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
 
     class Meta:
@@ -782,7 +782,7 @@ class Invitation(HandleRefModel):
         verbose_name_plural = _("Invitations")
 
     class HandleRef:
-        tag = "inv"
+        tag = "invite"
 
     @property
     def expired(self):
@@ -810,7 +810,7 @@ class Invitation(HandleRefModel):
                 None,
                 "account/email/invite.txt",
                 {
-                    "inv": self,
+                    "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
                     "host": host_url(),

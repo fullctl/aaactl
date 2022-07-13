@@ -391,22 +391,22 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         data["org"] = self.context.get("org")
         data.pop("form_data", None)
 
-        inv = models.Invitation.objects.filter(
+        invite = models.Invitation.objects.filter(
             email=data["email"], org=data["org"]
         ).first()
 
-        if inv:
-            inv.created_by = data["created_by"]
+        if invite:
+            invite.created_by = data["created_by"]
             if data.get("service"):
-                inv.service = data["service"]
-            inv.save(update_fields=["created_by", "updated", "service"])
+                invite.service = data["service"]
+            invite.save(update_fields=["created_by", "updated", "service"])
 
         else:
-            inv = models.Invitation.objects.create(status="pending", **data)
+            invite = models.Invitation.objects.create(status="pending", **data)
 
-        inv.send()
+        invite.send()
 
-        return inv
+        return invite
 
 
 @register

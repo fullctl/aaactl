@@ -57,32 +57,32 @@ def test_password_reset_process(db, account_objects):
     assert password_reset.id is None
 
 
-def test_inv_process(db, account_objects, account_objects_b):
-    inv = Invitation.objects.create(
+def test_invite_process(db, account_objects, account_objects_b):
+    invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,
         email="test@localhost",
     )
 
-    inv.send()
+    invite.send()
 
-    inv.complete(account_objects_b.user)
+    invite.complete(account_objects_b.user)
 
     assert account_objects.org.org_user_set.filter(user=account_objects_b.user).exists()
 
 
-def test_inv_user_del(db, account_objects, account_objects_b, capsys):
-    inv = Invitation.objects.create(
+def test_invite_user_del(db, account_objects, account_objects_b, capsys):
+    invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,
         email="test@localhost",
     )
 
     account_objects.user.delete()
-    inv.refresh_from_db()
-    assert inv.created_by is None
+    invite.refresh_from_db()
+    assert invite.created_by is None
 
-    inv.send()
+    invite.send()
 
-    inv.complete(account_objects_b.user)
+    invite.complete(account_objects_b.user)
     assert account_objects.org.org_user_set.filter(user=account_objects_b.user).exists()

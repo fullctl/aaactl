@@ -111,7 +111,7 @@ class UserInformation(viewsets.ViewSet):
     def invites(self, request):
         user = request.user
         queryset = models.Invitation.objects.filter(email=user.email)
-        serializer = Serializers.inv(queryset, many=True)
+        serializer = Serializers.invite(queryset, many=True)
         return Response(serializer.data)
 
     @action(
@@ -122,7 +122,7 @@ class UserInformation(viewsets.ViewSet):
     def accept_invite(self, request, invite_id=None):
         user = request.user
         invite = models.Invitation.objects.get(email=user.email, id=invite_id)
-        serializer = Serializers.inv(invite)
+        serializer = Serializers.invite(invite)
         data = serializer.data
         invite.complete(user)
         return Response(data)
@@ -135,7 +135,7 @@ class UserInformation(viewsets.ViewSet):
     def reject_invite(self, request, invite_id=None):
         user = request.user
         invite = models.Invitation.objects.get(email=user.email, id=invite_id)
-        serializer = Serializers.inv(invite)
+        serializer = Serializers.invite(invite)
         data = serializer.data
         invite.delete()
         return Response(data)
@@ -403,7 +403,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)
-        serializer = Serializers.inv(invitations, many=True)
+        serializer = Serializers.invite(invitations, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["POST"])
@@ -412,11 +412,11 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invite(self, request, pk, org, auditlog=None):
         context = {"user": request.user, "org": org}
-        serializer = Serializers.inv(data=request.data, many=False, context=context)
+        serializer = Serializers.invite(data=request.data, many=False, context=context)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
-        inv = serializer.save()
-        return Response(Serializers.inv(inv, many=False).data)
+        invite = serializer.save()
+        return Response(Serializers.invite(invite, many=False).data)
 
     def get_throttles(self):
         if self.action in ["invite"]:

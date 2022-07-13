@@ -38,7 +38,7 @@ def test_stripe_setup_customer(billing_objects, mocker):
 
 
 @pytest.mark.django_db
-def test_stripe_charge_invalid(billing_objects):
+def test_stripe_charge_invitealid(billing_objects):
     billing_objects.payment_method.data = {}
     billing_objects.payment_method.save()
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)

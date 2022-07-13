@@ -58,7 +58,7 @@ class BillingObjects:
             data={"foo": "bar"},
         )
 
-        self.product_sub_fixed = Product.objects.create(
+        self.product_subscription_fixed = Product.objects.create(
             name="test.subscription.fixed",
             description="test product: fixed subscription",
             group=self.product_group,
@@ -67,13 +67,13 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            product=self.product_sub_fixed,
+            product=self.product_subscription_fixed,
             type="fixed",
             price=125.99,
             data={"foo": "bar"},
         )
 
-        self.product_sub_metered = Product.objects.create(
+        self.product_subscription_metered = Product.objects.create(
             name="test.subscription.metered",
             description="test product: metered subscription",
             group=self.product_group,
@@ -82,7 +82,7 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            product=self.product_sub_metered,
+            product=self.product_subscription_metered,
             type="metered",
             price=0.50,
             data={"foo": "bar"},
@@ -114,7 +114,7 @@ class BillingObjects:
             payment_method=None,  # Set none to start
         )
 
-        self.monthly_subscription.add_prod(self.product_sub_metered)
+        self.monthly_subscription.add_product(self.product_subscription_metered)
 
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
@@ -124,7 +124,7 @@ class BillingObjects:
             payment_method=None,  # Set none to start
         )
 
-        self.yearly_subscription.add_prod(self.product_sub_metered)
+        self.yearly_subscription.add_product(self.product_subscription_metered)
 
         self.billing_contact = BillingContact.objects.create(
             org=self.org, name="William Contact", email="billing_contact@localhost"
@@ -285,30 +285,30 @@ def charge_objects(billing_objects, mocker):
     )
     subscription = billing_objects.monthly_subscription
 
-    product_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_fixed)
-    fixed_subprod = product_fixed.sub_set.first()
+    product_fixed = billing_objects.product_subscription_fixed
+    subscription.add_product(product_fixed)
+    fixed_subproduct = product_fixed.sub_set.first()
 
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
+    subscription.start_subscription_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subcycle, subscription_product=fixed_subprod, usage=1
+        subscription_cycle=subcycle, subscription_product=fixed_subproduct, usage=1
     )
 
     subcycle.charge()
 
-    subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.payment_charge
+    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
+    payment_charge = subsubscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_chg(payment_charge)
 
     return {
         "subscription": subscription,
         "subcycle": subcycle,
-        "subcycle_charge": subcycle_charge,
+        "subsubscription_cycle_charge": subsubscription_cycle_charge,
         "payment_charge": payment_charge,
         "order_history": order_history,
     }

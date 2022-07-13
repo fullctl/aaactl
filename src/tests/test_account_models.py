@@ -28,7 +28,7 @@ def test_api_key_autocreate(db, account_objects):
     assert key.managed is True
 
 
-def test_emconf_process(db, account_objects):
+def test_email_confirmation_process(db, account_objects):
 
     user = account_objects.user
     email_confirmation = EmailConfirmation.start(user)
@@ -42,7 +42,7 @@ def test_emconf_process(db, account_objects):
     assert user.user_settings.email_confirmed
 
 
-def test_pwdrst_process(db, account_objects):
+def test_password_reset_process(db, account_objects):
 
     user = account_objects.user
 
@@ -57,7 +57,7 @@ def test_pwdrst_process(db, account_objects):
     assert password_reset.id is None
 
 
-def test_inv_process(db, account_objects, account_objects_b):
+def test_invite_process(db, account_objects, account_objects_b):
     invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,
@@ -71,7 +71,7 @@ def test_inv_process(db, account_objects, account_objects_b):
     assert account_objects.org.orguser_set.filter(user=account_objects_b.user).exists()
 
 
-def test_inv_user_del(db, account_objects, account_objects_b, capsys):
+def test_invite_user_del(db, account_objects, account_objects_b, capsys):
     invite = Invitation.objects.create(
         org=account_objects.org,
         created_by=account_objects.user,

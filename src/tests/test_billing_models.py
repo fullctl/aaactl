@@ -19,23 +19,23 @@ from billing.models import (
 
 def test_product_group(db, billing_objects):
     assert str(billing_objects.product.group) == "Test Group"
-    assert str(billing_objects.product_sub_fixed.group) == "Test Group"
-    assert str(billing_objects.product_sub_metered.group) == "Test Group"
+    assert str(billing_objects.product_subscription_fixed.group) == "Test Group"
+    assert str(billing_objects.product_subscription_metered.group) == "Test Group"
 
 
-def test_recurring_products(db, billing_objects):
+def test_recurring_product_products(db, billing_objects):
     assert billing_objects.product.is_recurring is False
-    assert billing_objects.product_sub_fixed.is_recurring is True
-    assert billing_objects.product_sub_metered.is_recurring is True
+    assert billing_objects.product_subscription_fixed.is_recurring is True
+    assert billing_objects.product_subscription_metered.is_recurring is True
 
 
-def test_recurring_product_type(db, billing_objects):
+def test_recurring_product_product_type(db, billing_objects):
     assert (
-        billing_objects.product_sub_fixed.recurring_product.type_description
+        billing_objects.product_subscription_fixed.recurring_product.type_description
         == "Fixed Price"
     )
     assert (
-        billing_objects.product_sub_metered.recurring_product.type_description
+        billing_objects.product_subscription_metered.recurring_product.type_description
         == "Metered Usage"
     )
 
@@ -51,8 +51,8 @@ def test_subscription_products(db, billing_objects):
     Test adding a product to subscription.
     """
     subscription = billing_objects.monthly_subscription
-    product_sub_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_sub_fixed)
+    product_subscription_fixed = billing_objects.product_subscription_fixed
+    subscription.add_product(product_subscription_fixed)
     assert SubscriptionProduct.objects.filter(subscription=subscription).count() == 2
 
 
@@ -65,12 +65,12 @@ def test_subscription_cycle_start(db, billing_objects):
 
     # Test subscription_cycle start
     assert subscription.cycle_start is None
-    subscription.start_cycle()
+    subscription.start_subscription_cycle()
     assert subscription.cycle_start == datetime.now(timezone.utc).date()
 
     # Cannot re-start with active
     with pytest.raises(OSError):
-        subscription.start_cycle()
+        subscription.start_subscription_cycle()
 
 
 def test_subscription_cycle(db, billing_objects):
@@ -82,7 +82,7 @@ def test_subscription_cycle(db, billing_objects):
 
     # Start a subscription_cycle two months ago
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
-    m_subscription.start_cycle(two_months_ago)
+    m_subscription.start_subscription_cycle(two_months_ago)
     assert m_subscription.subscription_cycle is None
 
     # Need to address January rollover
@@ -94,12 +94,12 @@ def test_subscription_cycle(db, billing_objects):
 
     # now start a subscription_cycle two weeks ago
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    m_subscription.start_cycle(two_weeks_ago)
+    m_subscription.start_subscription_cycle(two_weeks_ago)
     assert m_subscription.subscription_cycle
     assert SubscriptionCycle.objects.count() == 2
 
 
-def test_end_cycle(db, billing_objects, mocker):
+def test_end_subscription_cycle(db, billing_objects, mocker):
 
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
@@ -109,7 +109,7 @@ def test_end_cycle(db, billing_objects, mocker):
 
     subscription = billing_objects.monthly_subscription
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
+    subscription.start_subscription_cycle(two_weeks_ago)
 
     subscription.payment_method = billing_objects.payment_method
     subscription.save()
@@ -117,10 +117,10 @@ def test_end_cycle(db, billing_objects, mocker):
     # FIXME - This doesn't seem to be the test we want
     # but currently there is no way to force end a subscription_cycle (?)
     with pytest.raises(OSError):
-        subscription.end_cycle()
+        subscription.end_subscription_cycle()
 
 
-def test_subcycle_charge(db, billing_objects, mocker):
+def test_subsubscription_cycle_charge(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
@@ -129,23 +129,23 @@ def test_subcycle_charge(db, billing_objects, mocker):
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
+    subscription.start_subscription_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 
     subcycle.charge()
-    subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.payment_charge
+    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
+    payment_charge = subsubscription_cycle_charge.payment_charge
 
-    assert subcycle_charge.subscription_cycle == subcycle
+    assert subsubscription_cycle_charge.subscription_cycle == subcycle
     assert payment_charge.price == subcycle.price
     assert payment_charge.description == subscription.charge_description
 
 
-def test_subcycle_charge_exists(db, billing_objects, mocker):
+def test_subsubscription_cycle_charge_exists(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
@@ -154,23 +154,23 @@ def test_subcycle_charge_exists(db, billing_objects, mocker):
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
+    subscription.start_subscription_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 
     subcycle.charge()
 
-    subcycle_charge = subcycle.cyclechg_set.first()
+    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
 
     # Returns charge if charge is still "pending"
-    assert subcycle.charge() == subcycle_charge
+    assert subcycle.charge() == subsubscription_cycle_charge
 
     # Now we set status of payment charge from ok to pending
-    subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.payment_charge
+    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
+    payment_charge = subsubscription_cycle_charge.payment_charge
     payment_charge.status = "ok"
     payment_charge.save()
     subcycle.refresh_from_db()
@@ -188,39 +188,39 @@ def test_calc_subscription_charge(db, billing_objects):
     # Create subscription_cycle
     subscription = billing_objects.monthly_subscription
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
-    subscription_cycle = subscription.start_cycle(two_months_ago)
+    subscription_cycle = subscription.start_subscription_cycle(two_months_ago)
 
     # Create product subscriptions
 
-    product_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_fixed)
-    fixed_subprod = product_fixed.sub_set.first()
+    product_fixed = billing_objects.product_subscription_fixed
+    subscription.add_product(product_fixed)
+    fixed_subproduct = product_fixed.sub_set.first()
 
-    product_metered = billing_objects.product_sub_metered
-    subscription.add_prod(product_metered)
-    metered_subprod = product_metered.sub_set.first()
+    product_metered = billing_objects.product_subscription_metered
+    subscription.add_product(product_metered)
+    metered_subproduct = product_metered.sub_set.first()
 
     # Create Subscription Cycle Products
-    fixed_cycleprod = SubscriptionCycleProduct.objects.create(
+    fixed_subscription_cycleproduct = SubscriptionCycleProduct.objects.create(
         subscription_cycle=subscription_cycle,
-        subscription_product=fixed_subprod,
+        subscription_product=fixed_subproduct,
         usage=1,
     )
 
-    assert fixed_cycleprod.price == 125.99
+    assert fixed_subscription_cycleproduct.price == 125.99
 
-    metered_cycleprod = SubscriptionCycleProduct.objects.create(
+    metered_subscription_cycleproduct = SubscriptionCycleProduct.objects.create(
         subscription_cycle=subscription_cycle,
-        subscription_product=metered_subprod,
+        subscription_product=metered_subproduct,
         usage=0,
     )
 
     # Adjust usage
-    assert metered_cycleprod.price == 0
-    metered_cycleprod.usage = 50
-    metered_cycleprod.save()
+    assert metered_subscription_cycleproduct.price == 0
+    metered_subscription_cycleproduct.usage = 50
+    metered_subscription_cycleproduct.save()
 
-    assert metered_cycleprod.price == 25
+    assert metered_subscription_cycleproduct.price == 25
 
     # Get price for whole subscription_cycle
     assert subscription_cycle.price == 150.99
@@ -231,7 +231,7 @@ def test_calc_subscription_charge(db, billing_objects):
     """
 
 
-def test_order_history(db, billing_objects, mocker):
+def test_order_history_history(db, billing_objects, mocker):
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
         return_value={"id": 1234},
@@ -239,17 +239,17 @@ def test_order_history(db, billing_objects, mocker):
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
+    subscription.start_subscription_cycle(two_weeks_ago)
     subcycle = subscription.cycle_set.first()
 
-    subcycle.update_usage(subscription.subprod_set.first(), 1)
+    subcycle.update_usage(subscription.subproduct_set.first(), 1)
 
     assert subcycle.price > 0
 
     subcycle.charge()
 
-    subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.payment_charge
+    subsubscription_cycle_charge = subcycle.cyclechg_set.first()
+    payment_charge = subsubscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_chg(payment_charge)
     assert order_history
@@ -287,7 +287,7 @@ def test_create_transactions_from_product(billing_objects):
 
 
 @pytest.mark.django_db
-def test_order_init(order_history, billing_objects):
+def test_order_history_init(order_history, billing_objects):
     assert order_history.user == billing_objects.user
     assert order_history.amount == 1200.99
     assert order_history.currency == "USD"

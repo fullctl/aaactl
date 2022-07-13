@@ -23,7 +23,7 @@ from billing.payment_processors import PROCESSORS
 @org_view(["billing", "orderhistory"])
 def order_history(request):
 
-    order_history = OrderHistory.objects.filter(billcon__org=request.selected_org)
+    order_history = OrderHistory.objects.filter(billing_contact__org=request.selected_org)
     order_history = order_history.order_by("-processed")
     env = dict(order_history=order_history, form=ChangeInformation(None))
     return render(request, "billing/controlpanel/order_history.html", env)
@@ -44,7 +44,7 @@ def order_history_details(request, id):
     )
     try:
         order_history = OrderHistory.objects.get(
-            billcon__org=request.selected_org, order_id=id
+            billing_contact__org=request.selected_org, order_id=id
         )
     except OrderHistory.DoesNotExist:
         raise Http404(_("Order history not found"))
@@ -57,7 +57,7 @@ def order_history_details(request, id):
 @org_view(["billing", "contact"])
 def billing_contacts(request):
 
-    billing_contacts = request.selected_org.billcon_set.filter(status="ok")
+    billing_contacts = request.selected_org.billing_contact_set.filter(status="ok")
     env = dict(billing_contacts=billing_contacts)
     return render(request, "billing/controlpanel/billing_contacts.html", env)
 
@@ -67,7 +67,7 @@ def billing_contacts(request):
 def billing_contact(request, id):
 
     try:
-        billing_contact = request.selected_org.billcon_set.get(id=id)
+        billing_contact = request.selected_org.billing_contact_set.get(id=id)
     except request.user.pay_set.model.DoesNotExist:
         raise Http404(_("Billing contact not found"))
 
@@ -85,7 +85,7 @@ def billing_contact(request, id):
 def services(request):
 
     billing_is_setup = PaymentMethod.objects.filter(
-        billcon__org=request.selected_org, status="ok"
+        billing_contact__org=request.selected_org, status="ok"
     ).exists()
 
     services = request.selected_org.sub_set.filter(status="ok")

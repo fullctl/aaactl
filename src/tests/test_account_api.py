@@ -313,10 +313,10 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     assert_expected(response, strip_api_fields(expected))
 
 
-def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start):
+def test_password_reset_start(db, account_objects, data_account_api_password_reset_start):
 
-    input = json.loads(data_account_api_pwdrst_start.input)
-    expected = data_account_api_pwdrst_start.expected
+    input = json.loads(data_account_api_password_reset_start.input)
+    expected = data_account_api_password_reset_start.expected
 
     response = getattr(account_objects, input["client"]).post(
         reverse("account_api:password_reset-start"), data=input["data"]
@@ -325,12 +325,12 @@ def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start
     assert_expected(response, expected)
 
 
-def test_password_reset_complete(db, account_objects, data_account_api_pwdrst_complete):
+def test_password_reset_complete(db, account_objects, data_account_api_password_reset_complete):
 
     password_reset = models.PasswordReset.start(account_objects.user)
 
-    input = json.loads(data_account_api_pwdrst_complete.input)
-    expected = data_account_api_pwdrst_complete.expected
+    input = json.loads(data_account_api_password_reset_complete.input)
+    expected = data_account_api_password_reset_complete.expected
     data = input["data"]
     if data.get("secret") == "$":
         data["secret"] = password_reset.secret

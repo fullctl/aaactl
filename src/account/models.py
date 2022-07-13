@@ -420,7 +420,7 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
         return f"{self.namespace} ({self.id})"
 
 
-def generate_emconf_secret():
+def generate_email_confirmation_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -440,7 +440,7 @@ class EmailConfirmation(HandleRefModel):
         get_user_model(), on_delete=models.CASCADE, related_name="email_confirmation"
     )
 
-    secret = models.CharField(max_length=255, default=generate_emconf_secret)
+    secret = models.CharField(max_length=255, default=generate_email_confirmation_secret)
 
     email = models.EmailField()
 
@@ -492,7 +492,7 @@ class EmailConfirmation(HandleRefModel):
         self.delete()
 
 
-def generate_pwdrst_secret():
+def generate_password_reset_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -512,7 +512,7 @@ class PasswordReset(HandleRefModel):
         get_user_model(), on_delete=models.CASCADE, related_name="password_reset"
     )
 
-    secret = models.CharField(max_length=255, default=generate_pwdrst_secret)
+    secret = models.CharField(max_length=255, default=generate_password_reset_secret)
 
     email = models.EmailField()
 

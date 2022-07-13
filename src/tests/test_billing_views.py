@@ -3,7 +3,7 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_order_history_details(client_anon, billing_objects, charge_objects):
+def test_order_history_history_details(client_anon, billing_objects, charge_objects):
     order_item_id = charge_objects["order_history"].order_id
 
     # Test anon
@@ -62,7 +62,7 @@ def test_setup(client_anon, billing_objects):
 
 
 @pytest.mark.django_db
-def test_setup_billcon_prepop(billing_objects):
+def test_setup_billing_contact_prepop(billing_objects):
     response = billing_objects.client.get(
         reverse("billing:setup")
         + f"?billing_contact={billing_objects.billing_contact.id}"

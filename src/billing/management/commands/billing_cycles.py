@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         try:
             sid = transaction.savepoint()
-            self.progress_cycles()
+            self.progress_subscription_cycles()
 
             if not self.commit:
                 raise Rollback()
@@ -43,19 +43,19 @@ class Command(BaseCommand):
                 transaction.rollback()
             self.log("Ran in non-committal mode, rolling back changes")
 
-    def progress_cycles(self):
+    def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
         for subscription in qset:
             self.log(f"checking subscription {subscription} ...")
 
             if not subscription.subscription_cycle:
-                subscription.start_cycle()
+                subscription.start_subscription_cycle()
                 self.log(
                     f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
                 )
 
-            for subscription_product in subscription.subprod_set.all():
+            for subscription_product in subscription.subproduct_set.all():
                 self.collect(subscription_product, subscription.subscription_cycle)
 
             for subscription_cycle in subscription.cycle_set.filter(status="ok"):

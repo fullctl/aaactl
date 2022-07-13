@@ -60,7 +60,7 @@ def test_post_billing_setup(billing_objects, mocker):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_get_payment_methods(billing_objects, data_billing_api_billcon):
+def test_get_payment_methods(billing_objects, data_billing_api_billing_contact):
     response = billing_objects.api_client.get(
         reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
     )
@@ -75,7 +75,7 @@ def test_get_payment_methods(billing_objects, data_billing_api_billcon):
     print(response.content)
 
     assert strip_api_fields(response.json()) == strip_api_fields(
-        data_billing_api_billcon.expected
+        data_billing_api_billing_contact.expected
     )
 
 
@@ -183,9 +183,9 @@ def test_get_orders(billing_objects, charge_objects):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_get_products(billing_objects, data_billing_api_prod):
+def test_get_products(billing_objects, data_billing_api_product):
     response = billing_objects.api_client.get(reverse("billing_api:product-list"))
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == strip_api_fields(
-        data_billing_api_prod.expected
+        data_billing_api_product.expected
     )

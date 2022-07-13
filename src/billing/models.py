@@ -122,7 +122,7 @@ class Product(HandleRefModel):
         return f"{self.name}({self.id})"
 
     def create_transactions(self, user):
-        order_number = "ORDER_" + unique_order_id()
+        order_number = "ORDER_" + unique_order_history_id()
         self._create_order(user, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
@@ -221,7 +221,7 @@ class RecurringProduct(HandleRefModel):
     )
 
     class Meta:
-        db_table = "billing_recurring_product"
+        db_table = "billing_recurring_product_product"
         verbose_name = _("Recurring Product Settings")
         verbose_name_plural = _("Recurring Product Settings")
         # FIXME: why is this weird on postgres
@@ -343,7 +343,7 @@ class Subscription(HandleRefModel):
 
     @property
     def subscription_cycle(self):
-        return self.get_cycle(datetime.date.today())
+        return self.get_subscription_cycle(datetime.date.today())
 
     @property
     def charge_description(self):
@@ -352,18 +352,18 @@ class Subscription(HandleRefModel):
     def __str__(self):
         return f"{self.group.name} : {self.org}"
 
-    def get_cycle(self, date):
+    def get_subscription_cycle(self, date):
         return self.cycle_set.filter(start__lte=date, end__gte=date).first()
 
     @reversion.create_revision()
-    def add_prod(self, product):
+    def add_product(self, product):
         subscription_product, _ = SubscriptionProduct.objects.get_or_create(
             subscription=self, product=product
         )
         return subscription_product
 
     @reversion.create_revision()
-    def end_cycle(self):
+    def end_subscription_cycle(self):
         """
         end current subscription subscription_cycle prematurely
         """
@@ -373,9 +373,9 @@ class Subscription(HandleRefModel):
         self.subscription_cycle.end = datetime.date.today()
         self.subscription_cycle.save()
         self.subscription_cycle.charge()
-        self.start_cycle()
+        self.start_subscription_cycle()
 
-    def start_cycle(self, start=None, force=False):
+    def start_subscription_cycle(self, start=None, force=False):
         if not start:
             start = datetime.date.today()
 
@@ -397,7 +397,7 @@ class Subscription(HandleRefModel):
                     )
                 )
             else:
-                self.end_cycle()
+                self.end_subscription_cycle()
 
         if not self.cycle_start:
             self.cycle_start = start
@@ -418,7 +418,7 @@ class SubscriptionProduct(HandleRefModel):
     """
 
     subscription = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name="subprod_set"
+        Subscription, on_delete=models.CASCADE, related_name="subproduct_set"
     )
 
     product = models.ForeignKey(
@@ -567,7 +567,7 @@ class SubscriptionCycle(HandleRefModel):
         )
 
     def create_transactions(self, user):
-        order_number = "ORDER_" + unique_order_id()
+        order_number = "ORDER_" + unique_order_history_id()
         self._create_orders(user, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
@@ -575,7 +575,7 @@ class SubscriptionCycle(HandleRefModel):
         self._create_payment(user, invoice_number)
 
     def _create_orders(self, user, order_number):
-        for subscription_product in self.subscription.subprod_set.all():
+        for subscription_product in self.subscription.subproduct_set.all():
             Order.objects.create(
                 user=user,
                 amount=self.price,
@@ -586,7 +586,7 @@ class SubscriptionCycle(HandleRefModel):
             )
 
     def _create_invoices(self, user, invoice_number):
-        for subscription_product in self.subscription.subprod_set.all():
+        for subscription_product in self.subscription.subproduct_set.all():
             Invoice.objects.create(
                 # Not sure how we want to access this
                 user=user,
@@ -745,11 +745,11 @@ def unique_id(Model, field):
     raise OSError(f"Could not generate a unique {Model} id")
 
 
-def unique_order_history_id():
+def unique_order_history_history_id():
     return unique_id(OrderHistory, "order_id")
 
 
-def unique_order_id():
+def unique_order_history_id():
     return unique_id(Order, "order_number")
 
 
@@ -792,14 +792,14 @@ class OrderHistory(HandleRefModel):
     processed = models.DateTimeField(help_text=("When was this order processed"))
 
     order_id = models.CharField(
-        max_length=16, default=unique_order_history_id, unique=True
+        max_length=16, default=unique_order_history_history_id, unique=True
     )
 
     class HandleRef:
         tag = "order_history"
 
     class Meta:
-        db_table = "billing_order_history"
+        db_table = "billing_order_history_history"
         verbose_name = _("Order History Entry")
         verbose_name_plural = _("Order History Entries")
 
@@ -810,7 +810,7 @@ class OrderHistory(HandleRefModel):
             billing_contact=payment_charge.payment_method.billing_contact,
             billed_to=payment_charge.payment_method.name,
             processed=datetime.datetime.now(),
-            order_id=unique_order_history_id(),
+            order_id=unique_order_history_history_id(),
         )
         order_history.save()
 
@@ -882,7 +882,7 @@ class OrderHistoryItem(HandleRefModel):
         tag = "order_history_item"
 
     class Meta:
-        db_table = "billing_order_history_item"
+        db_table = "billing_order_history_history_item"
         verbose_name = _("Order History Item")
         verbose_name_plural = _("Order History Items")
 
@@ -913,7 +913,7 @@ class BillingContact(HandleRefModel):
     org = models.ForeignKey(
         account.models.Organization,
         on_delete=models.CASCADE,
-        related_name="billcon_set",
+        related_name="billing_contact_set",
     )
 
     name = models.CharField(max_length=255)
@@ -970,7 +970,7 @@ class PaymentMethod(HandleRefModel):
 
     @classmethod
     def get_for_org(cls, org, status="ok"):
-        return cls.objects.filter(billcon__org=org, status=status)
+        return cls.objects.filter(billing_contact__org=org, status=status)
 
     @property
     def name(self):

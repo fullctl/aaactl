@@ -110,7 +110,7 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
     list_display = ("subscription", "start", "end", "charged", "organization_name")
-    search_fields = ("sub__prod__name", "sub__org__name", "group__name", "sub__id")
+    search_fields = ("sub__product__name", "sub__org__name", "group__name", "sub__id")
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
@@ -120,7 +120,7 @@ class SubscriptionCycleAdmin(BaseAdmin):
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
     list_display = ("subscription_product", "type", "value", "valid", "source")
-    search_fields = ("subprod__name", "subprod__sub__org___name")
+    search_fields = ("subproduct__name", "subproduct__subscription__org___name")
 
 
 class OrderHistoryItemInline(admin.TabularInline):
@@ -132,7 +132,7 @@ class OrderHistoryItemInline(admin.TabularInline):
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(BaseAdmin):
     list_display = ("id", "org", "billing_contact", "price", "notes", "processed")
-    search_fields = ("billcon__name",)
+    search_fields = ("billing_contact__name",)
     inlines = (OrderHistoryItemInline,)
     readonly_fields = ("org",)
 
@@ -149,7 +149,7 @@ class PaymentMethodForm(forms.ModelForm):
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(BaseAdmin):
     list_display = ("id", "name", "billing_contact", "processor", "status")
-    search_fields = ("billcon__name",)
+    search_fields = ("billing_contact__name",)
     form = PaymentMethodForm
 
 
@@ -164,7 +164,7 @@ class PaymentChargeAdmin(BaseAdmin):
         "created",
         "updated",
     )
-    search_fields = ("pay__billcon__name",)
+    search_fields = ("pay__billing_contact__name",)
 
     def billing_contact(self, obj):
         return obj.payment_method.billing_contact
@@ -173,7 +173,7 @@ class PaymentChargeAdmin(BaseAdmin):
 @admin.register(CustomerData)
 class CustomerDataAdmin(BaseAdmin):
     list_dispaly = ("id", "billing_contact")
-    search_fields = ("billcon_name",)
+    search_fields = ("billing_contact_name",)
 
 
 @admin.register(ProductGroup)

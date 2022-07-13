@@ -117,7 +117,7 @@ class Subscription(serializers.ModelSerializer):
             "items",
         ]
 
-    def get_cycle(self, subscription):
+    def get_subscription_cycle(self, subscription):
         if not subscription.subscription_cycle:
             return None
         return {
@@ -138,7 +138,7 @@ class Subscription(serializers.ModelSerializer):
                 "unit_name": subscription_product.product.recurring_product.unit,
                 "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
             }
-            for subscription_product in subscription.subprod_set.all()
+            for subscription_product in subscription.subproduct_set.all()
         ]
 
 
@@ -192,7 +192,7 @@ class BillingSetup(serializers.Serializer):
         if not value:
             return 0
         try:
-            return models.PaymentMethod.objects.get(id=value, billcon__org=org)
+            return models.PaymentMethod.objects.get(id=value, billing_contact__org=org)
         except models.PaymentMethod.DoesNotExist:
             raise serializers.ValidationError("Payment method not found")
 
@@ -254,9 +254,9 @@ class BillingSetup(serializers.Serializer):
             subscription.save()
 
             if not subscription.subscription_cycle:
-                subscription.start_cycle()
+                subscription.start_subscription_cycle()
 
-            if not subscription.subprod_set.filter(product=product).exists():
+            if not subscription.subproduct_set.filter(product=product).exists():
                 subscription.add_prod(product)
 
         models.Subscription.set_payment_method(org, pay_method)

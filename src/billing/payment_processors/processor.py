@@ -53,7 +53,7 @@ class PaymentProcessor:
         return self.payment_method.billing_contact
 
     @property
-    def billcon_customer(self):
+    def billing_contact_customer(self):
         try:
             return self.payment_method.billing_contact.customer
         except ObjectDoesNotExist:
@@ -73,7 +73,7 @@ class PaymentProcessor:
 
     def save(self):
         self.payment_method.save()
-        self.billcon_customer.save()
+        self.billing_contact_customer.save()
 
     @reversion.create_revision()
     def sync_charge(self, payment_charge):

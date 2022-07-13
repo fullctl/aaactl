@@ -48,7 +48,7 @@ class Organization(viewsets.ViewSet):
             return Response({"billing_contact": ["Required field"]}, status=400)
 
         queryset = models.PaymentMethod.get_for_org(org).filter(
-            billcon_id=billing_contact
+            billing_contact_id=billing_contact
         )
         serializer = Serializers.payment_method(queryset, many=True)
         return Response(serializer.data)
@@ -59,7 +59,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def payment_method(self, request, pk, org, auditlog=None):
         payment_method = models.PaymentMethod.objects.get(
-            billcon__org=org, id=request.data.get("id")
+            billing_contact__org=org, id=request.data.get("id")
         )
 
         if payment_method.billing_contact.pay_set.filter(status="ok").count() <= 1:
@@ -86,7 +86,7 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_contact(self, request, pk, org, auditlog=None):
 
-        instance = org.billcon_set.get(id=request.data.get("id"))
+        instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
             serializer = Serializers.billing_contact(
@@ -128,7 +128,7 @@ class Organization(viewsets.ViewSet):
         subscription = models.Subscription.get_or_create(org, product.group)
         subscription.add_prod(product)
         if not subscription.subscription_cycle:
-            subscription.start_cycle()
+            subscription.start_subscription_cycle()
 
         serializer = Serializers.subscription(subscription)
         return Response(serializer.data)
@@ -137,7 +137,7 @@ class Organization(viewsets.ViewSet):
     @set_org
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def orders(self, request, pk, org):
-        queryset = models.OrderHistory.objects.filter(billcon__org=org)
+        queryset = models.OrderHistory.objects.filter(billing_contact__org=org)
         queryset = queryset.prefetch_related("orderitem_set").select_related(
             "billing_contact"
         )

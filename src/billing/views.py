@@ -136,7 +136,9 @@ def setup(request, **kwargs):
     if billing_contact:
         try:
             billing_contact = BillingContact.objects.get(id=billing_contact, org=org)
-            billing_address_init.update(holder=billing_contact.name, email=billing_contact.email)
+            billing_address_init.update(
+                holder=billing_contact.name, email=billing_contact.email
+            )
         except BillingContact.DoesNotExist:
             pass
 
@@ -182,7 +184,9 @@ def setup(request, **kwargs):
     payment_processor_id = request.GET.get("processor", list(PROCESSORS.keys())[0])
     payment_processor = PROCESSORS[payment_processor_id]
     env.update(
-        payment_processor=payment_processor(PaymentMethod(billing_contact=BillingContact())),
+        payment_processor=payment_processor(
+            PaymentMethod(billing_contact=BillingContact())
+        ),
         form_payopt_create=payment_processor.Form(),
         from_payopt_create_template=payment_processor.Form().template,
         form_billing_address=BillingAddressForm(initial=billing_address_init),

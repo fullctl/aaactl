@@ -51,7 +51,9 @@ class Command(BaseCommand):
 
             if not subscription.subscription_cycle:
                 subscription.start_cycle()
-                self.log(f"-- started new billing subscription_cycle: {subscription.subscription_cycle}")
+                self.log(
+                    f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
+                )
 
             for subscription_product in subscription.subprod_set.all():
                 self.collect(subscription_product, subscription.subscription_cycle)
@@ -67,7 +69,9 @@ class Command(BaseCommand):
                     )
                     break
                 if not subscription_cycle.charged:
-                    self.log(f"-- charging ${subscription_cycle.price} for previous subscription_cycle: {subscription_cycle}")
+                    self.log(
+                        f"-- charging ${subscription_cycle.price} for previous subscription_cycle: {subscription_cycle}"
+                    )
 
                     if not self.commit:
                         continue

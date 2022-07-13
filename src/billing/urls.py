@@ -17,5 +17,9 @@ urlpatterns = [
         billing.views.order_history_details,
         name="order_history-history-details",
     ),
-    path("order_history-history/", billing.views.order_history, name="order_history-history"),
+    path(
+        "order_history-history/",
+        billing.views.order_history,
+        name="order_history-history",
+    ),
 ]

@@ -59,7 +59,9 @@ class PaymentProcessor:
         except ObjectDoesNotExist:
             from billing.models import CustomerData
 
-            customer, created = CustomerData.objects.get_or_create(billing_contact=self.billing_contact)
+            customer, created = CustomerData.objects.get_or_create(
+                billing_contact=self.billing_contact
+            )
             return customer
 
     @property

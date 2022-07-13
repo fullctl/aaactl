@@ -67,7 +67,10 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            product=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
+            product=self.product_sub_fixed,
+            type="fixed",
+            price=125.99,
+            data={"foo": "bar"},
         )
 
         self.product_sub_metered = Product.objects.create(

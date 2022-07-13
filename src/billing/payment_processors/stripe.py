@@ -125,7 +125,9 @@ class Stripe(PaymentProcessor):
         if not payment_charge.data.get("stripe_charge"):
             return super()._sync_charge(payment_charge, "failed")
 
-        charge = stripe.Charge.retrieve(payment_charge.data["stripe_charge"], api_key=self.api_key)
+        charge = stripe.Charge.retrieve(
+            payment_charge.data["stripe_charge"], api_key=self.api_key
+        )
 
         if charge["status"] == "succeeded":
             return super()._sync_charge(payment_charge, "ok")

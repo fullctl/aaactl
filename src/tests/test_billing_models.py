@@ -30,7 +30,10 @@ def test_recurring_products(db, billing_objects):
 
 
 def test_recurring_product_type(db, billing_objects):
-    assert billing_objects.product_sub_fixed.recurring_product.type_description == "Fixed Price"
+    assert (
+        billing_objects.product_sub_fixed.recurring_product.type_description
+        == "Fixed Price"
+    )
     assert (
         billing_objects.product_sub_metered.recurring_product.type_description
         == "Metered Usage"
@@ -199,13 +202,17 @@ def test_calc_subscription_charge(db, billing_objects):
 
     # Create Subscription Cycle Products
     fixed_cycleprod = SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscription_cycle, subscription_product=fixed_subprod, usage=1
+        subscription_cycle=subscription_cycle,
+        subscription_product=fixed_subprod,
+        usage=1,
     )
 
     assert fixed_cycleprod.price == 125.99
 
     metered_cycleprod = SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscription_cycle, subscription_product=metered_subprod, usage=0
+        subscription_cycle=subscription_cycle,
+        subscription_product=metered_subprod,
+        usage=0,
     )
 
     # Adjust usage

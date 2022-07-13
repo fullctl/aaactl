@@ -357,7 +357,9 @@ class Subscription(HandleRefModel):
 
     @reversion.create_revision()
     def add_prod(self, product):
-        subscription_product, _ = SubscriptionProduct.objects.get_or_create(subscription=self, product=product)
+        subscription_product, _ = SubscriptionProduct.objects.get_or_create(
+            subscription=self, product=product
+        )
         return subscription_product
 
     @reversion.create_revision()
@@ -401,7 +403,9 @@ class Subscription(HandleRefModel):
             self.cycle_start = start
             self.save()
 
-        subscription_cycle = SubscriptionCycle.objects.create(subscription=self, start=start, end=end)
+        subscription_cycle = SubscriptionCycle.objects.create(
+            subscription=self, start=start, end=end
+        )
 
         return subscription_cycle
 
@@ -417,7 +421,9 @@ class SubscriptionProduct(HandleRefModel):
         Subscription, on_delete=models.CASCADE, related_name="subprod_set"
     )
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sub_set")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="sub_set"
+    )
 
     data = models.JSONField(
         default=dict,
@@ -550,7 +556,9 @@ class SubscriptionCycle(HandleRefModel):
             return pending_chg
 
         payment_charge = PaymentCharge.objects.create(
-            payment_method=self.subscription.payment_method, price=self.price, description=self.subscription.charge_description
+            payment_method=self.subscription.payment_method,
+            price=self.price,
+            description=self.subscription.charge_description,
         )
         self.subscription.payment_method.processor_instance.charge(payment_charge)
 
@@ -611,7 +619,9 @@ class SubscriptionCycleCharge(HandleRefModel):
         SubscriptionCycle, on_delete=models.CASCADE, related_name="cyclechg_set"
     )
     payment_charge = models.OneToOneField(
-        "billing.PaymentCharge", on_delete=models.CASCADE, related_name="subscription_cycle_charge"
+        "billing.PaymentCharge",
+        on_delete=models.CASCADE,
+        related_name="subscription_cycle_charge",
     )
 
     class Meta:
@@ -638,7 +648,8 @@ class SubscriptionCycleProduct(HandleRefModel):
         SubscriptionProduct, on_delete=models.CASCADE, related_name="cycleprod_set"
     )
     usage = models.PositiveIntegerField(
-        default=0, help_text=_("Usage attributed to subscription cycle for this product")
+        default=0,
+        help_text=_("Usage attributed to subscription cycle for this product"),
     )
 
     class Meta:
@@ -804,7 +815,11 @@ class OrderHistory(HandleRefModel):
         order_history.save()
 
         try:
-            for cycleprod in payment_charge.subscription_cycle_charge.subscription_cycle.cycleprod_set.all():
+            for (
+                cycleprod
+            ) in (
+                payment_charge.subscription_cycle_charge.subscription_cycle.cycleprod_set.all()
+            ):
                 OrderHistoryItem.objects.create(
                     order_history=order_history,
                     cycleprod=cycleprod,
@@ -814,7 +829,9 @@ class OrderHistory(HandleRefModel):
 
         except SubscriptionCycleCharge.DoesNotExist:
             OrderHistoryItem.objects.create(
-                order_history=order_history, price=payment_charge.price, description=payment_charge.description
+                order_history=order_history,
+                price=payment_charge.price,
+                description=payment_charge.description,
             )
 
         return order_history
@@ -833,7 +850,9 @@ class OrderHistory(HandleRefModel):
     @property
     def organization_name(self):
         try:
-            return self.payment_charge.subscription_cycle_charge.subscription_cycle.subscription.org.name
+            return (
+                self.payment_charge.subscription_cycle_charge.subscription_cycle.subscription.org.name
+            )
         except SubscriptionCycleCharge.DoesNotExist:
             return "-"
 

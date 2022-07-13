@@ -85,7 +85,9 @@ class UserInformation(viewsets.ViewSet):
     @user_endpoint()
     def resend_confirmation_mail(self, request):
 
-        user_settings, created = models.UserSettings.objects.get_or_create(user=request.user)
+        user_settings, created = models.UserSettings.objects.get_or_create(
+            user=request.user
+        )
 
         if user_settings.email_confirmed:
             return Response(

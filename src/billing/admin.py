@@ -44,7 +44,14 @@ class RecurringProductInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(BaseAdmin):
-    list_display = ("name", "group", "component", "description", "price", "recurring_product")
+    list_display = (
+        "name",
+        "group",
+        "component",
+        "description",
+        "price",
+        "recurring_product",
+    )
     search_fields = ("name", "component", "group")
     readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
     inlines = (ProductModifierInline, RecurringProductInline)
@@ -148,7 +155,15 @@ class PaymentMethodAdmin(BaseAdmin):
 
 @admin.register(PaymentCharge)
 class PaymentChargeAdmin(BaseAdmin):
-    list_display = ("id", "payment_method", "billing_contact", "price", "status", "created", "updated")
+    list_display = (
+        "id",
+        "payment_method",
+        "billing_contact",
+        "price",
+        "status",
+        "created",
+        "updated",
+    )
     search_fields = ("pay__billcon__name",)
 
     def billing_contact(self, obj):

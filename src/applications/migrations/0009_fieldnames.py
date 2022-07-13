@@ -6,18 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0008_auto_20220708_1348'),
+        ("applications", "0008_auto_20220708_1348"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='service',
-            old_name='api_host',
-            new_name='api_url',
+            model_name="service",
+            old_name="api_host",
+            new_name="api_url",
         ),
         migrations.RenameField(
-            model_name='service',
-            old_name='invite_redirect',
-            new_name='service_url',
+            model_name="service",
+            old_name="invite_redirect",
+            new_name="service_url",
         ),
     ]

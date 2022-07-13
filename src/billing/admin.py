@@ -148,11 +148,11 @@ class PaymentMethodAdmin(BaseAdmin):
 
 @admin.register(PaymentCharge)
 class PaymentChargeAdmin(BaseAdmin):
-    list_display = ("id", "pay", "billing_contact", "price", "status", "created", "updated")
-    search_fields = ("pay__billing_contact__name",)
+    list_display = ("id", "payment_method", "billing_contact", "price", "status", "created", "updated")
+    search_fields = ("payment_method__billing_contact__name",)
 
     def billing_contact(self, obj):
-        return obj.pay.billing_contact
+        return obj.payment_method.billing_contact
 
 
 @admin.register(CustomerData)

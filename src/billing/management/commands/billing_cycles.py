@@ -59,9 +59,9 @@ class Command(BaseCommand):
             for subscription_cycle in subscription.subscription_cycle_set.filter(status="ok"):
                 if not subscription_cycle.ended:
                     continue
-                if not subscription.pay_id:
+                if not subscription.payment_method_id:
                     Subscription.set_payment_method(subscription.org)
-                if not subscription.pay_id:
+                if not subscription.payment_method_id:
                     self.log(
                         f"-- no payment method set, unable to charge previous subscription_cycle for org {subscription.org}"
                     )

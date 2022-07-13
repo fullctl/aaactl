@@ -35,7 +35,7 @@ You have not used any services
     </div>
     <div class="col-6 right">
     {% if permissions.read_org_billing %}
-      <h6>{% trans "Billed to " %} <small>{{ subscription.pay.name }}</small></h6>
+      <h6>{% trans "Billed to " %} <small>{{ subscription.payment_method.name }}</small></h6>
     {% endif %}
     </div>
   </div>

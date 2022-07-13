@@ -9,11 +9,11 @@ billing.BillingContact = twentyc.cls.define(
   {
     BillingContact : function() {
       this.elements = {}
-      this.elements.pay_list = $('.pay-listing')
+      this.elements.payment_method_list = $('.payment_method-listing')
       this.elements.billing_contact_form = $('form.billing_contact')
 
-      this.rest_api_pay_list = new twentyc.rest.List(this.elements.pay_list);
-      this.rest_api_pay_list.load()
+      this.rest_api_payment_method_list = new twentyc.rest.List(this.elements.payment_method_list);
+      this.rest_api_payment_method_list.load()
 
       this.rest_api_billing_contact_form = new twentyc.rest.Form(this.elements.billing_contact_form);
       $(this.rest_api_billing_contact_form).on('api-delete:success', function() {

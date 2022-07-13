@@ -147,7 +147,7 @@ def test_delete_billing_contact(billing_objects):
 def test_delete_active_billing_contact(billing_objects):
     # Connect payment method to subscription, ie make billing contact active
     subscription = billing_objects.monthly_subscription
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     subscription.save()
     assert billing_objects.billing_contact.active
 

@@ -108,7 +108,7 @@ def test_end_subscription_cycle(db, billing_objects, mocker):
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
 
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     subscription.save()
 
     # FIXME - This doesn't seem to be the test we want
@@ -124,7 +124,7 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
         return_value={"id": 1234},
     )
     subscription = billing_objects.monthly_subscription
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
@@ -149,7 +149,7 @@ def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocke
         return_value={"id": 1234},
     )
     subscription = billing_objects.monthly_subscription
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
@@ -230,7 +230,7 @@ def test_order_history(db, billing_objects, mocker):
         return_value={"id": 1234},
     )
     subscription = billing_objects.monthly_subscription
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()

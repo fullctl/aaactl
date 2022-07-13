@@ -48,7 +48,7 @@ class Organization(viewsets.ViewSet):
             return Response({"billing_contact": ["Required field"]}, status=400)
 
         queryset = models.PaymentMethod.get_for_org(org).filter(billing_contact_id=billing_contact)
-        serializer = Serializers.pay(queryset, many=True)
+        serializer = Serializers.payment_method(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["DELETE"])
@@ -56,11 +56,11 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def payment_method(self, request, pk, org, auditlog=None):
-        pay = models.PaymentMethod.objects.get(
+        payment_method = models.PaymentMethod.objects.get(
             billing_contact__org=org, id=request.data.get("id")
         )
 
-        if pay.billing_contact.pay_set.filter(status="ok").count() <= 1:
+        if payment_method.billing_contact.payment_method_set.filter(status="ok").count() <= 1:
             return Response(
                 {
                     "non_field_errors": [
@@ -70,11 +70,11 @@ class Organization(viewsets.ViewSet):
                 status=400,
             )
 
-        old_id = pay.id
-        models.Subscription.set_payment_method(org, replace=pay)
-        pay.delete()
-        pay.id = old_id
-        serializer = Serializers.pay(pay, many=False)
+        old_id = payment_method.id
+        models.Subscription.set_payment_method(org, replace=payment_method)
+        payment_method.delete()
+        payment_method.id = old_id
+        serializer = Serializers.payment_method(payment_method, many=False)
 
         return Response(serializer.data)
 

@@ -108,7 +108,7 @@ class BillingObjects:
             group=self.product_group,
             subscription_cycle_interval="month",
             subscription_cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
         self.monthly_subscription.add_product(self.product_subscription_metered)
@@ -118,7 +118,7 @@ class BillingObjects:
             group=self.product_group,
             subscription_cycle_interval="year",
             subscription_cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
         self.yearly_subscription.add_product(self.product_subscription_metered)
@@ -286,7 +286,7 @@ def charge_objects(billing_objects, mocker):
     subscription.add_product(product_fixed)
     fixed_subscription_product = product_fixed.subscription_set.first()
 
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()

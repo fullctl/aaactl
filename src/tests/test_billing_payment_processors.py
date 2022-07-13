@@ -76,7 +76,7 @@ def test_stripe_setup_card(billing_objects, mocker):
 def test_stripe_sync_charge_success(billing_objects, mocker):
     stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     payment_charge = models.PaymentCharge.objects.create(
-        pay=billing_objects.payment_method,
+        payment_method=billing_objects.payment_method,
         price=100,
         description="Test payment",
         status="pending",

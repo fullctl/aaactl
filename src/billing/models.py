@@ -300,7 +300,7 @@ class Subscription(HandleRefModel):
     )
     subscription_cycle_frequency = models.PositiveIntegerField(default=1)
 
-    pay = models.ForeignKey(
+    payment_method = models.ForeignKey(
         "billing.PaymentMethod",
         on_delete=models.SET_NULL,
         null=True,
@@ -330,16 +330,16 @@ class Subscription(HandleRefModel):
         return subscription
 
     @classmethod
-    def set_payment_method(cls, org, pay=None, replace=None):
-        if not pay:
-            pay = PaymentMethod.get_for_org(org).first()
+    def set_payment_method(cls, org, payment_method=None, replace=None):
+        if not payment_method:
+            payment_method = PaymentMethod.get_for_org(org).first()
 
         qset = org.subscription_set
         if replace:
-            qset = qset.filter(pay=replace)
+            qset = qset.filter(payment_method=replace)
 
-        if pay:
-            qset.update(pay=pay)
+        if payment_method:
+            qset.update(payment_method=payment_method)
 
     @property
     def subscription_cycle(self):
@@ -550,9 +550,9 @@ class SubscriptionCycle(HandleRefModel):
             return pending_payment_charge
 
         payment_charge = PaymentCharge.objects.create(
-            pay=self.subscription.pay, price=self.price, description=self.subscription.charge_description
+            payment_method=self.subscription.payment_method, price=self.price, description=self.subscription.charge_description
         )
-        self.subscription.pay.processor_instance.charge(payment_charge)
+        self.subscription.payment_method.processor_instance.charge(payment_charge)
 
         return SubscriptionCycleCharge.objects.create(
             subscription_cycle=self, payment_charge=payment_charge, status="pending"
@@ -593,8 +593,8 @@ class SubscriptionCycle(HandleRefModel):
         payment = Payment.objects.create(
             user=user,
             amount=self.price,
-            billing_contact=self.subscription.pay.billing_contact,
-            payment_method=self.subscription.pay,
+            billing_contact=self.subscription.payment_method.billing_contact,
+            payment_method=self.subscription.payment_method,
             invoice_number=invoice_number,
         )
         return payment
@@ -796,8 +796,8 @@ class OrderHistory(HandleRefModel):
     def create_from_payment_charge(cls, payment_charge):
         order = cls(
             payment_charge=payment_charge,
-            billing_contact=payment_charge.pay.billing_contact,
-            billed_to=payment_charge.pay.name,
+            billing_contact=payment_charge.payment_method.billing_contact,
+            billed_to=payment_charge.payment_method.name,
             processed=datetime.datetime.now(),
             order_id=unique_order_history_id(),
         )
@@ -910,8 +910,8 @@ class BillingContact(HandleRefModel):
 
     @property
     def active(self):
-        for pay in self.pay_set.filter(status="ok"):
-            if pay.subscription_set.filter(status="ok").exists():
+        for payment_method in self.payment_method_set.filter(status="ok"):
+            if payment_method.subscription_set.filter(status="ok").exists():
                 return True
         return False
 
@@ -927,7 +927,7 @@ class PaymentMethod(HandleRefModel):
     """
 
     billing_contact = models.ForeignKey(
-        BillingContact, on_delete=models.CASCADE, related_name="pay_set"
+        BillingContact, on_delete=models.CASCADE, related_name="payment_method_set"
     )
     custom_name = models.CharField(max_length=255, null=True, blank=True)
     processor = models.CharField(max_length=255)
@@ -942,7 +942,7 @@ class PaymentMethod(HandleRefModel):
     state = models.CharField(max_length=255, null=True, blank=True)
 
     class HandleRef:
-        tag = "pay"
+        tag = "payment_method"
 
     class Meta:
         db_table = "billing_payment_method"
@@ -972,7 +972,7 @@ class PaymentMethod(HandleRefModel):
 @reversion.register()
 class PaymentCharge(HandleRefModel):
 
-    pay = models.ForeignKey(
+    payment_method = models.ForeignKey(
         PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
     )
     price = models.DecimalField(
@@ -993,7 +993,7 @@ class PaymentCharge(HandleRefModel):
         tag = "payment_charge"
 
     def __str__(self):
-        return f"{self.pay.name} Charge {self.id}"
+        return f"{self.payment_method.name} Charge {self.id}"
 
     @reversion.create_revision()
     def capture(self):
@@ -1005,7 +1005,7 @@ class PaymentCharge(HandleRefModel):
     @reversion.create_revision()
     def sync_status(self):
         if self.status == "pending":
-            self.pay.processor_instance.sync_charge(self)
+            self.payment_method.processor_instance.sync_charge(self)
             if self.status == "ok":
                 self.capture()
 

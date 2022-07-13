@@ -68,7 +68,7 @@ def billing_contact(request, id):
 
     try:
         billing_contact = request.selected_org.billing_contact_set.get(id=id)
-    except request.user.pay_set.model.DoesNotExist:
+    except request.user.payment_method_set.model.DoesNotExist:
         raise Http404(_("Billing contact not found"))
 
     env = dict(

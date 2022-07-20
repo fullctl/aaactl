@@ -122,7 +122,7 @@ class Organization(viewsets.ViewSet):
     @set_org
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
-    def subscriptionscribe(self, request, pk, org, auditlog=None):
+    def subscribe(self, request, pk, org, auditlog=None):
         name = request.data.get("product")
 
         try:

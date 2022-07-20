@@ -16,7 +16,7 @@ class Command(CommandInterface):
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
-        parser.add_argument("type", type=str, choices=("org", "user", "orguser"))
+        parser.add_argument("type", type=str, choices=("org", "user", "org_user"))
         parser.add_argument("id", type=int)
 
     def run(self, *args, **kwargs):
@@ -40,7 +40,7 @@ class Command(CommandInterface):
         bridge = Bridge(svc, None, user=user)
         bridge.sync_user()
 
-    def sync_orguser(self, svc, pk):
+    def sync_org_user(self, svc, pk):
         user = get_user_model().objects.get(pk=pk)
         bridge = Bridge(svc, None, user=user)
-        bridge.sync_orguser()
+        bridge.sync_org_user()

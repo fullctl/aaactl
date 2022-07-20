@@ -14,10 +14,11 @@ def test_logout(db, account_objects):
 
 
 def test_confirm_email(db, account_objects):
-    emconf = models.EmailConfirmation.start(account_objects.user)
+    email_confirmation = models.EmailConfirmation.start(account_objects.user)
 
     response = account_objects.client.get(
-        reverse("account:auth-confirm-email", args=(emconf.secret,)), follow=True
+        reverse("account:auth-confirm-email", args=(email_confirmation.secret,)),
+        follow=True,
     )
 
     assert response.status_code == 200
@@ -27,9 +28,9 @@ def test_confirm_email(db, account_objects):
         is False
     )
 
-    account_objects.user.usercfg.refresh_from_db()
+    account_objects.user.user_settings.refresh_from_db()
 
-    assert account_objects.user.usercfg.email_confirmed
+    assert account_objects.user.user_settings.email_confirmed
 
 
 def test_reset_password(db, account_objects, client_anon):
@@ -38,10 +39,10 @@ def test_reset_password(db, account_objects, client_anon):
 
     assert response.status_code == 200
 
-    pwdrst = models.PasswordReset.start(account_objects.user)
+    password_reset = models.PasswordReset.start(account_objects.user)
 
     response = client_anon.get(
-        reverse("account:auth-reset-password", args=(pwdrst.secret,))
+        reverse("account:auth-reset-password", args=(password_reset.secret,))
     )
 
     assert response.status_code == 200
@@ -49,18 +50,18 @@ def test_reset_password(db, account_objects, client_anon):
 
 def test_accept_invite(db, account_objects, account_objects_b):
 
-    inv = models.Invitation.objects.create(
+    invite = models.Invitation.objects.create(
         org=account_objects.org, created_by=account_objects.user, email="test@localhost"
     )
 
     response = account_objects_b.client.get(
-        reverse("account:accept-invite", args=(inv.secret,)), follow=True
+        reverse("account:accept-invite", args=(invite.secret,)), follow=True
     )
 
     assert response.status_code == 200
 
     account_objects_b.user.refresh_from_db()
-    assert account_objects_b.user.orguser_set.filter(org=account_objects.org).exists()
+    assert account_objects_b.user.org_user_set.filter(org=account_objects.org).exists()
 
 
 def test_index(db, account_objects, client_anon):

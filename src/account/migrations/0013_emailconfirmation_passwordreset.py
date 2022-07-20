@@ -51,7 +51,8 @@ class Migration(migrations.Migration):
                 (
                     "secret",
                     models.CharField(
-                        default=account.models.generate_pwdrst_secret, max_length=255
+                        default=account.models.generate_password_reset_secret,
+                        max_length=255,
                     ),
                 ),
                 ("email", models.EmailField(max_length=254)),
@@ -105,7 +106,8 @@ class Migration(migrations.Migration):
                 (
                     "secret",
                     models.CharField(
-                        default=account.models.generate_emconf_secret, max_length=255
+                        default=account.models.generate_email_confirmation_secret,
+                        max_length=255,
                     ),
                 ),
                 ("email", models.EmailField(max_length=254)),

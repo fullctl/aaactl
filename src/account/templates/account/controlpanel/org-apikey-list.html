@@ -1,7 +1,7 @@
 {% load i18n static %}
 <h5>{% trans "API Keys" %}</h5>
 <div
-  class="orgkey-listing"
+  class="org_key-listing"
   data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="keys">
   <div class="templates" style="display:none">
@@ -11,7 +11,7 @@
       data-api-action="set_key_permissions"
       data-api-method="PUT">
       <div class="row" style="margin-bottom: 3px;">
-        <div style="display:none" data-api-submit="yes">
+        <div style="display:none" data-api-subscriptionmit="yes">
           <input type="text" name="id" type="hidden">
           <input type="text" name="component" type="hidden">
         </div>
@@ -85,6 +85,6 @@
 
 <script>
 $(document).ready(function() {
-  var orgkey_list = new account.OrgKeysList();
+  var org_key_list = new account.OrgKeysList();
 });
 </script>

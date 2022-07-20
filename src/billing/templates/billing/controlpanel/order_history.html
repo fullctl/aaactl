@@ -29,7 +29,7 @@ You have not made any payments
         <td>{{ order.description }}</td>
         <td>${{ order.price }} USD</td>
         <td>{{ order.processed|date:"Y-m-d" }}</td>
-        <td><a href="{% url "billing:order-history-details" id=order.order_id %}">{{ order.orderitem_set.count }} {% trans "items" %}</a></td>
+        <td><a href="{% url "billing:order-history-details" id=order.order_id %}">{{ order.order_history_item_set.count }} {% trans "items" %}</a></td>
       </tr>
     {% endfor %}
     </tbody>

@@ -11,7 +11,7 @@ class Rollback(Exception):
 
 # FIXME: use fullctl.django base command
 class Command(BaseCommand):
-    help = "Progresses billing cycles"
+    help = "Progresses billing subscription_cycles"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         try:
             sid = transaction.savepoint()
-            self.progress_cycles()
+            self.progress_subscription_cycles()
 
             if not self.commit:
                 raise Rollback()
@@ -43,56 +43,62 @@ class Command(BaseCommand):
                 transaction.rollback()
             self.log("Ran in non-committal mode, rolling back changes")
 
-    def progress_cycles(self):
+    def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
-        for sub in qset:
-            self.log(f"checking subscription {sub} ...")
+        for subscription in qset:
+            self.log(f"checking subscription {subscription} ...")
 
-            if not sub.cycle:
-                sub.start_cycle()
-                self.log(f"-- started new billing cycle: {sub.cycle}")
+            if not subscription.subscription_cycle:
+                subscription.start_subscription_cycle()
+                self.log(
+                    f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
+                )
 
-            for subprod in sub.subprod_set.all():
-                self.collect(subprod, sub.cycle)
+            for subscription_product in subscription.subscription_product_set.all():
+                self.collect(subscription_product, subscription.subscription_cycle)
 
-            for cycle in sub.cycle_set.filter(status="ok"):
-                if not cycle.ended:
+            for subscription_cycle in subscription.subscription_cycle_set.filter(
+                status="ok"
+            ):
+                if not subscription_cycle.ended:
                     continue
-                if not sub.pay_id:
-                    Subscription.set_payment_method(sub.org)
-                if not sub.pay_id:
+                if not subscription.payment_method_id:
+                    Subscription.set_payment_method(subscription.org)
+                if not subscription.payment_method_id:
                     self.log(
-                        f"-- no payment method set, unable to charge previous cycle for org {sub.org}"
+                        f"-- no payment method set, unable to charge previous subscription_cycle for org {subscription.org}"
                     )
                     break
-                if not cycle.charged:
-                    self.log(f"-- charging ${cycle.price} for previous cycle: {cycle}")
+                if not subscription_cycle.charged:
+                    self.log(
+                        f"-- charging ${subscription_cycle.price} for previous subscription_cycle: {subscription_cycle}"
+                    )
 
                     if not self.commit:
                         continue
 
                     with reversion.create_revision():
-                        cyclechg = cycle.charge()
+                        subscription_cycle_charge = subscription_cycle.charge()
 
                     with reversion.create_revision():
-                        if cyclechg:
-                            cyclechg.chg.sync_status()
+                        if subscription_cycle_charge:
+                            subscription_cycle_charge.payment_charge.sync_status()
 
-    def collect(self, subprod, cycle):
+    def collect(self, subscription_product, subscription_cycle):
 
-        org = cycle.sub.org
+        org = subscription_cycle.subscription.org
 
-        service = subprod.prod.component
+        service = subscription_product.product.component
         if not service:
-            cycle.update_usage(subprod, None)
+            subscription_cycle.update_usage(subscription_product, None)
             return
         bridge = service.bridge(org)
-        product = subprod.prod.name
+        product = subscription_product.product.name
 
         try:
             usage = bridge.usage(product)
             self.log(f"{org} -> {product}: {usage}")
-            cycle.update_usage(subprod, usage)
+            subscription_cycle.update_usage(subscription_product, usage)
         except KeyError as exc:
             self.log(f"{exc}")

@@ -10,7 +10,7 @@
   data-api-redirect="{{ request.GET.redirect }}"
   data-api-method="POST">
 
-<div data-api-submit="yes">
+<div data-api-subscriptionmit="yes">
 {% csrf_token %}
 {% if form_init %}
 {{ form_init|crispy }}
@@ -37,7 +37,7 @@
 <!-- use existing payment method -->
 
 {% if form_payopt_select %}
-<div class="form-select-payopt collapse show" id="form-select-payopt" data-api-submit="yes">
+<div class="form-select-payopt collapse show" id="form-select-payopt" data-api-subscriptionmit="yes">
   <div>
     <div>
       <h4>
@@ -55,7 +55,7 @@
 
 <!-- create new payment method -->
 
-<div class="form-create-payopt{% if form_payopt_select %} collapse{% endif %}" id="form-create-payopt" data-api-submit="yes">
+<div class="form-create-payopt{% if form_payopt_select %} collapse{% endif %}" id="form-create-payopt" data-api-subscriptionmit="yes">
 <h4>
 {% trans "Create new payment method" %}
 {% if form_payopt_select %}
@@ -119,7 +119,7 @@
 </div>
 <div class="col-xs-12 col-lg-12">
 
-{% if recurring %}
+{% if recurring_product %}
 <div class="review-order">
 <h4>Review Order</h4>
 
@@ -130,22 +130,22 @@
   </div>
 </div>
 
-<h6>{{ recurring.prod.group }} Subscription</h6>
+<h6>{{ recurring_product.product.group }} Subscription</h6>
 <div class="row">
-  <div class="col-xs-12 col-md-4">{{ recurring.prod.description }}</div>
-  <div class="col-xs-12 col-md-4">{{ recurring.type_description }}</div>
-  <div class="col-xs-12 col-md-4">${{ recurring.price }} USD / {{ recurring.unit }}</div>
+  <div class="col-xs-12 col-md-4">{{ recurring_product.product.description }}</div>
+  <div class="col-xs-12 col-md-4">{{ recurring_product.type_description }}</div>
+  <div class="col-xs-12 col-md-4">${{ recurring_product.price }} USD / {{ recurring_product.unit }}</div>
 </div>
 </div>
 <div style="margin-bottom: 15px;"></div>
 {% endif %}
 
-<div data-api-submit="yes">
+<div data-api-subscriptionmit="yes">
 {{ form_agreements|crispy }}
 </div>
 
 <div class="right">
-<button id="billing-setup-submit" type="button"  class="btn btn-primary submit">{% trans 'Continue' %}</button>
+<button id="billing-setup-subscriptionmit" type="button"  class="btn btn-primary subscriptionmit">{% trans 'Continue' %}</button>
 </div>
 
 

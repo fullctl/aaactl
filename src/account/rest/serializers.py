@@ -54,7 +54,7 @@ class PermissionNamespacesMixin:
             for mperm in mperms:
 
                 if mperm.grant_mode == "restricted":
-                    if not mperm.org_managed_perm_set.filter(org=org).exists():
+                    if not mperm.org_managed_permission_set.filter(org=org).exists():
                         continue
 
                 r.append((mperm.namespace, mperm.description))
@@ -112,7 +112,7 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
 @register
 class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
-    ref_tag = "orguser"
+    ref_tag = "org_user"
 
     name = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
@@ -156,10 +156,10 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
 @register
 class OrganizationUserPermissions(PermissionSetterMixin):
-    ref_tag = "orguserperm"
-    rel_fld = "orguser"
+    ref_tag = "org_userperm"
+    rel_fld = "org_user"
 
-    orguser = serializers.PrimaryKeyRelatedField(
+    org_user = serializers.PrimaryKeyRelatedField(
         queryset=models.OrganizationUser.objects.all()
     )
 
@@ -291,9 +291,9 @@ class UserInformation(FormValidationMixin, serializers.ModelSerializer):
 
         if user.email != data.get("email"):
             user.email = data.get("email")
-            usercfg, _ = models.UserSettings.objects.get_or_create(user=user)
-            usercfg.email_confirmed = False
-            usercfg.save()
+            user_settings, _ = models.UserSettings.objects.get_or_create(user=user)
+            user_settings.email_confirmed = False
+            user_settings.save()
 
             models.EmailConfirmation.start(user)
 
@@ -315,7 +315,7 @@ class UserInformationPasswordProtected(UserInformation):
 
 @register
 class UserSettings(FormValidationMixin, serializers.ModelSerializer):
-    ref_tag = "usercfg"
+    ref_tag = "user_settings"
     form = forms.UserSettings
 
     class Meta:
@@ -391,28 +391,28 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         data["org"] = self.context.get("org")
         data.pop("form_data", None)
 
-        inv = models.Invitation.objects.filter(
+        invite = models.Invitation.objects.filter(
             email=data["email"], org=data["org"]
         ).first()
 
-        if inv:
-            inv.created_by = data["created_by"]
+        if invite:
+            invite.created_by = data["created_by"]
             if data.get("service"):
-                inv.service = data["service"]
-            inv.save(update_fields=["created_by", "updated", "service"])
+                invite.service = data["service"]
+            invite.save(update_fields=["created_by", "updated", "service"])
 
         else:
-            inv = models.Invitation.objects.create(status="pending", **data)
+            invite = models.Invitation.objects.create(status="pending", **data)
 
-        inv.send()
+        invite.send()
 
-        return inv
+        return invite
 
 
 @register
 class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
 
-    ref_tag = "start_pwdrst"
+    ref_tag = "start_password_reset"
     required_context = []
     form = forms.StartPasswordReset
 
@@ -456,7 +456,7 @@ class PasswordReset(FormValidationMixin, serializers.Serializer):
 
     def save(self):
         data = self.validated_data
-        instance = data["form_data"]["pwdrst"]
+        instance = data["form_data"]["password_reset"]
         instance.complete(data["password_new"])
         return instance
 
@@ -523,10 +523,10 @@ class OrganizationAPIKey(
 
 @register
 class OrganizationAPIKeyPermissions(PermissionSetterMixin):
-    ref_tag = "orgkeyperm"
-    rel_fld = "orgkey"
+    ref_tag = "org_key_permission"
+    rel_fld = "org_key"
 
-    orgkey = serializers.PrimaryKeyRelatedField(
+    org_key = serializers.PrimaryKeyRelatedField(
         queryset=models.OrganizationAPIKey.objects.all()
     )
 

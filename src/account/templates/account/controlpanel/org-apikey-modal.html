@@ -10,16 +10,16 @@
       </div>
       <div class="modal-body">
         <form
-          class="create_orgkey"
+          class="create_org_key"
           data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
           data-api-action="create_key"
           data-api-method="POST"
         >
-        <div data-api-submit="yes">
-        {{ create_orgkey_form|crispy }}
+        <div data-api-subscriptionmit="yes">
+        {{ create_org_key_form|crispy }}
         </div>
         <div class="right">
-          <button type="button" class="btn btn-manage submit">
+          <button type="button" class="btn btn-manage subscriptionmit">
             {% trans "Create" %}
           </button>
         </div>

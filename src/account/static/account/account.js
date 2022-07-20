@@ -30,7 +30,7 @@ account.ControlPanel = twentyc.cls.define(
         this.resend_confirmation_email = new twentyc.rest.Form(this.elements.resend_confirmation_email);
       $(this.resend_confirmation_email).on("api-post:success", function() {
         this.popoverAlert(
-          this.resend_confirmation_email.element.find('button.submit'),
+          this.resend_confirmation_email.element.find('button.subscriptionmit'),
           "Confirmation email has been sent"
         );
 
@@ -350,9 +350,9 @@ account.OrgKeysList = twentyc.cls.define(
   {
     OrgKeysList : function() {
       this.elements = {}
-      this.elements.orgkey_listing = $('.orgkey-listing')
+      this.elements.org_key_listing = $('.org_key-listing')
 
-      this.rest_api_list = new twentyc.rest.List(this.elements.orgkey_listing);
+      this.rest_api_list = new twentyc.rest.List(this.elements.org_key_listing);
 
       this.rest_api_list.formatters.permissions = function(value, data) {
         if(!data.manageable.match(/ud/))
@@ -400,10 +400,10 @@ account.OrgKeysList = twentyc.cls.define(
       })
 
       // Modal
-      this.elements.orgkey_form = $('form.create_orgkey');
-      if ( this.elements.orgkey_form.length ){
-        this.rest_orgkey_form = new twentyc.rest.Form(this.elements.orgkey_form);
-        $(this.rest_orgkey_form).on("api-write:success", function() {
+      this.elements.org_key_form = $('form.create_org_key');
+      if ( this.elements.org_key_form.length ){
+        this.rest_org_key_form = new twentyc.rest.Form(this.elements.org_key_form);
+        $(this.rest_org_key_form).on("api-write:success", function() {
           $('#orgApiKeyModal').modal('toggle');
           this.rest_api_list.load();
         }.bind(this));
@@ -482,7 +482,7 @@ account.ServiceApplications = twentyc.cls.define(
       this.rest_api_list = new twentyc.rest.List(this.element);
 
       this.rest_api_list.formatters.row = (row, data) => {
-        let redirect_url = data.invite_redirect.replace("{org.slug}", account.org.slug)
+        let redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
         let img= row.find("img.logo")
         row.find("a.redirect").attr("href", redirect_url);
         if(!data.logo) {

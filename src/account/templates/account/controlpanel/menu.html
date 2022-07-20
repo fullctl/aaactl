@@ -34,7 +34,7 @@
             data-api-action="user"
             data-api-method="PUT"
           >
-            <div data-api-submit="yes">
+            <div data-api-subscriptionmit="yes">
             {{ change_user_info_form.email | as_crispy_field }}
             <div class="form-row">
               <div class="form-group col-6 mb-0">
@@ -57,7 +57,7 @@
                 aria-expanded="true"
                 aria-controls="collapseOne">
               Cancel</button>
-              <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
+              <button type="button" class="btn btn-primary subscriptionmit">{% trans "Save" %}</button>
             </div>
           </form>
         </div>
@@ -71,7 +71,7 @@
       </div>
       <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
         <div class="card-body">
-          {% include "account/controlpanel/user-invites.html" with form=usercfg_form %}
+          {% include "account/controlpanel/user-invites.html" with form=user_settings_form %}
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@
       </div>
       <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
         <div class="card-body">
-          {% include "account/controlpanel/user-preferences.html" with form=usercfg_form %}
+          {% include "account/controlpanel/user-preferences.html" with form=user_settings_form %}
         </div>
       </div>
     </div>

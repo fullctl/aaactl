@@ -15,13 +15,13 @@ class Service(HandleRefModel):
     slug = models.CharField(max_length=16, unique=True)
     name = models.CharField(max_length=255, unique=True)
 
-    invite_redirect = models.URLField(
+    service_url = models.URLField(
         _("Service URL"),
         max_length=255,
         null=True,
         help_text=_("URL used to redirect users to the service."),
     )
-    api_host = models.URLField(_("API URL"), max_length=255, null=True, blank=True)
+    api_url = models.URLField(_("API URL"), max_length=255, null=True, blank=True)
     logo = models.URLField(max_length=255, null=True, blank=True)
     group = models.CharField(
         max_length=255,
@@ -46,7 +46,7 @@ class Service(HandleRefModel):
         verbose_name_plural = _("Service Applications")
 
     class HandleRef:
-        tag = "svcapp"
+        tag = "service_application"
 
     def __str__(self):
         return self.name
@@ -58,7 +58,7 @@ class Service(HandleRefModel):
 @grainy_model("service")
 class ServiceAPIEndpoint(HandleRefModel):
 
-    svcapp = models.ForeignKey(
+    service_application = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
         related_name="api_endpoint_set",
@@ -73,4 +73,4 @@ class ServiceAPIEndpoint(HandleRefModel):
         verbose_name_plural = _("API Endpoints")
 
     class HandleRef:
-        tag = "svcapp_api"
+        tag = "service_application_api"

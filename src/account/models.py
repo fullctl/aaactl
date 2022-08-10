@@ -178,16 +178,6 @@ class Organization(HandleRefModel):
                 org_user.is_default = True
                 org_user.save()
 
-            for mperm in ManagedPermission.objects.all():
-
-                if not mperm.can_grant_to_org(self):
-                    continue
-
-                if perms == "r":
-                    mperm.auto_grant_user(self, user)
-                else:
-                    mperm.auto_grant_admin(self, user)
-
         return org_user
 
     @reversion.create_revision()
@@ -255,6 +245,45 @@ class OrganizationUser(HandleRefModel):
         if self.is_default:
             self.user.org_user_set.exclude(id=self.id).update(is_default=False)
         super().save(**kwargs)
+
+
+@reversion.register
+class Role(HandleRefModel):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+    level = models.PositiveIntegerField(help_text=_("Defines the order in which permissions are applied for user's that are in multiple roles. With the lowest level role being applied last."))
+    auto_set_on_creator = models.BooleanField(help_text=_("Automatically give the creators of an organization this role"), default=False)
+    auto_set_on_member = models.BooleanField(help_text=_("Automatically give new members of an organization this role"), default=False)
+
+    class Meta:
+        db_table = "account_role"
+        verbose_name = _("Role")
+        verbose_name_plural = _("Roles")
+
+    class HandleRef:
+        tag = "role"
+
+    def __str__(self):
+        return f"Role: {self.name} ({self.id})"
+
+@reversion.register
+class OrganizationRole(HandleRefModel):
+
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="roles")
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="roles"
+    )
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="organization_roles")
+
+    class Meta:
+        db_table = "account_organization_user_role"
+        verbose_name = _("User role within organization")
+        verbose_name_plural = _("User roles within organization")
+        unique_together = (("org", "user", "role"),)
+
+    class HandleRef:
+        tag = "org_user_role"
+
 
 
 def generate_api_key():
@@ -613,18 +642,6 @@ class ManagedPermission(HandleRefModel):
         help_text=_("How is this permission granted"),
     )
 
-    auto_grant_admins = PermissionField(
-        help_text=_(
-            "Auto grants the permission at the following level to organization admins"
-        )
-    )
-
-    auto_grant_users = PermissionField(
-        help_text=_(
-            "Auto grants the permission at the following level to organization members and api keys"
-        )
-    )
-
     class Meta:
         db_table = "account_managed_permission"
         verbose_name = _("Managed permission")
@@ -632,33 +649,6 @@ class ManagedPermission(HandleRefModel):
 
     class HandleRef:
         tag = "mperm"
-
-    @classmethod
-    def grant_all_key(cls, org_key, admin=False):
-        for mperm in cls.objects.all():
-            mperm.auto_grant_key(org_key, admin=admin)
-
-    @classmethod
-    def grant_all_user(cls, user, admin=False):
-        mperms = [mperm for mperm in cls.objects.all()]
-        for org_user in user.org_user_set.all():
-            for mperm in mperms:
-                if admin:
-                    mperm.auto_grant_admin(org_user.org, org_user.user)
-                else:
-                    mperm.auto_grant_user(org_user.org, org_user.user)
-
-    @classmethod
-    def revoke_all_key(cls, org_key):
-        for mperm in cls.objects.all():
-            mperm.revoke_key(org_key)
-
-    @classmethod
-    def revoke_all_user(cls, user):
-        mperms = [mperm for mperm in cls.objects.all()]
-        for org_user in user.org_user_set.all():
-            for mperm in mperms:
-                mperm.revoke_user(org_user.org, org_user.user)
 
     def __str__(self):
         return f"{self.group} - {self.description}"
@@ -675,55 +665,80 @@ class ManagedPermission(HandleRefModel):
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
-    def auto_grant(self, org):
+    def apply(self, org=None, user=None):
 
-        if not self.can_grant_to_org(org):
-            self.revoke(org)
+        self.revoke(org=org, user=user)
+
+        if org and not self.can_grant_to_org(org):
             return
 
-        for user in org.users:
-            if org.is_admin_user(user):
-                self.auto_grant_admin(org, user)
-            else:
-                self.auto_grant_user(org, user)
+        self.grant(org=org, user=user)
 
-        for key in org.org_key_set.all():
-            self.auto_grant_key(key)
-
-    def revoke(self, org):
-        for user in org.users:
-            self.revoke_user(org, user)
-
-        for key in org.org_key_set.all():
-            self.revoke_key(key)
-
-    def revoke_user(self, org, user):
+    def revoke(self, org=None, user=None):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.delete_permission(ns)
 
-    def revoke_key(self, org_key):
-        org = org_key.org
-        ns = self.namespace.format(org_id=org.pk)
-        org_key.grainy_permissions.delete_permission(ns)
+        qset_auto_grants = self.role_auto_grants.all().select_related("role").order_by("-role__level")
 
-    def auto_grant_admin(self, org, user):
-        ns = self.namespace.format(org_id=org.pk)
-        user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
+        for role_auto_grant in qset_auto_grants:
 
-    def auto_grant_user(self, org, user):
-        ns = self.namespace.format(org_id=org.pk)
-        user.grainy_permissions.add_permission(ns, self.auto_grant_users)
+            qset_org_role = OrganizationRole.objects.filter(role=role_auto_grant.role)
+            qset_org_role = qset_org_role.select_related("org", "user")
 
-    def auto_grant_key(self, org_key, admin=False):
-        org = org_key.org
-        ns = self.namespace.format(org_id=org.pk)
+            if org:
+                qset_org_role = qset_org_role.filter(org=org)
 
-        if admin:
-            perms = self.auto_grant_admins
-        else:
-            perms = self.auto_grant_users
+            if user:
+                qset_org_role = qset_org_role.filter(user=user)
 
-        org_key.grainy_permissions.add_permission(ns, perms)
+            for org_role in qset_org_role:
+                org = org_role.org
+                user = org_role.user
+                ns = self.namespace.format(org_id=org.pk)
+                user.grainy_permissions.delete_permission(ns)
+
+
+    def grant(self, org=None, user=None):
+
+        qset_auto_grants = self.role_auto_grants.all().select_related("role").order_by("-role__level")
+
+        for role_auto_grant in qset_auto_grants:
+
+            qset_org_role = OrganizationRole.objects.filter(role=role_auto_grant.role)
+            qset_org_role = qset_org_role.select_related("org", "user")
+
+            if org:
+                qset_org_role = qset_org_role.filter(org=org)
+
+            if user:
+                qset_org_role = qset_org_role.filter(user=user)
+
+
+            for org_role in qset_org_role:
+                org = org_role.org
+                user = org_role.user
+                ns = self.namespace.format(org_id=org.pk)
+                print("Applying", ns, org, user)
+                user.grainy_permissions.add_permission(ns, role_auto_grant.permissions)
+
+
+@reversion.register
+class ManagedPermissionRoleAutoGrant(HandleRefModel):
+
+    managed_permission = models.ForeignKey(ManagedPermission, related_name="role_auto_grants", on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, related_name="managed_permissions", on_delete=models.CASCADE)
+    permissions = PermissionField(help_text=_("Will grand this level of permissions to the specified role"))
+
+    class Meta:
+        db_table = "account_managed_permission_role_auto_grant"
+        verbose_name = _("Permission assignment for role")
+        verbose_name_plural = _("Permission assignments for roles")
+        unique_together = (("managed_permission", "role"),)
+
+    class HandleRef:
+        tag = "managed_permission_role_auto_grant"
+
+
 
 
 @reversion.register

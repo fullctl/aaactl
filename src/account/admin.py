@@ -1,3 +1,4 @@
+import reversion
 from django import forms
 from django.contrib import admin
 from django_grainy.forms import (
@@ -15,17 +16,26 @@ from account.models import (
     InternalAPIKeyPermission,
     Invitation,
     ManagedPermission,
+    ManagedPermissionRoleAutoGrant,
     Organization,
     OrganizationAPIKey,
     OrganizationAPIKeyPermission,
     OrganizationManagedPermission,
     OrganizationUser,
+    OrganizationRole,
     PasswordReset,
+    Role,
     UserSettings,
 )
 
+from fullctl.django.admin import BaseAdmin
+
 # registered models
 
+@admin.register(Role)
+class RoleAdmin(BaseAdmin):
+    list_display = ("name", "description", "level", "auto_set_on_creator", "auto_set_on_member", "created", "updated")
+    ordering = ("level",)
 
 @admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):
@@ -75,25 +85,31 @@ class OrganizationUserInline(admin.TabularInline):
     model = OrganizationUser
     extra = 1
 
+class OrganizationRoleInline(admin.TabularInline):
+    model = OrganizationRole
+    extra = 1
+    fields = ("user", "role")
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
     search_fields = ("org_user_set__last_name", "name")
-    inlines = (OrganizationUserInline,)
+    inlines = (OrganizationUserInline, OrganizationRoleInline)
 
+    @reversion.create_revision()
     def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=True)
-        for obj in formset.deleted_objects:
-            for mperm in ManagedPermission.objects.all():
-                mperm.revoke_user(obj.org, obj.user)
-        for instance in instances:
-            for mperm in ManagedPermission.objects.all():
-                if instance.org.user == instance.user:
-                    mperm.auto_grant_admin(instance.org, instance.user)
-                else:
-                    mperm.auto_grant_user(instance.org, instance.user)
+        return super().save_formset(request, form, formset, change)
 
+    def _save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=True)
+
+        # handle role deletions
+        for obj in formset.deleted_objects:
+            if isinstance(obj, OrganizationRole):
+                ManagedPermission.revoke_organization_role(obj)
+
+        for instance in instances:
+            continue
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
@@ -115,15 +131,17 @@ class PasswordResetAdmin(admin.ModelAdmin):
     fields = ("version", "status", "user", "email")
 
 
-class ManagedPermissionForm(forms.ModelForm):
+class ManagedPermissionRoleAutoGrantForm(forms.ModelForm):
 
-    auto_grant_admins = PermissionFormField(
+    permissions = PermissionFormField(
         initial=15, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
     )
 
-    auto_grant_users = PermissionFormField(
-        initial=1, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
-    )
+
+class ManagedPermissionRoleAutoGrantInline(admin.TabularInline):
+    form = ManagedPermissionRoleAutoGrantForm
+    model = ManagedPermissionRoleAutoGrant
+    extra = 1
 
 
 @admin.register(ManagedPermission)
@@ -134,13 +152,12 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
         "group",
         "managable",
         "grant_mode",
-        "auto_grant_admins",
-        "auto_grant_users",
         "created",
         "updated",
     )
+    ordering = ("description",)
     search_fields = ("group", "description", "namespace")
-    form = ManagedPermissionForm
+    inlines = (ManagedPermissionRoleAutoGrantInline,)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

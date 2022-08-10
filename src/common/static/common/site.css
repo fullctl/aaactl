@@ -13,6 +13,14 @@
   --danger: #dc3545;
 }
 
+.accordion {
+  --bs-accordion-bg: var(--lightest-gray);
+  --bs-accordion-btn-color: var(--dark-gray);
+  --bs-accordion-btn-padding-y: 1rem;
+  --bs-accordion-btn-padding-x: 1.5rem;
+  --bs-accordion-body-padding-x: 1rem;
+}
+
 body {
   background-color: var(--dark-gray);
   font-family: 'IBM Plex Sans', sans-serif !important;

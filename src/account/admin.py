@@ -134,7 +134,7 @@ class PasswordResetAdmin(admin.ModelAdmin):
 class ManagedPermissionRoleAutoGrantForm(forms.ModelForm):
 
     permissions = PermissionFormField(
-        initial=15, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
+        initial=0, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
     )
 
 
@@ -142,6 +142,7 @@ class ManagedPermissionRoleAutoGrantInline(admin.TabularInline):
     form = ManagedPermissionRoleAutoGrantForm
     model = ManagedPermissionRoleAutoGrant
     extra = 1
+    fields = ("role", "permissions")
 
 
 @admin.register(ManagedPermission)
@@ -173,3 +174,9 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         "reason",
         "created",
     )
+
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj=obj, **kwargs)
+        form.base_fields["managed_permission"].queryset = ManagedPermission.objects.filter(grant_mode="restricted")
+        return form

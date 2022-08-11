@@ -12,6 +12,7 @@ from account.models import (
     APIKey,
     EmailConfirmation,
     ManagedPermission,
+    ManagedPermissionRoleAutoGrant,
     Organization,
     OrganizationManagedPermission,
     OrganizationUser,
@@ -77,27 +78,21 @@ def create_personal_org(sender, **kwargs):
         Organization.personal_org(user)
 
 
-@receiver(post_save, sender=ManagedPermission)
+@receiver(post_save, sender=ManagedPermissionRoleAutoGrant)
 def set_permissions(sender, **kwargs):
 
     created = kwargs.get("created")
-    mperm = kwargs.get("instance")
-
-    if created:
-        for org in Organization.objects.all():
-            mperm.auto_grant(org)
-    else:
-        for org in Organization.objects.all():
-            mperm.revoke(org)
-            mperm.auto_grant(org)
-
-
-@receiver(post_delete, sender=ManagedPermission)
-def revoke_permissions(sender, **kwargs):
-    mperm = kwargs.get("instance")
+    mperm = kwargs.get("instance").managed_permission
 
     for org in Organization.objects.all():
-        mperm.revoke(org)
+        mperm.apply(org=org, role=kwargs.get("instance").role)
+
+@receiver(pre_delete, sender=ManagedPermissionRoleAutoGrant)
+def revoke_permissions(sender, **kwargs):
+    mperm = kwargs.get("instance").managed_permission
+
+    for org in Organization.objects.all():
+        mperm.revoke(org=org, role=kwargs.get("instance").role)
 
 
 @receiver(post_save, sender=OrganizationManagedPermission)
@@ -124,7 +119,7 @@ def save_org_user(sender, **kwargs):
     if not created:
         return
 
-    if instance.org.user == instance.user:
+    if instance.org.org_user_set.count() == 1:
         qset = Role.objects.filter(auto_set_on_creator=True)
     else:
         qset = Role.objects.filter(auto_set_on_member=True)

@@ -22,9 +22,9 @@ cardElement.on('change', function(event) {
     stripe.createToken(cardElement).then(function(result) {
       if(result.token) {
         $('#stripe-token').val(result.token.id)
-        $('#billing-setup-subscriptionmit').attr('disabled', false)
+        $('#billing-setup-submit').attr('disabled', false)
       } else {
-        $('#billing-setup-subscriptionmit').attr('disabled', true)
+        $('#billing-setup-submit').attr('disabled', true)
       }
 
       if(result.error) {
@@ -57,7 +57,7 @@ cardElement.on('change', function(event) {
 </div>
 {% endif %}
 
-<div data-api-subscriptionmit="yes">
+<div data-api-submit="yes">
   <input type="hidden" placeholder="stripe token" name="stripe_token" id="stripe-token" />
 </div>
 

@@ -329,7 +329,7 @@ appears when the header is clicked.*/
   text-decoration: underline;
 }
 
-.user-info button.subscriptionmit {
+.user-info button.submit {
   color: white;
   text-decoration: none;
   background-color: var(--dark-gray);

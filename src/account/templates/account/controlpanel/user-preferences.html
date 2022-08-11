@@ -5,11 +5,11 @@
             data-api-base="{% url "account_api:user-user-settings" %}"
             data-api-method="PUT"
           >
-            <div data-api-subscriptionmit="yes">
+            <div data-api-submit="yes">
             {{ form.opt_promotions | as_crispy_field }}
             </div>
             <div class="right">
-              <button type="button" class="btn btn-primary subscriptionmit">{% trans "Save" %}</button>
+              <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
             </div>
           </form>
 

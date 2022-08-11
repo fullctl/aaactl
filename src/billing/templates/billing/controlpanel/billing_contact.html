@@ -11,18 +11,18 @@
   data-api-action="billing_contact"
   data-api-method="PUT">
 
-  <div style="display:hidden" data-api-subscriptionmit="yes">
+  <div style="display:hidden" data-api-submit="yes">
     <input type="hidden" name="id" value="{{ billing_contact.id }}">
   </div>
 
 
-  <div data-api-subscriptionmit="yes">
+  <div data-api-submit="yes">
   {{ form|crispy }}
   </div>
 
   <div class="row">
     <div class="col-6">
-      <button type="button" class="btn btn-primary subscriptionmit">{% trans "Save" %}</button>
+      <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
     </div>
     <div class="col-6 right">
       {% if permissions.delete_org_billing %}
@@ -30,7 +30,7 @@
         type="button"
         data-api-method="DELETE"
         data-api-redirect="{% url "billing:billing-contacts" %}"
-        class="btn btn-danger subscriptionmit">{% trans "Delete" %}</button>
+        class="btn btn-danger submit">{% trans "Delete" %}</button>
       {% endif %}
     </div>
   </div>
@@ -46,7 +46,7 @@
   class="payment_method-listing"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="payment_methods">
-  <div style="display:none" data-api-subscriptionmit="yes">
+  <div style="display:none" data-api-submit="yes">
     <input type="hidden" name="billing_contact" value="{{ billing_contact.id }}" >
   </div>
   <div class="templates" style="display:none">

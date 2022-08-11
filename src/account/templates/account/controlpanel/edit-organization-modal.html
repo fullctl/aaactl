@@ -16,11 +16,11 @@
           data-api-redirect="{% url "account:controlpanel" %}"
           data-api-method="PUT"
         >
-        <div data-api-subscriptionmit="yes">
+        <div data-api-submit="yes">
         {{ edit_org_form|crispy }}
         </div>
         <div class="right">
-          <button type="button" class="btn btn-manage subscriptionmit">{% trans "Save" %}</button>
+          <button type="button" class="btn btn-manage submit">{% trans "Save" %}</button>
         </div>
         </form>
       </div>

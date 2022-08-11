@@ -30,7 +30,7 @@ account.ControlPanel = twentyc.cls.define(
         this.resend_confirmation_email = new twentyc.rest.Form(this.elements.resend_confirmation_email);
       $(this.resend_confirmation_email).on("api-post:success", function() {
         this.popoverAlert(
-          this.resend_confirmation_email.element.find('button.subscriptionmit'),
+          this.resend_confirmation_email.element.find('button.submit'),
           "Confirmation email has been sent"
         );
 

@@ -6,7 +6,7 @@
   data-api-action="user/keys"
 >
 <div class="templates" style="display:none">
-      <a data-template="row">
+      <div data-template="row">
         <div class="container-fluid personal-key-card">
           <div class="row">
 
@@ -44,24 +44,24 @@
             </div>
           </div>
           <div class="row mt-2 justify-content-between">
-            <div class="pl-0">
+            <div class="pl-0 col">
               <span class="normal-label light-grey">Created: </span>
               <strong><span data-field="created" class="table-text-normal dark-grey"></span></strong>
             </div>
-            <div>
+            <div class="col-md-auto">
               <span class="normal-label">Status: </span>
               <span data-field="status"></span>
             </div>
           </div>
         </div>
-      </a>
+      </div>
 </div>
 
 <div class="list-body"></div>
 </div>
 
-<div class="center">
-  <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#personalApiKeyModal">
+<div class="center mt-3">
+  <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#personalApiKeyModal">
   {% trans "+ Create API Key" %}
   </button>
 </div>

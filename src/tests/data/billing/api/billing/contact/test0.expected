@@ -2,7 +2,7 @@
   "data": 
     [
       {
-        "billcon": 1, 
+        "billing_contact": 1, 
         "custom_name": "Test Customer", 
         "holder": "William Contact",
         "country": "US", 

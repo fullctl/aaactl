@@ -35,4 +35,5 @@ def info(request):
         "version": settings.PACKAGE_VERSION,
         "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
         "cloudflare_analytics_id": settings.CLOUDFLARE_ANALYTICS_ID,
+        "enable_email_confirmation": settings.ENABLE_EMAIL_CONFIRMATION,
     }

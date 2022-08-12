@@ -28,7 +28,7 @@ class Bridge(client.Bridge):
 
         self.service = service
 
-        super().__init__(service.api_host, api_key.key, org_slug)
+        super().__init__(service.api_url, api_key.key, org_slug)
 
     def usage(self, product_name):
         # this should stay {org} and not {org_id} so it uses the org slug
@@ -73,9 +73,9 @@ class Bridge(client.Bridge):
         }
         self.post(path, data=data)
 
-    def sync_orguser(self):
+    def sync_org_user(self):
         path = self._endpoint(
-            "sync_orguser", default="service-bridge/aaactl-sync/orguser/{user_id}/"
+            "sync_org_user", default="service-bridge/aaactl-sync/org_user/{user_id}/"
         )
 
         data = {

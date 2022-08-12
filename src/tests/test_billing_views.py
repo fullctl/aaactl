@@ -62,10 +62,10 @@ def test_setup(client_anon, billing_objects):
 
 
 @pytest.mark.django_db
-def test_setup_billcon_prepop(billing_objects):
+def test_setup_billing_contact_prepop(billing_objects):
     response = billing_objects.client.get(
         reverse("billing:setup")
-        + f"?billcon={billing_objects.billing_contact.id}"
+        + f"?billing_contact={billing_objects.billing_contact.id}"
         + "&"
         + f"org={billing_objects.org.slug}"
     )

@@ -23,12 +23,12 @@
         </td>
       </tr>
     {% endif %}
-    {% for billcon in billing_contacts %}
+    {% for billing_contact in billing_contacts %}
       <tr>
-        <td>{{ billcon.name }}</td>
+        <td>{{ billing_contact.name }}</td>
         <td class="right">
           {% if permissions.update_org_billing %}
-          <a href="{% url "billing:billing-contact" billcon.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
+          <a href="{% url "billing:billing-contact" billing_contact.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
           {% endif %}
         </td>
       </tr>

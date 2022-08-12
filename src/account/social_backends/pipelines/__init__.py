@@ -1,5 +1,7 @@
 import social_core.pipeline.user
 
+from account.models import UserSettings
+
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
 
@@ -40,3 +42,11 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
         user.grainy_permissions.filter(
             namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
         ).exclude(namespace__in=namespaces).delete()
+
+
+def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):
+
+    if user.email and user.email == details.get("email"):
+        user_settings, _ = UserSettings.objects.get_or_create(user=user)
+        user_settings.email_confirmed = True
+        user_settings.save()

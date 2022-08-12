@@ -1,4 +1,5 @@
 import fullctl.django.models.concrete.tasks as task_models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
@@ -25,16 +26,16 @@ def sync_user(sender, **kwargs):
 
 
 @receiver(post_save, sender=OrganizationUser)
-def sync_orguser_add(sender, **kwargs):
+def sync_org_user_add(sender, **kwargs):
     task_models.CallCommand.create_task(
-        "aaactl_sync", "orguser", kwargs["instance"].user_id
+        "aaactl_sync", "org_user", kwargs["instance"].user_id
     )
 
 
 @receiver(post_delete, sender=OrganizationUser)
-def sync_orguser_delete(sender, **kwargs):
+def sync_org_user_delete(sender, **kwargs):
     task_models.CallCommand.create_task(
-        "aaactl_sync", "orguser", kwargs["instance"].user_id
+        "aaactl_sync", "org_user", kwargs["instance"].user_id
     )
 
 
@@ -42,8 +43,11 @@ def sync_orguser_delete(sender, **kwargs):
 def create_user_config(sender, **kwargs):
     if kwargs.get("created"):
         user = kwargs.get("instance")
-        UserSettings.objects.get_or_create(user=user)
-        EmailConfirmation.start(user)
+        if settings.ENABLE_EMAIL_CONFIRMATION:
+            UserSettings.objects.get_or_create(user=user)
+            EmailConfirmation.start(user)
+        else:
+            UserSettings.objects.get_or_create(user=user, email_confirmed=True)
 
 
 @receiver(post_save, sender=get_user_model())
@@ -78,8 +82,7 @@ def set_permissions(sender, **kwargs):
             mperm.auto_grant(org)
     else:
         for org in Organization.objects.all():
-            if not mperm.managable_for_org(org):
-                mperm.revoke(org)
+            mperm.revoke(org)
             mperm.auto_grant(org)
 
 

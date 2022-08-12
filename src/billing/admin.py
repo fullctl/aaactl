@@ -44,22 +44,29 @@ class RecurringProductInline(admin.StackedInline):
 
 @admin.register(Product)
 class ProductAdmin(BaseAdmin):
-    list_display = ("name", "group", "component", "description", "price", "recurring")
+    list_display = (
+        "name",
+        "group",
+        "component",
+        "description",
+        "price",
+        "recurring_product",
+    )
     search_fields = ("name", "component", "group")
-    readonly_fields = BaseAdmin.readonly_fields + ("recurring",)
+    readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
     inlines = (ProductModifierInline, RecurringProductInline)
     form = ProductForm
 
-    def recurring(self, obj):
-        if obj.is_recurring:
+    def recurring_product(self, obj):
+        if obj.is_recurring_product:
             return _("Yes")
         return _("No")
 
 
 @admin.register(ProductModifier)
 class ProductModifieradmin(BaseAdmin):
-    list_display = ("prod", "type", "value", "duration", "code")
-    search_fields = ("prod__name", "code")
+    list_display = ("product", "type", "value", "duration", "code")
+    search_fields = ("product__name", "code")
 
 
 class SubscriptionProductModifierInline(admin.TabularInline):
@@ -76,14 +83,14 @@ class SubscriptionCycleInline(admin.TabularInline):
 
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
-    fields = ("prod",)
+    fields = ("product",)
     extra = 0
 
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
-    list_display = ("group", "org", "cycle", "cycle_start")
-    search_fields = ("group__name", "prod__name", "org__name")
+    list_display = ("group", "org", "subscription_cycle", "subscription_cycle_start")
+    search_fields = ("group__name", "product__name", "org__name")
     inlines = (
         SubscriptionProductInline,
         SubscriptionCycleInline,
@@ -102,30 +109,38 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
-    list_display = ("sub", "start", "end", "charged", "organization_name")
-    search_fields = ("sub__prod__name", "sub__org__name", "group__name", "sub__id")
+    list_display = ("subscription", "start", "end", "charged", "organization_name")
+    search_fields = (
+        "subscription__product__name",
+        "subscription__org__name",
+        "group__name",
+        "subscription__id",
+    )
     inlines = (SubscriptionCycleProductInline, SubscriptionCycleChargeInline)
 
     def organization_name(self, obj):
-        return obj.sub.org.name
+        return obj.subscription.org.name
 
 
 @admin.register(SubscriptionProductModifier)
 class SubscriptionProductModifierAdmin(BaseAdmin):
-    list_display = ("subprod", "type", "value", "valid", "source")
-    search_fields = ("subprod__name", "subprod__sub__org___name")
+    list_display = ("subscription_product", "type", "value", "valid", "source")
+    search_fields = (
+        "subscription_product__name",
+        "subscription_product__subscription__org___name",
+    )
 
 
 class OrderHistoryItemInline(admin.TabularInline):
     model = OrderHistoryItem
     extra = 0
-    fields = ("cycleprod", "description", "price")
+    fields = ("subscription_cycle_product", "description", "price")
 
 
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(BaseAdmin):
-    list_display = ("id", "org", "billcon", "price", "notes", "processed")
-    search_fields = ("billcon__name",)
+    list_display = ("id", "org", "billing_contact", "price", "notes", "processed")
+    search_fields = ("billing_contact__name",)
     inlines = (OrderHistoryItemInline,)
     readonly_fields = ("org",)
 
@@ -141,24 +156,32 @@ class PaymentMethodForm(forms.ModelForm):
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(BaseAdmin):
-    list_display = ("id", "name", "billcon", "processor", "status")
-    search_fields = ("billcon__name",)
+    list_display = ("id", "name", "billing_contact", "processor", "status")
+    search_fields = ("billing_contact__name",)
     form = PaymentMethodForm
 
 
 @admin.register(PaymentCharge)
 class PaymentChargeAdmin(BaseAdmin):
-    list_display = ("id", "pay", "billcon", "price", "status", "created", "updated")
-    search_fields = ("pay__billcon__name",)
+    list_display = (
+        "id",
+        "payment_method",
+        "billing_contact",
+        "price",
+        "status",
+        "created",
+        "updated",
+    )
+    search_fields = ("payment_method__billing_contact__name",)
 
-    def billcon(self, obj):
-        return obj.pay.billcon
+    def billing_contact(self, obj):
+        return obj.payment_method.billing_contact
 
 
 @admin.register(CustomerData)
 class CustomerDataAdmin(BaseAdmin):
-    list_dispaly = ("id", "billcon")
-    search_fields = ("billcon_name",)
+    list_dispaly = ("id", "billing_contact")
+    search_fields = ("billing_contact_name",)
 
 
 @admin.register(ProductGroup)

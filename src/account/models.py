@@ -2,6 +2,7 @@ import datetime
 import secrets
 
 import reversion
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -26,7 +27,7 @@ class UserSettings(HandleRefModel):
     """
 
     user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name="usercfg"
+        get_user_model(), on_delete=models.CASCADE, related_name="user_settings"
     )
     email_confirmed = models.BooleanField(
         default=False, help_text=_("Has the user confirmed his email")
@@ -41,7 +42,7 @@ class UserSettings(HandleRefModel):
         verbose_name_plural = _("User Settings")
 
     class HandleRef:
-        tag = "usercfg"
+        tag = "user_settings"
 
 
 def generate_org_name():
@@ -99,7 +100,7 @@ class Organization(HandleRefModel):
         """
 
         try:
-            return user.orguser_set.get(org__user_id=user.id).org
+            return user.org_user_set.get(org__user_id=user.id).org
         except OrganizationUser.DoesNotExist:
             pass
 
@@ -125,7 +126,7 @@ class Organization(HandleRefModel):
         organization will be returned,
         """
 
-        default_org = user.orguser_set.filter(is_default=True)
+        default_org = user.org_user_set.filter(is_default=True)
 
         if default_org.exists():
             return default_org.first().org
@@ -149,8 +150,8 @@ class Organization(HandleRefModel):
 
     @property
     def users(self):
-        for orguser in self.orguser_set.all():
-            yield orguser.user
+        for org_user in self.org_user_set.all():
+            yield org_user.user
 
     @property
     def label(self):
@@ -169,13 +170,13 @@ class Organization(HandleRefModel):
 
     @reversion.create_revision()
     def add_user(self, user, perms="r"):
-        orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
+        org_user, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
 
-            if user.orguser_set.count() == 2:
+            if user.org_user_set.count() == 2:
                 # switch from personal org to real org as primary org
-                orguser.is_default = True
-                orguser.save()
+                org_user.is_default = True
+                org_user.save()
 
             for mperm in ManagedPermission.objects.all():
 
@@ -187,11 +188,11 @@ class Organization(HandleRefModel):
                 else:
                     mperm.auto_grant_admin(self, user)
 
-        return orguser
+        return org_user
 
     @reversion.create_revision()
     def remove_user(self, user):
-        self.orguser_set.filter(user=user).delete()
+        self.org_user_set.filter(user=user).delete()
         for mperm in ManagedPermission.objects.all():
             mperm.revoke_user(self, user)
 
@@ -215,23 +216,23 @@ class Organization(HandleRefModel):
         Makes this organization the default organization for the user
         """
 
-        orguser = user.orguser_set.filter(org=self).first()
+        org_user = user.org_user_set.filter(org=self).first()
 
-        if not orguser:
+        if not org_user:
             raise KeyError("Not a member of this organization")
 
         # set new default org
-        orguser.is_default = True
-        orguser.save()
+        org_user.is_default = True
+        org_user.save()
 
 
 @reversion.register
 class OrganizationUser(HandleRefModel):
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="orguser_set"
+        get_user_model(), on_delete=models.CASCADE, related_name="org_user_set"
     )
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orguser_set"
+        Organization, on_delete=models.CASCADE, related_name="org_user_set"
     )
 
     is_default = models.BooleanField(
@@ -245,14 +246,14 @@ class OrganizationUser(HandleRefModel):
         verbose_name_plural = _("Organization User Memberships")
 
     class HandleRef:
-        tag = "orguser"
+        tag = "org_user"
 
     def __str__(self):
         return f"{self.org.slug}:{self.user.username} ({self.id})"
 
     def save(self, **kwargs):
         if self.is_default:
-            self.user.orguser_set.exclude(id=self.id).update(is_default=False)
+            self.user.org_user_set.exclude(id=self.id).update(is_default=False)
         super().save(**kwargs)
 
 
@@ -328,7 +329,7 @@ class APIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("API Key Permissions")
 
     class HandleRef:
-        tag = "keyperm"
+        tag = "key_permission"
 
 
 @reversion.register
@@ -371,18 +372,18 @@ class InternalAPIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("Internal API Key Permissions")
 
     class HandleRef:
-        tag = "keyperm"
+        tag = "key_permission"
 
 
 @reversion.register
-@grainy_model(namespace="orgkey", namespace_instance="{namespace}.{instance.org_id}")
+@grainy_model(namespace="org_key", namespace_instance="{namespace}.{instance.org_id}")
 class OrganizationAPIKey(APIKeyBase):
     """
     Describes a organization APIKey
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orgkey_set"
+        Organization, on_delete=models.CASCADE, related_name="org_key_set"
     )
     email = models.EmailField()
 
@@ -392,7 +393,7 @@ class OrganizationAPIKey(APIKeyBase):
         verbose_name_plural = _("Organization API Keys")
 
     class HandleRef:
-        tag = "orgkey"
+        tag = "org_key"
 
 
 @reversion.register
@@ -413,13 +414,13 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("Organization API Key Permissions")
 
     class HandleRef:
-        tag = "orgkeyperm"
+        tag = "org_key_permission"
 
     def __str__(self):
         return f"{self.namespace} ({self.id})"
 
 
-def generate_emconf_secret():
+def generate_email_confirmation_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -436,10 +437,12 @@ class EmailConfirmation(HandleRefModel):
     """
 
     user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name="emconf"
+        get_user_model(), on_delete=models.CASCADE, related_name="email_confirmation"
     )
 
-    secret = models.CharField(max_length=255, default=generate_emconf_secret)
+    secret = models.CharField(
+        max_length=255, default=generate_email_confirmation_secret
+    )
 
     email = models.EmailField()
 
@@ -449,12 +452,16 @@ class EmailConfirmation(HandleRefModel):
         verbose_name_plural = _("Email Confirmation Processes")
 
     class HandleRef:
-        tag = "emconf"
+        tag = "email_confirmation"
 
     @classmethod
     def start(cls, user):
+
+        if not settings.ENABLE_EMAIL_CONFIRMATION:
+            return
+
         try:
-            user.emconf.delete()
+            user.email_confirmation.delete()
         except cls.DoesNotExist:
             pass
 
@@ -480,14 +487,14 @@ class EmailConfirmation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self):
-        usercfg, _ = UserSettings.objects.get_or_create(user=self.user)
-        usercfg.email_confirmed = True
-        usercfg.save()
+        user_settings, _ = UserSettings.objects.get_or_create(user=self.user)
+        user_settings.email_confirmed = True
+        user_settings.save()
 
         self.delete()
 
 
-def generate_pwdrst_secret():
+def generate_password_reset_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -507,7 +514,7 @@ class PasswordReset(HandleRefModel):
         get_user_model(), on_delete=models.CASCADE, related_name="password_reset"
     )
 
-    secret = models.CharField(max_length=255, default=generate_pwdrst_secret)
+    secret = models.CharField(max_length=255, default=generate_password_reset_secret)
 
     email = models.EmailField()
 
@@ -517,7 +524,7 @@ class PasswordReset(HandleRefModel):
         verbose_name_plural = _("Password Reset Processes")
 
     class HandleRef:
-        tag = "pwdrst"
+        tag = "password_reset"
 
     @classmethod
     def start(cls, user):
@@ -627,31 +634,31 @@ class ManagedPermission(HandleRefModel):
         tag = "mperm"
 
     @classmethod
-    def grant_all_key(cls, orgkey, admin=False):
+    def grant_all_key(cls, org_key, admin=False):
         for mperm in cls.objects.all():
-            mperm.auto_grant_key(orgkey, admin=admin)
+            mperm.auto_grant_key(org_key, admin=admin)
 
     @classmethod
     def grant_all_user(cls, user, admin=False):
         mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.orguser_set.all():
+        for org_user in user.org_user_set.all():
             for mperm in mperms:
                 if admin:
-                    mperm.auto_grant_admin(orguser.org, orguser.user)
+                    mperm.auto_grant_admin(org_user.org, org_user.user)
                 else:
-                    mperm.auto_grant_user(orguser.org, orguser.user)
+                    mperm.auto_grant_user(org_user.org, org_user.user)
 
     @classmethod
-    def revoke_all_key(cls, orgkey):
+    def revoke_all_key(cls, org_key):
         for mperm in cls.objects.all():
-            mperm.revoke_key(orgkey)
+            mperm.revoke_key(org_key)
 
     @classmethod
     def revoke_all_user(cls, user):
         mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.orguser_set.all():
+        for org_user in user.org_user_set.all():
             for mperm in mperms:
-                mperm.revoke_user(orguser.org, orguser.user)
+                mperm.revoke_user(org_user.org, org_user.user)
 
     def __str__(self):
         return f"{self.group} - {self.description}"
@@ -662,7 +669,9 @@ class ManagedPermission(HandleRefModel):
             return True
 
         if self.grant_mode == "restricted":
-            return org.org_managed_perm_set.filter(managed_permission=self).exists()
+            return org.org_managed_permission_set.filter(
+                managed_permission=self
+            ).exists()
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
@@ -678,24 +687,24 @@ class ManagedPermission(HandleRefModel):
             else:
                 self.auto_grant_user(org, user)
 
-        for key in org.orgkey_set.all():
+        for key in org.org_key_set.all():
             self.auto_grant_key(key)
 
     def revoke(self, org):
         for user in org.users:
             self.revoke_user(org, user)
 
-        for key in org.orgkey_set.all():
+        for key in org.org_key_set.all():
             self.revoke_key(key)
 
     def revoke_user(self, org, user):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.delete_permission(ns)
 
-    def revoke_key(self, orgkey):
-        org = orgkey.org
+    def revoke_key(self, org_key):
+        org = org_key.org
         ns = self.namespace.format(org_id=org.pk)
-        orgkey.grainy_permissions.delete_permission(ns)
+        org_key.grainy_permissions.delete_permission(ns)
 
     def auto_grant_admin(self, org, user):
         ns = self.namespace.format(org_id=org.pk)
@@ -705,8 +714,8 @@ class ManagedPermission(HandleRefModel):
         ns = self.namespace.format(org_id=org.pk)
         user.grainy_permissions.add_permission(ns, self.auto_grant_users)
 
-    def auto_grant_key(self, orgkey, admin=False):
-        org = orgkey.org
+    def auto_grant_key(self, org_key, admin=False):
+        org = org_key.org
         ns = self.namespace.format(org_id=org.pk)
 
         if admin:
@@ -714,7 +723,7 @@ class ManagedPermission(HandleRefModel):
         else:
             perms = self.auto_grant_users
 
-        orgkey.grainy_permissions.add_permission(ns, perms)
+        org_key.grainy_permissions.add_permission(ns, perms)
 
 
 @reversion.register
@@ -725,11 +734,15 @@ class OrganizationManagedPermission(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     managed_permission = models.ForeignKey(
-        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        ManagedPermission,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     reason = models.CharField(
@@ -738,10 +751,10 @@ class OrganizationManagedPermission(HandleRefModel):
     )
 
     class HandleRef:
-        tag = "org_managed_perm"
+        tag = "org_managed_permission"
 
     class Meta:
-        db_table = "account_org_managed_perms"
+        db_table = "account_org_managed_permissions"
         verbose_name = _("Managed permission for organization")
         verbose_name_plural = _("Managed permissions for organization")
 
@@ -753,14 +766,14 @@ class OrganizationManagedPermission(HandleRefModel):
 class Invitation(HandleRefModel):
     secret = models.CharField(max_length=255, default=generate_invite_secret)
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="inv_set"
+        Organization, on_delete=models.CASCADE, related_name="invite_set"
     )
     created_by = models.ForeignKey(
         get_user_model(),
         null=True,
         blank=False,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
     email = models.EmailField()
     service = models.ForeignKey(
@@ -768,7 +781,7 @@ class Invitation(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
 
     class Meta:
@@ -777,7 +790,7 @@ class Invitation(HandleRefModel):
         verbose_name_plural = _("Invitations")
 
     class HandleRef:
-        tag = "inv"
+        tag = "invite"
 
     @property
     def expired(self):
@@ -805,7 +818,7 @@ class Invitation(HandleRefModel):
                 None,
                 "account/email/invite.txt",
                 {
-                    "inv": self,
+                    "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
                     "host": host_url(),
@@ -815,6 +828,6 @@ class Invitation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self, user):
-        if not self.expired and not self.org.orguser_set.filter(user=user).exists():
+        if not self.expired and not self.org.org_user_set.filter(user=user).exists():
             self.org.add_user(user, "r")
         Invitation.objects.filter(org=self.org, email=self.email).delete()

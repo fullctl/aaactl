@@ -177,6 +177,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "account.social_backends.pipelines.sync_peeringdb",
     "social_core.pipeline.user.user_details",
+    "account.social_backends.pipelines.auto_confirm_email",
 )
 
 # We are using postgres so make use of postgres json field
@@ -231,6 +232,14 @@ REST_FRAMEWORK = {
 }
 
 settings_manager.set_default_append()
+
+# misc aaactl settings
+
+# global toggle email confirmation
+settings_manager.set_option("ENABLE_EMAIL_CONFIRMATION", True)
+
+# automatic email confirm on oauath
+settings_manager.set_option("CONFIRM_EMAIL_ON_OAUTH", True)
 
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")

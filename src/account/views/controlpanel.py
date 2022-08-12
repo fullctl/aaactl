@@ -23,10 +23,10 @@ def index(request):
 
     invitation_form = account.forms.InviteToOrganization(initial=request.GET)
     create_org_form = account.forms.CreateOrganization()
-    create_orgkey_form = account.forms.CreateOrgAPIKey()
+    create_org_key_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()
-    usercfg_form = account.forms.UserSettings(
-        initial={"opt_promotions": user.usercfg.opt_promotions}
+    user_settings_form = account.forms.UserSettings(
+        initial={"opt_promotions": user.user_settings.opt_promotions}
     )
 
     if user.has_usable_password():
@@ -55,9 +55,9 @@ def index(request):
         create_org_form=create_org_form,
         edit_org_form=edit_org_form,
         invitation_form=invitation_form,
-        create_orgkey_form=create_orgkey_form,
+        create_org_key_form=create_org_key_form,
         create_key_form=create_key_form,
-        usercfg_form=usercfg_form,
+        user_settings_form=user_settings_form,
         can_invite=request.perms.check([request.selected_org, "users"], "c"),
     )
 

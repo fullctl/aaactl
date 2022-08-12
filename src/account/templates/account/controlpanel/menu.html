@@ -52,8 +52,8 @@
             <div class="right">
               <button
                 class="btn btn-link cancel-collapse"
-                data-toggle="collapse"
-                data-target="#collapseOne"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseOne"
                 aria-expanded="true"
                 aria-controls="collapseOne">
               Cancel</button>
@@ -120,20 +120,20 @@
       <h5 class="accordion-header" id="headingFour">
         <a tabindex="0"
           id="changePwdPopover"
-          data-container="body"
-          data-trigger="manual"
-          data-toggle="popover"
-          data-content="Password successfully changed"
-          data-placement="top">
-        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseThree">
+          data-bs-container="body"
+          data-bs-trigger="manual"
+          data-bs-toggle="popover"
+          data-bs-content="Password successfully changed"
+          data-bs-placement="top">
+        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
             {% if initial_password %}
-            <h5 class="mb-0">Set Password</h5>
+              Set Password
             {% else %}
-            <h5 class="mb-0">Change Password</h5>
+              Change Password
             {% endif %}
         </button>
       </h5>
-      <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingThree">
+      <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour">
         <div class="accordion-body">
           {% include "account/controlpanel/change-password-card.html" %}
         </div>

@@ -124,7 +124,7 @@ account.ControlPanel = twentyc.cls.define(
         $(btn_make_default).on('api-write:success', ()=>{ this.loadDropDown(); });
         menu.append(btn_make_default.element)
 
-        menu.append(`<a class="dropdown-item org-item" role="button" data-toggle="modal" data-target="#createOrgModal">+ Create Organization</a>`)
+        menu.append(`<a class="dropdown-item org-item text-body" role="button" data-bs-toggle="modal" data-bs-target="#createOrgModal">+ Create Organization</a>`)
       });
       this.dropDown.load();
     },

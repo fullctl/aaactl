@@ -10,13 +10,13 @@
       <div class="col-xs-12 col-sm-auto pl-0">
         <h2>Account Dashboard</h2>
       </div>
-      <div class="col-xs-12 col-sm-auto pl-0">
+      <div class="col-xs-12 col-sm-auto ps-0">
         <div
           class="dropdown org-select"
           data-api-base="{% url "account_api:org-list" %}">
           <div class="custom-divider">
-            <a class="btn org-select-dropdown-header clearfix"
-                href="#" id="dropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
+            <a class="btn org-select-dropdown-header clearfix text-start"
+                href="#" id="dropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
             <div class="dropdown-menu org-select-menu dd-box-shadow list-body"
                  aria-labelledby="dropdownMenuLink"></div>
             {% include "account/controlpanel/create-org-modal.html" %}
@@ -25,14 +25,14 @@
               <a data-template="row" class="dropdown-item org-item">
                 <span data-field="label"></span>
               </a>
-              <a data-template="btn_make_default" class="dropdown-item org-item" data-api-base="{% url "account_api:user-set-default-org" %}">
+              <a data-template="btn_make_default" class="dropdown-item org-item text-body" data-api-base="{% url "account_api:user-set-default-org" %}">
                 <span>{% trans "Set as primary organization" %}</span>
               </a>
           </div>
        </div>
       <div class="ml-2 small-links">
           {% if permissions.update_org_org %}
-          <a href="javascript:void(0)" role="button" data-toggle="modal" data-target="#editOrgModal">Organization Settings</a>
+          <a href="javascript:void(0)" role="button" data-bs-toggle="modal" data-bs-target="#editOrgModal">Organization Settings</a>
           {% endif %}
           {% if permissions.update_org_org and permissions.read_org_billing %}
           <span> | </span>
@@ -92,7 +92,7 @@
         {% include "account/controlpanel/org-apikey-list.html" %}
         {% if permissions.create_org_org_key %}
           <div class="text-center">
-            <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#orgApiKeyModal">
+            <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#orgApiKeyModal">
               {% trans "+ Create API Key" %}
             </button>
           </div>

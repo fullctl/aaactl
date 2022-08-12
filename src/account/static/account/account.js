@@ -743,7 +743,7 @@ account.PendingUsers = twentyc.cls.define(
         if ( value === '' ) {
           return value + '<span class="user-badge ub-pending">Pending</span>';
         } else {
-          return value + '<span class="user-badge ub-pending ml-2">Pending</span>';
+          return value + '<span class="user-badge ub-pending ms-2">Pending</span>';
         }
       }
 

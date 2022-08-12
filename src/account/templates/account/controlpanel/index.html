@@ -7,7 +7,7 @@
   <div class="col-xs-12 col-md-8">
     {% block controlpanel %}
     <div class="row mt-2 justify-content-between">
-      <div class="col-xs-12 col-sm-auto pl-0">
+      <div class="col-xs-12 col-sm-auto ps-0">
         <h2>Account Dashboard</h2>
       </div>
       <div class="col-xs-12 col-sm-auto ps-0">
@@ -30,7 +30,7 @@
               </a>
           </div>
        </div>
-      <div class="ml-2 small-links">
+      <div class="ms-2 small-links">
           {% if permissions.update_org_org %}
           <a href="javascript:void(0)" role="button" data-bs-toggle="modal" data-bs-target="#editOrgModal">Organization Settings</a>
           {% endif %}
@@ -45,7 +45,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col pl-0 mt-4 mb-4">
+      <div class="col ps-0 mt-4 mb-4">
         {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
         <div class="alert alert-warning">
           <div class="row">
@@ -69,7 +69,7 @@
     </div>
     {% if permissions.read_org_user %}
     <div class="row user-container">
-      <div class="col-12 pl-0">
+      <div class="col-12 ps-0">
         {% block users %}
         {% include "account/controlpanel/user-list.html" %}
         {% include "account/controlpanel/pending-user-list.html" %}
@@ -87,7 +87,7 @@
     {% endif %}
     {% if permissions.read_org_org_key %}
     <div class="row key-container">
-      <div class="col-12 pl-0">
+      <div class="col-12 ps-0">
         {% block org_keys %}
         {% include "account/controlpanel/org-apikey-list.html" %}
         {% if permissions.create_org_org_key %}
@@ -105,7 +105,7 @@
 
     {% if permissions.read_org_billing %}
     <div class="row service-container">
-      <div class="col-12 pl-0">
+      <div class="col-12 ps-0">
         {% block services %}
         {% include "account/controlpanel/service-list.html" %}
         {% endblock %}
@@ -114,7 +114,7 @@
     {% endif %}
     {% if permissions.read_org_billing %}
     <div class="row order-history-container">
-      <div class="col-12 pl-0 pr-0">
+      <div class="col-12 ps-0 pe-0">
         <h5>Order History</h5>
         <div
           class="order-history"
@@ -125,7 +125,7 @@
               <tr data-template="row">
                 <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
                 <td scope="col" data-field="processed" class="light-grey"></td>
-                <td scope="col" data-field="price" class="dark-grey pr-4 right "></td>
+                <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
                 <td scope="col" data-field="order_id" class="small-links"></td>
               </tr>
             </table>

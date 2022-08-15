@@ -36,7 +36,14 @@
       <td colspan="3" scope="col">
         <div class="row">
           <div class="col-xs-12 col-md-9 col-lg-10">
-            <div data-field="permissions"></div>
+            <div>
+              <h6>{% trans "Roles" %}</h6>
+              <div data-field="roles"></div>
+            </div>
+            <div class="marg-top">
+              <h6>{% trans "Permissions" %}</h6>
+              <div data-field="permissions"></div>
+            </div>
           </div>
           <div class="col-xs-12 col-md-3 col-lg-2 right">
             <button class="btn btn-slim btn-danger" data-api-action="user" data-api-method="DELETE" data-api-callback="remove" data-confirm="Remove user from organization?">Remove</button>

@@ -12,7 +12,7 @@ def create_roles(apps, schema_editor):
     Role.handleref.all().delete()
 
     Role.handleref.create(name="Admin", level=0, auto_set_on_creator=True)
-    Role.handleref.create(name="Member", level=0, auto_set_on_member=True)
+    Role.handleref.create(name="Member", level=100, auto_set_on_member=True)
 
 def create_auto_grants(apps, schema_editor):
 

@@ -448,6 +448,26 @@ table.table-sm {
   font-size: .875rem;
   line-height: 1.125rem;
   border-radius: 100px;
+
+}
+
+.btn-slim-dynamic {
+  padding: .2rem .75rem;
+  max-height: 1.6rem;
+  font-size: .875rem;
+  line-height: 1.125rem;
+  border-radius: 100px;
+}
+
+
+.btn-slim.role {
+  position: relative;
+  margin-right: 3px;
+}
+
+.btn-slim.role:hover {
+  background-color: #dc3545;
+  color: #fff;
 }
 
 .btn-manage {

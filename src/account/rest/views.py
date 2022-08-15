@@ -1,6 +1,7 @@
 import reversion
 from django.contrib import messages
 from django.utils.translation import gettext as _
+from fullctl.django.rest.core import BadRequest
 from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -306,6 +307,44 @@ class Organization(viewsets.ViewSet):
         org.remove_user(org_user.user)
 
         return Response(Serializers.org_user(instance=org_user, many=False).data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def add_role(self, request, pk, org, auditlog=None):
+
+        user = models.OrganizationUser.objects.get(id=request.data.get("org_user")).user_id
+        role = models.Role.objects.get(id=request.data.get("role"))
+
+        if models.OrganizationRole.objects.filter(org=org, user=user, role=role).exists():
+            return BadRequest({"non_field_errors":[_("User already has this role")]})
+
+        serializer = Serializers.org_user_role(
+            data={
+                "org": org.id,
+                "user": user,
+                "role": request.data.get("role"),
+            },
+            many=False,
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def remove_role(self, request, pk, org, auditlog=None):
+        user = models.OrganizationUser.objects.get(id=request.data.get("org_user")).user_id
+        role = models.Role.objects.get(id=request.data.get("role"))
+        user_role = models.OrganizationRole.objects.get(org=org, user=user, role=role)
+        serializer = Serializers.org_user_role(user_role)
+        response = Response(serializer.data)
+        user_role.delete()
+        return response
 
     @action(detail=True, methods=["PUT"])
     @set_org

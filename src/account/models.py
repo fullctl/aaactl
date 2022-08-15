@@ -641,6 +641,36 @@ class ManagedPermission(HandleRefModel):
     class HandleRef:
         tag = "mperm"
 
+    @classmethod
+    def apply_roles(cls, org, user):
+
+        user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
+
+        print(user_roles)
+
+        # 2) delete all those namespaces for the user in the org
+        for ns in cls.namespaces():
+            print("revoking", ns, org, user)
+            user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
+
+        for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(role__in=user_roles).order_by("-role__level"):
+
+            managed_permission = auto_grant.managed_permission
+
+            if not managed_permission.can_grant_to_org(org):
+                continue
+
+            ns = managed_permission.namespace.format(org_id=org.id)
+            print("granting", auto_grant.role.name, ns, org, user)
+            user.grainy_permissions.add_permission(ns, auto_grant.permissions)
+
+
+
+    @classmethod
+    def namespaces(cls):
+        for managed_permission in cls.objects.all():
+            yield managed_permission.namespace
+
     def __str__(self):
         return f"{self.group} - {self.description}"
 
@@ -673,7 +703,7 @@ class ManagedPermission(HandleRefModel):
         if role:
             qset_auto_grants = qset_auto_grants.filter(role=role)
 
-        qset_auto_grants = qset_auto_grants.select_related("role").order_by("-role__level")
+        qset_auto_grants = qset_auto_grants.select_related("role").order_by("role__level")
 
         for role_auto_grant in qset_auto_grants:
             qset_org_role = OrganizationRole.objects.filter(role=role_auto_grant.role)
@@ -698,7 +728,7 @@ class ManagedPermission(HandleRefModel):
         if role:
             qset_auto_grants = qset_auto_grants.filter(role=role)
 
-        qset_auto_grants = qset_auto_grants.select_related("role").order_by("-role__level")
+        qset_auto_grants = qset_auto_grants.select_related("role").order_by("role__level")
 
         for role_auto_grant in qset_auto_grants:
 

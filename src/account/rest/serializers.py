@@ -109,6 +109,26 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
         return data[self.rel_fld]
 
+@register
+class OrganizationRole(serializers.ModelSerializer):
+
+    name = serializers.CharField(source="role.name", read_only=True)
+
+    ref_tag = "org_user_role"
+
+    class Meta:
+        model = models.OrganizationRole
+        fields = ["id", "role", "name", "org", "user"]
+
+@register
+class Role(serializers.ModelSerializer):
+
+    ref_tag = "role"
+
+    class Meta:
+        model = models.Role
+        fields = ["id", "name"]
+
 
 @register
 class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
@@ -119,10 +139,12 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
     you = serializers.SerializerMethodField()
     manageable = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
+    role_options = serializers.SerializerMethodField()
 
     class Meta:
         model = models.OrganizationUser
-        fields = ["id", "name", "email", "you", "manageable", "permissions"]
+        fields = ["id", "name", "email", "you", "manageable", "role_options", "roles", "permissions"]
 
     def get_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
@@ -132,6 +154,15 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
     def get_you(self, obj):
         return obj.user == self.context.get("user")
+
+    def get_roles(self, obj):
+        return OrganizationRole(obj.user.roles.filter(org_id=obj.org_id), many=True).data
+
+    def get_role_options(self, obj):
+        if not hasattr(self, "_role_options"):
+            self._role_options = list(models.Role.objects.all())
+
+        return Role(self._role_options, many=True).data
 
     def get_manageable(self, obj):
         perms = self.context.get("perms")

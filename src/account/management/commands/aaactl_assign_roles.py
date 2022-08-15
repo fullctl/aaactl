@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.management.commands.base import CommandInterface
 
-from account.models import Organization, OrganizationRole
+from account.models import Role, Organization, OrganizationRole
 from applications.models import Service
 from applications.service_bridge import Bridge
 
@@ -28,12 +28,12 @@ class Command(CommandInterface):
             if org_role.exists():
                 continue
 
-            if check_permissions(org, user, "c") or org.user == user:
+            if check_permissions(user, org, "c") or org.user == user:
                 role = Role.objects.get(name="Admin")
             else:
                 role = Role.objects.get(name="Member")
 
-            self.log(f"assigning role {role} to {user}")
+            self.log_info(f"assigning role {role} to {user} in {org} ({org.id})")
 
             OrganizationRole.objects.get_or_create(
                 org=org, user=user, role=role

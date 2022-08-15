@@ -1,6 +1,7 @@
 import reversion
 from django import forms
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django_grainy.forms import (
     PERM_CHOICES_FOR_FIELD,
     BitmaskSelect,
@@ -84,11 +85,18 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
 class OrganizationUserInline(admin.TabularInline):
     model = OrganizationUser
     extra = 1
+    fields = ("user", "is_default")
 
 class OrganizationRoleInline(admin.TabularInline):
     model = OrganizationRole
     extra = 1
     fields = ("user", "role")
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj=obj, **kwargs)
+        if obj:
+            formset.form.base_fields["user"].queryset = get_user_model().objects.filter(org_user_set__org=obj)
+        return formset
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
@@ -100,16 +108,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_formset(self, request, form, formset, change):
         return super().save_formset(request, form, formset, change)
 
-    def _save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=True)
-
-        # handle role deletions
-        for obj in formset.deleted_objects:
-            if isinstance(obj, OrganizationRole):
-                ManagedPermission.revoke_organization_role(obj)
-
-        for instance in instances:
-            continue
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):

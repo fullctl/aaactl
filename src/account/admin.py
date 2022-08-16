@@ -8,6 +8,7 @@ from django_grainy.forms import (
     PermissionFormField,
     UserPermissionForm,
 )
+from fullctl.django.admin import BaseAdmin
 
 from account.models import (
     APIKey,
@@ -22,17 +23,16 @@ from account.models import (
     OrganizationAPIKey,
     OrganizationAPIKeyPermission,
     OrganizationManagedPermission,
-    OrganizationUser,
     OrganizationRole,
+    OrganizationUser,
     PasswordReset,
     Role,
     UserPermissionOverride,
     UserSettings,
 )
 
-from fullctl.django.admin import BaseAdmin
-
 # registered models
+
 
 @admin.register(UserPermissionOverride)
 class UserPermissionOverrideAdmin(BaseAdmin):
@@ -44,10 +44,20 @@ class UserPermissionOverrideAdmin(BaseAdmin):
         "org__slug",
     )
 
+
 @admin.register(Role)
 class RoleAdmin(BaseAdmin):
-    list_display = ("name", "description", "level", "auto_set_on_creator", "auto_set_on_member", "created", "updated")
+    list_display = (
+        "name",
+        "description",
+        "level",
+        "auto_set_on_creator",
+        "auto_set_on_member",
+        "created",
+        "updated",
+    )
     ordering = ("level",)
+
 
 @admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):
@@ -98,6 +108,7 @@ class OrganizationUserInline(admin.TabularInline):
     extra = 1
     fields = ("user", "is_default")
 
+
 class OrganizationRoleInline(admin.TabularInline):
     model = OrganizationRole
     extra = 1
@@ -106,8 +117,11 @@ class OrganizationRoleInline(admin.TabularInline):
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj=obj, **kwargs)
         if obj:
-            formset.form.base_fields["user"].queryset = get_user_model().objects.filter(org_user_set__org=obj)
+            formset.form.base_fields["user"].queryset = get_user_model().objects.filter(
+                org_user_set__org=obj
+            )
         return formset
+
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
@@ -174,6 +188,10 @@ class ManagedPermissionAdmin(admin.ModelAdmin):
             return ("namespace",)
         return super().get_readonly_fields(request, obj)
 
+    @reversion.create_revision()
+    def save_formset(self, request, form, formset, change):
+        return super().save_formset(request, form, formset, change)
+
 
 @admin.register(OrganizationManagedPermission)
 class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
@@ -184,8 +202,9 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         "created",
     )
 
-
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
-        form.base_fields["managed_permission"].queryset = ManagedPermission.objects.filter(grant_mode="restricted")
+        form.base_fields[
+            "managed_permission"
+        ].queryset = ManagedPermission.objects.filter(grant_mode="restricted")
         return form

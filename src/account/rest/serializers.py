@@ -3,8 +3,8 @@ import re
 
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.translation import gettext as _
-from django_grainy.util import Permissions
 from django_grainy.helpers import int_flags
+from django_grainy.util import Permissions
 from rest_framework import serializers
 
 import account.forms as forms
@@ -110,6 +110,7 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
         return data[self.rel_fld]
 
+
 @register
 class OrganizationRole(serializers.ModelSerializer):
 
@@ -120,6 +121,7 @@ class OrganizationRole(serializers.ModelSerializer):
     class Meta:
         model = models.OrganizationRole
         fields = ["id", "role", "name", "org", "user"]
+
 
 @register
 class Role(serializers.ModelSerializer):
@@ -145,7 +147,16 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.OrganizationUser
-        fields = ["id", "name", "email", "you", "manageable", "role_options", "roles", "permissions"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "you",
+            "manageable",
+            "role_options",
+            "roles",
+            "permissions",
+        ]
 
     def get_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
@@ -157,7 +168,9 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
         return obj.user == self.context.get("user")
 
     def get_roles(self, obj):
-        return OrganizationRole(obj.user.roles.filter(org_id=obj.org_id), many=True).data
+        return OrganizationRole(
+            obj.user.roles.filter(org_id=obj.org_id), many=True
+        ).data
 
     def get_role_options(self, obj):
         if not hasattr(self, "_role_options"):
@@ -173,9 +186,11 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
     def get_permissions(self, obj):
 
-
         if not hasattr(obj, "_overrides"):
-            obj._overrides = dict([(o.namespace, o.id) for o in obj.user.permission_overrides.filter(org=obj.org)])
+            obj._overrides = {
+                o.namespace: o.id
+                for o in obj.user.permission_overrides.filter(org=obj.org)
+            }
 
         perms = Permissions(obj.user)
         rv = {
@@ -183,7 +198,7 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
                 "override": obj._overrides.get(ns.format(org_id=obj.org.id)),
-                #"override": obj.user.permission_overrides.filter(namespace=ns.format(org_id=obj.org.id)).exists(),
+                # "override": obj.user.permission_overrides.filter(namespace=ns.format(org_id=obj.org.id)).exists(),
             }
             for ns, label in self.permission_namespaces(obj.org)
         }
@@ -217,17 +232,21 @@ class OrganizationUserPermissions(PermissionSetterMixin):
         user = self.permission_holder
 
         try:
-            override = models.UserPermissionOverride.objects.get(namespace=namespace, org=org, user=user)
+            override = models.UserPermissionOverride.objects.get(
+                namespace=namespace, org=org, user=user
+            )
             override.permissions = int_flags(permissions)
         except models.UserPermissionOverride.DoesNotExist:
             override = models.UserPermissionOverride.objects.create(
-                namespace=namespace, org=org, user=user, permissions=int_flags(permissions)
+                namespace=namespace,
+                org=org,
+                user=user,
+                permissions=int_flags(permissions),
             )
 
         data["override_id"] = override.id
 
         return data[self.rel_fld]
-
 
 
 @register

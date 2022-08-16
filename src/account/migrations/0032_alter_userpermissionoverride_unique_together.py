@@ -8,12 +8,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('account', '0031_user_permission_override'),
+        ("account", "0031_user_permission_override"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='userpermissionoverride',
-            unique_together={('user', 'org', 'namespace')},
+            name="userpermissionoverride",
+            unique_together={("user", "org", "namespace")},
         ),
     ]

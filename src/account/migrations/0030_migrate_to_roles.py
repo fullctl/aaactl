@@ -2,8 +2,6 @@
 
 from django.db import migrations
 
-from django_grainy.util import check_permissions
-from django.contrib.auth import get_user_model
 
 def create_roles(apps, schema_editor):
 
@@ -13,6 +11,7 @@ def create_roles(apps, schema_editor):
 
     Role.handleref.create(name="Admin", level=0, auto_set_on_creator=True)
     Role.handleref.create(name="Member", level=100, auto_set_on_member=True)
+
 
 def create_auto_grants(apps, schema_editor):
 
@@ -33,7 +32,7 @@ def create_auto_grants(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0029_permission_roles_2'),
+        ("account", "0029_permission_roles_2"),
     ]
 
     operations = [

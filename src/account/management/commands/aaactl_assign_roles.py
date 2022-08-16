@@ -1,11 +1,9 @@
 from django.contrib.auth import get_user_model
+from django_grainy.util import check_permissions
 from fullctl.django.management.commands.base import CommandInterface
 
-from account.models import Role, Organization, OrganizationRole
-from applications.models import Service
-from applications.service_bridge import Bridge
+from account.models import Organization, OrganizationRole, Role
 
-from django_grainy.util import check_permissions
 
 class Command(CommandInterface):
 
@@ -35,8 +33,4 @@ class Command(CommandInterface):
 
             self.log_info(f"assigning role {role} to {user} in {org} ({org.id})")
 
-            OrganizationRole.objects.get_or_create(
-                org=org, user=user, role=role
-            )
-
-
+            OrganizationRole.objects.get_or_create(org=org, user=user, role=role)

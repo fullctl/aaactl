@@ -11,11 +11,13 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 from django_grainy.models import Permission, PermissionField, PermissionManager
-from django_grainy.util import Permissions, check_permissions
+from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 
 from common.email import email_noreply
 from common.models import HandleRefModel
+
+from account.tasks import UpdatePermissions
 
 # Create your models here.
 
@@ -242,9 +244,19 @@ class OrganizationUser(HandleRefModel):
 class Role(HandleRefModel):
     name = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=255, null=True, blank=True)
-    level = models.PositiveIntegerField(help_text=_("Defines the order in which permissions are applied for user's that are in multiple roles. With the lowest level role being applied last."))
-    auto_set_on_creator = models.BooleanField(help_text=_("Automatically give the creators of an organization this role"), default=False)
-    auto_set_on_member = models.BooleanField(help_text=_("Automatically give new members of an organization this role"), default=False)
+    level = models.PositiveIntegerField(
+        help_text=_(
+            "Defines the order in which permissions are applied for user's that are in multiple roles. With the lowest level role being applied last."
+        )
+    )
+    auto_set_on_creator = models.BooleanField(
+        help_text=_("Automatically give the creators of an organization this role"),
+        default=False,
+    )
+    auto_set_on_member = models.BooleanField(
+        help_text=_("Automatically give new members of an organization this role"),
+        default=False,
+    )
 
     class Meta:
         db_table = "account_role"
@@ -257,14 +269,19 @@ class Role(HandleRefModel):
     def __str__(self):
         return f"Role: {self.name} ({self.id})"
 
+
 @reversion.register
 class OrganizationRole(HandleRefModel):
 
-    org = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="roles")
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="roles"
+    )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, related_name="roles"
     )
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="organization_roles")
+    role = models.ForeignKey(
+        Role, on_delete=models.PROTECT, related_name="organization_roles"
+    )
 
     class Meta:
         db_table = "account_organization_user_role"
@@ -274,7 +291,6 @@ class OrganizationRole(HandleRefModel):
 
     class HandleRef:
         tag = "org_user_role"
-
 
 
 def generate_api_key():
@@ -604,8 +620,16 @@ class UserPermissionOverride(HandleRefModel):
     directly to the user through the dashboard interface
     """
 
-    user = models.ForeignKey(get_user_model(), related_name="permission_overrides", on_delete=models.CASCADE)
-    org = models.ForeignKey(Organization, null=True, blank=True, related_name="permission_overrides", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        get_user_model(), related_name="permission_overrides", on_delete=models.CASCADE
+    )
+    org = models.ForeignKey(
+        Organization,
+        null=True,
+        blank=True,
+        related_name="permission_overrides",
+        on_delete=models.CASCADE,
+    )
     namespace = models.CharField(max_length=255)
     permissions = PermissionField()
 
@@ -671,11 +695,12 @@ class ManagedPermission(HandleRefModel):
 
         # delete all those namespaces for the user in the org
         for ns in cls.namespaces():
-            print("revoke", user, ns)
             user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
 
         # re-apply automatically granted permissions through roles
-        for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(role__in=user_roles).order_by("-role__level"):
+        for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(
+            role__in=user_roles
+        ).order_by("-role__level"):
 
             managed_permission = auto_grant.managed_permission
 
@@ -683,14 +708,34 @@ class ManagedPermission(HandleRefModel):
                 continue
 
             ns = managed_permission.namespace.format(org_id=org.id)
-            print("grant", user, ns)
+            print("granting", ns, user)
             user.grainy_permissions.add_permission(ns, auto_grant.permissions)
 
         # re-apply permission overrides
         for override in UserPermissionOverride.objects.filter(user=user):
-            print("override grant", user, override.namespace)
             override.apply()
 
+    @classmethod
+    def apply_roles_all(cls, org_id=None):
+
+        """
+        Reapplies roles for all users across all orgs
+
+        TODO: This is a costly operation, and should eventually be replaced
+        with something that does batch inserts, especially once the
+        number of active users grow.
+
+        Alternatively call it from a task. Or both.
+        """
+
+        org_qset = Organization.objects.all()
+
+        if org_id:
+            org_qset = org_qset.filter(id=org_id)
+
+        for org in org_qset:
+            for user in org.org_user_set.all().select_related("user", "org"):
+                cls.apply_roles(org, user.user)
 
     @classmethod
     def namespaces(cls):
@@ -713,13 +758,18 @@ class ManagedPermission(HandleRefModel):
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
 
-
 @reversion.register
 class ManagedPermissionRoleAutoGrant(HandleRefModel):
 
-    managed_permission = models.ForeignKey(ManagedPermission, related_name="role_auto_grants", on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, related_name="managed_permissions", on_delete=models.CASCADE)
-    permissions = PermissionField(help_text=_("Will grand this level of permissions to the specified role"))
+    managed_permission = models.ForeignKey(
+        ManagedPermission, related_name="role_auto_grants", on_delete=models.CASCADE
+    )
+    role = models.ForeignKey(
+        Role, related_name="managed_permissions", on_delete=models.CASCADE
+    )
+    permissions = PermissionField(
+        help_text=_("Will grand this level of permissions to the specified role")
+    )
 
     class Meta:
         db_table = "account_managed_permission_role_auto_grant"
@@ -729,8 +779,6 @@ class ManagedPermissionRoleAutoGrant(HandleRefModel):
 
     class HandleRef:
         tag = "managed_permission_role_auto_grant"
-
-
 
 
 @reversion.register
@@ -764,9 +812,6 @@ class OrganizationManagedPermission(HandleRefModel):
         db_table = "account_org_managed_permissions"
         verbose_name = _("Managed permission for organization")
         verbose_name_plural = _("Managed permissions for organization")
-
-    def apply(self):
-        self.managed_permission.apply(self.org)
 
 
 @reversion.register

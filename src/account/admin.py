@@ -26,12 +26,23 @@ from account.models import (
     OrganizationRole,
     PasswordReset,
     Role,
+    UserPermissionOverride,
     UserSettings,
 )
 
 from fullctl.django.admin import BaseAdmin
 
 # registered models
+
+@admin.register(UserPermissionOverride)
+class UserPermissionOverrideAdmin(BaseAdmin):
+    list_display = ("user", "org", "namespace", "permissions", "created", "updated")
+    search_fields = (
+        "user__username",
+        "user__email",
+        "org__name",
+        "org__slug",
+    )
 
 @admin.register(Role)
 class RoleAdmin(BaseAdmin):

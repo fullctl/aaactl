@@ -4,6 +4,7 @@ import re
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.translation import gettext as _
 from django_grainy.util import Permissions
+from django_grainy.helpers import int_flags
 from rest_framework import serializers
 
 import account.forms as forms
@@ -171,11 +172,18 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
         return "r"
 
     def get_permissions(self, obj):
+
+
+        if not hasattr(obj, "_overrides"):
+            obj._overrides = dict([(o.namespace, o.id) for o in obj.user.permission_overrides.filter(org=obj.org)])
+
         perms = Permissions(obj.user)
         rv = {
             ns: {
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
+                "override": obj._overrides.get(ns.format(org_id=obj.org.id)),
+                #"override": obj.user.permission_overrides.filter(namespace=ns.format(org_id=obj.org.id)).exists(),
             }
             for ns, label in self.permission_namespaces(obj.org)
         }
@@ -190,6 +198,8 @@ class OrganizationUserPermissions(PermissionSetterMixin):
     ref_tag = "org_userperm"
     rel_fld = "org_user"
 
+    override_id = serializers.IntegerField(read_only=True)
+
     org_user = serializers.PrimaryKeyRelatedField(
         queryset=models.OrganizationUser.objects.all()
     )
@@ -197,6 +207,27 @@ class OrganizationUserPermissions(PermissionSetterMixin):
     @property
     def permission_holder(self):
         return self.validated_data[self.rel_fld].user
+
+    def save(self):
+        data = self.validated_data
+        org = data["org"]
+        component = data["component"]
+        permissions = data["permissions"]
+        namespace = component.format(org_id=org.id)
+        user = self.permission_holder
+
+        try:
+            override = models.UserPermissionOverride.objects.get(namespace=namespace, org=org, user=user)
+            override.permissions = int_flags(permissions)
+        except models.UserPermissionOverride.DoesNotExist:
+            override = models.UserPermissionOverride.objects.create(
+                namespace=namespace, org=org, user=user, permissions=int_flags(permissions)
+            )
+
+        data["override_id"] = override.id
+
+        return data[self.rel_fld]
+
 
 
 @register

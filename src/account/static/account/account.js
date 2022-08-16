@@ -304,6 +304,8 @@ account.UsersList = twentyc.cls.define(
 
       console.log("REST API LIST", rest_api_list)
 
+      // user permission management
+
       this.rest_api_list.formatters.permissions = function(value, data) {
         if(!data.manageable.match(/ud/))
           return;
@@ -316,10 +318,43 @@ account.UsersList = twentyc.cls.define(
           widget.fill({component:component});
           widget.set_flag_values(value[component]);
           editor.find('[data-field="component"]').text(label);
+
+          $(widget).on("api-write:success", function(e, ev, d, response) {
+            this.element.addClass("override");
+            var data = response.first();
+            data.perms = data.permissions;
+            this.set_flag_values(data);
+            console.log("DATA",data);
+            this.override_id = data["override_id"];
+          });
+
+          if(value[component].override) {
+            editor.addClass("override");
+          }
+
+          var node_remove_override = editor.find('.delete-override')
+          node_remove_override.
+            data("api-base", widget.base_url).
+            data("api-action", "remove_permissions");
+
+          var btn_remove_override = new twentyc.rest.Button(editor.find('.delete-override'));
+          widget.override_id = value[component].override;
+          btn_remove_override.form = widget;
+
+          $(btn_remove_override).on("api-write:before", function (ev, e, data) {
+            data["id"] = this.form.override_id;
+          });
+          $(btn_remove_override).on("api-write:success", function (ev, e, data, response) {
+            $(this.element).parents(".permissions").removeClass("override");
+            this.form.set_flag_values(response.first());
+          });
+
           container.append(editor)
         }
         return container;
       }.bind(this.rest_api_list)
+
+      // user role management
 
       this.rest_api_list.formatters.roles = function(value, data) {
         if(!data.manageable.match(/ud/))
@@ -378,6 +413,7 @@ account.UsersList = twentyc.cls.define(
         return container;
       }.bind(this.rest_api_list)
 
+      // user management
 
       this.rest_api_list.formatters.row = function(row,data) {
         var manage_container = row.filter('.manage')

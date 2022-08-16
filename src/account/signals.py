@@ -18,6 +18,7 @@ from account.models import (
     OrganizationUser,
     OrganizationRole,
     Role,
+    UserPermissionOverride,
     UserSettings,
 )
 
@@ -127,24 +128,21 @@ def save_org_user(sender, **kwargs):
     for role in qset:
         OrganizationRole.objects.get_or_create(user=instance.user, org=instance.org, role=role)
 
-"""
-@receiver(post_save, sender=OrganizationRole)
-def save_org_role(sender, **kwargs):
-    instance = kwargs.get("instance")
-    ManagedPermission.apply_roles(instance.org, instance.user)
-"""
-
-
 @receiver(post_delete, sender=OrganizationRole)
 def del_org_role(sender, **kwargs):
+    instance = kwargs.get("instance")
+    ManagedPermission.apply_roles(instance.org, instance.user)
+
+@receiver(post_delete, sender=UserPermissionOverride)
+def del_user_permission_override(sender, **kwargs):
     instance = kwargs.get("instance")
     ManagedPermission.apply_roles(instance.org, instance.user)
 
 def sync_roles(**kwargs):
     for vs in kwargs.get("versions"):
         instance = vs.object
-
-        if isinstance(instance, OrganizationRole):
+        if isinstance(instance, (OrganizationRole, UserPermissionOverride)):
             ManagedPermission.apply_roles(instance.org, instance.user)
+
 
 post_revision_commit.connect(sync_roles)

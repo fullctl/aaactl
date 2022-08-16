@@ -655,3 +655,22 @@ td.status {
   text-decoration: underline;
 }
 
+/*
+ * user management in organization
+ */
+
+div.permissions {
+  opacity: 0.66;
+}
+
+div.permissions.override {
+  opacity: 1;
+}
+
+div.permissions .delete-override {
+  display: none;
+}
+
+div.permissions.override .delete-override {
+  display: inline;
+}

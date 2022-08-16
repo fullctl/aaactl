@@ -596,6 +596,29 @@ def generate_invite_secret():
 
 
 @reversion.register
+class UserPermissionOverride(HandleRefModel):
+
+    """
+    Describes a permission override for a user
+    usually set by manually granting a permission level
+    directly to the user through the dashboard interface
+    """
+
+    user = models.ForeignKey(get_user_model(), related_name="permission_overrides", on_delete=models.CASCADE)
+    org = models.ForeignKey(Organization, null=True, blank=True, related_name="permission_overrides", on_delete=models.CASCADE)
+    namespace = models.CharField(max_length=255)
+    permissions = PermissionField()
+
+    class Meta:
+        verbose_name = _("User permission override")
+        verbose_name_plural = _("User permission overrides")
+        unique_together = (("user", "org", "namespace"),)
+
+    def apply(self):
+        self.user.grainy_permissions.add_permission(self.namespace, self.permissions)
+
+
+@reversion.register
 class ManagedPermission(HandleRefModel):
 
     """
@@ -646,13 +669,12 @@ class ManagedPermission(HandleRefModel):
 
         user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
 
-        print(user_roles)
-
-        # 2) delete all those namespaces for the user in the org
+        # delete all those namespaces for the user in the org
         for ns in cls.namespaces():
-            print("revoking", ns, org, user)
+            print("revoke", user, ns)
             user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
 
+        # re-apply automatically granted permissions through roles
         for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(role__in=user_roles).order_by("-role__level"):
 
             managed_permission = auto_grant.managed_permission
@@ -661,9 +683,13 @@ class ManagedPermission(HandleRefModel):
                 continue
 
             ns = managed_permission.namespace.format(org_id=org.id)
-            print("granting", auto_grant.role.name, ns, org, user)
+            print("grant", user, ns)
             user.grainy_permissions.add_permission(ns, auto_grant.permissions)
 
+        # re-apply permission overrides
+        for override in UserPermissionOverride.objects.filter(user=user):
+            print("override grant", user, override.namespace)
+            override.apply()
 
 
     @classmethod
@@ -686,66 +712,6 @@ class ManagedPermission(HandleRefModel):
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
-    def apply(self, org=None, user=None, role=None):
-
-        self.revoke(org=org, user=user, role=role)
-
-        if org and not self.can_grant_to_org(org):
-            return
-
-        self.grant(org=org, user=user, role=role)
-
-    def revoke(self, org=None, user=None, role=None):
-        ns = self.namespace.format(org_id=org.pk)
-
-        qset_auto_grants = self.role_auto_grants.all()
-
-        if role:
-            qset_auto_grants = qset_auto_grants.filter(role=role)
-
-        qset_auto_grants = qset_auto_grants.select_related("role").order_by("role__level")
-
-        for role_auto_grant in qset_auto_grants:
-            qset_org_role = OrganizationRole.objects.filter(role=role_auto_grant.role)
-            qset_org_role = qset_org_role.select_related("org", "user")
-
-            if org:
-                qset_org_role = qset_org_role.filter(org=org)
-
-            if user:
-                qset_org_role = qset_org_role.filter(user=user)
-
-            for org_role in qset_org_role:
-                ns = self.namespace.format(org_id=org_role.org.pk)
-                print("Revoking", ns, org_role.org, org_role.user, org_role.role)
-                org_role.user.grainy_permissions.delete_permission(ns)
-
-
-    def grant(self, org=None, user=None, role=None):
-
-        qset_auto_grants = self.role_auto_grants.all()
-
-        if role:
-            qset_auto_grants = qset_auto_grants.filter(role=role)
-
-        qset_auto_grants = qset_auto_grants.select_related("role").order_by("role__level")
-
-        for role_auto_grant in qset_auto_grants:
-
-            qset_org_role = OrganizationRole.objects.filter(role=role_auto_grant.role)
-            qset_org_role = qset_org_role.select_related("org", "user")
-
-            if org:
-                qset_org_role = qset_org_role.filter(org=org)
-
-            if user:
-                qset_org_role = qset_org_role.filter(user=user)
-
-
-            for org_role in qset_org_role:
-                ns = self.namespace.format(org_id=org.pk)
-                print("Applying", ns, org_role.org, org_role.user, org_role.role)
-                org_role.user.grainy_permissions.add_permission(ns, role_auto_grant.permissions)
 
 
 @reversion.register

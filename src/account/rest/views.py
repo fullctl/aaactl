@@ -1,6 +1,9 @@
 import reversion
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
+from django_grainy.util import get_permissions
+from django_grainy.helpers import str_flags
 from fullctl.django.rest.core import BadRequest
 from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
@@ -365,6 +368,22 @@ class Organization(viewsets.ViewSet):
         serializer.save()
 
         return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def remove_permissions(self, request, pk, org, auditlog=None):
+        override = models.UserPermissionOverride.objects.get(org=org, id=request.data.get("id"))
+        user = override.user
+        namespace = override.namespace
+        override.delete()
+        permissions = get_permissions(get_user_model().objects.get(id=user.id), namespace)
+
+        return Response(
+            { "perms": str_flags(permissions) }
+        )
+
 
     @action(detail=True, methods=["GET"])
     @set_org

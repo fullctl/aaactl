@@ -302,8 +302,6 @@ account.UsersList = twentyc.cls.define(
 
       var rest_api_list = this.rest_api_list;
 
-      console.log("REST API LIST", rest_api_list)
-
       // user permission management
 
       this.rest_api_list.formatters.permissions = function(value, data) {
@@ -366,31 +364,53 @@ account.UsersList = twentyc.cls.define(
           var badge = $('<button>').addClass("btn btn-manage btn-slim role").attr("data-confirm", "Remove user from "+label+" role?");
           badge.append($('<span>').text(label));
 
-          badge.data('api-base', rest_api_list.base_url).data('api-action', 'remove_role');
+          badge.data('api-base', rest_api_list.base_url).
+            data('api-action', 'remove_role').
+            data('role', role_id).
+            data("orguser", data.id);
 
           var btn_role = new twentyc.rest.Button(badge);
 
-          $(btn_role).on("api-write:before", (ev, e, data_o, data_r) => {
+          $(btn_role).on("api-write:before", function (ev, e, data_o, data_r) {
             data_o["org_user"] = data.id;
-            data_o["role"] = role_id;
+            data_o["role"] = this.element.data('role');
           });
 
-          $(btn_role).on("api-write:success", ()=> { rest_api_list.load() });
+          $(btn_role).on("api-write:success", function() {
+            var orguser = this.element.data("orguser");
+            rest_api_list.load().then(() => {
+              rest_api_list.element.find('.row-'+orguser+' .manage').trigger("click");
+            });
+          });
 
           container.append(badge);
         }
 
         var role_options_container = $('<div class="dropdown" style="display:inline-block;">');
-        var btn_show_role_choices = $('<button>').addClass("btn btn-manage btn-slim-dynamic").text('+');
-        btn_show_role_choices.attr('data-toggle', "dropdown").attr('role', 'button').attr('id', 'role-options-'+data.id);
+        var btn_show_role_choices = $('<button>').addClass("btn btn-manage btn-slim-dynamic dropdown-toggle").text('+');
+        btn_show_role_choices.
+          attr('data-toggle', "dropdown").
+          attr('role', 'button').
+          attr('type', 'button').
+          attr("aria-expanded","false").
+          attr('id', 'role-options-'+data.id);
         role_options_container.append(btn_show_role_choices);
 
         var dd_role_options = $('<div class="dropdown-menu role-options">')
         $(data.role_options).each(function() {
+
+          var i;
+          for(i = 0; i < data.roles.length; i++) {
+            if(data.roles[i].role == this.id) {
+              return;
+            }
+          }
+
           var btn_add_role = new twentyc.rest.Button(
             $('<a href="#" class="dropdown-item">').
               data("api-base", rest_api_list.base_url).
               data("api-action", "add_role").
+              data("orguser", data.id).
               text(this.name)
           );
 
@@ -399,7 +419,12 @@ account.UsersList = twentyc.cls.define(
             data_o["role"] = this.id;
           });
 
-          $(btn_add_role).on("api-write:success", () => { rest_api_list.load() });
+          $(btn_add_role).on("api-write:success", function() {
+            var orguser = this.element.data("orguser");
+            rest_api_list.load().then(() => {
+              rest_api_list.element.find('.row-'+orguser+' .manage').trigger("click");
+            });
+          });
 
           dd_role_options.append(btn_add_role.element);
         })

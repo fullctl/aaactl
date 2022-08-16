@@ -15,9 +15,9 @@ from account.models import (
     OrganizationRole,
     OrganizationUser,
     Role,
+    UpdatePermissions,
     UserPermissionOverride,
     UserSettings,
-    UpdatePermissions,
 )
 
 
@@ -81,10 +81,12 @@ def create_personal_org(sender, **kwargs):
 def delete_auto_grant(sender, **kwargs):
     UpdatePermissions.create_task()
 
+
 @receiver(post_save, sender=OrganizationManagedPermission)
 def set_org_manage_permission(sender, **kwargs):
     instance = kwargs.get("instance")
     ManagedPermission.apply_roles_all(org_id=instance.org_id)
+
 
 @receiver(post_delete, sender=OrganizationManagedPermission)
 def delete_org_manage_permission(sender, **kwargs):
@@ -142,8 +144,6 @@ def sync_roles(**kwargs):
 
     if update_all_permissions:
         UpdatePermissions.create_task()
-
-
 
 
 post_revision_commit.connect(sync_roles)

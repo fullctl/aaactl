@@ -3,9 +3,11 @@ from fullctl.django.tasks import register
 
 import account.models
 
+__all__ = ["UpdatePermissions"]
+
+
 @register
 class UpdatePermissions(Task):
-
     class Meta:
         proxy = True
 

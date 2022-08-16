@@ -14,10 +14,9 @@ from django_grainy.models import Permission, PermissionField, PermissionManager
 from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 
+from account.tasks import UpdatePermissions  # noqa F401
 from common.email import email_noreply
 from common.models import HandleRefModel
-
-from account.tasks import UpdatePermissions
 
 # Create your models here.
 

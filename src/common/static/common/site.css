@@ -638,11 +638,15 @@ div.page_error {
 td.status {
   padding: 3px;
 }
-.status-ok {
+
+.status-ok,
+td.status-ok {
   background-color: darkgreen;
   color: #fff;
 }
-.status-failure {
+
+.status-failure,
+td.status-failure {
   background-color: darkred;
   color: #fff;
   text-decoration: underline;

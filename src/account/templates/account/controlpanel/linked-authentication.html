@@ -7,16 +7,16 @@
     <span class="small-label pb-2">{% trans "Linked providers" %}:</span>
     {% for socialauth in backends.associated %}
       <div class="pt-2 pb-2 row justify-content-between align-items-center">
-        <div class="ml-3 oauth-backend {{ backend }} linked-auth" title="{{ backend }}">
+        <div class="col ms-3 oauth-backend {{ backend }} linked-auth" title="{{ backend }}">
           {% include "account/auth/oauth-badge.html" with backend=socialauth.provider associated=True %}
         </div>
         {% if request.user.has_usable_password %}
-        <a href="javascript: controlpanel.postFromLink('{% url 'social:disconnect_individual' socialauth.provider socialauth.id %}?next={{ request.GET.next }}')" >
-          <button class="mr-3 btn btn-slim btn-manage manage">{% trans "Unlink " %}{{ request.user|social_id:socialauth.provider }}</button>
+        <a class="col-md-auto" href="javascript: controlpanel.postFromLink('{% url 'social:disconnect_individual' socialauth.provider socialauth.id %}?next={{ request.GET.next }}')" >
+          <button class="me-3 btn btn-slim btn-manage manage">{% trans "Unlink " %}{{ request.user|social_id:socialauth.provider }}</button>
         </a>
         {% else %}
         <a>
-          <button class="mr-3 btn btn-slim btn-manage manage">{{ request.user|social_id:socialauth.provider }}</button>
+          <button class="col-md-auto me-3 btn btn-slim btn-manage manage">{{ request.user|social_id:socialauth.provider }}</button>
         </a>
 
         {% endif %}
@@ -37,11 +37,11 @@
   <div class="col">
     <span class="small-label pb-2">{% trans "Available providers" %}:</span>    {% for backend in backends.not_associated %}
     <div class="pt-2 pb-2 row justify-content-between align-items-center">
-        <div class="ml-3 oauth-backend {{ backend }} available-apps" title="{{ backend }}">
+        <div class="col ms-3 oauth-backend {{ backend }} available-apps" title="{{ backend }}">
           {% include "account/auth/oauth-badge.html" with backend=backend %}
         </div>
-        <a href="{% url 'social:begin' backend %}?next={{ request.GET.next }}" >
-          <button class="mr-3 btn btn-slim btn-manage manage">{% trans "Add" %}</button>
+        <a class="col-md-auto" href="{% url 'social:begin' backend %}?next={{ request.GET.next }}" >
+          <button class="me-3 btn btn-slim btn-manage manage">{% trans "Add" %}</button>
         </a>
     </div>
     {% endfor %}

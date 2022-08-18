@@ -124,7 +124,7 @@ account.ControlPanel = twentyc.cls.define(
         $(btn_make_default).on('api-write:success', ()=>{ this.loadDropDown(); });
         menu.append(btn_make_default.element)
 
-        menu.append(`<a class="dropdown-item org-item" role="button" data-toggle="modal" data-target="#createOrgModal">+ Create Organization</a>`)
+        menu.append(`<a class="dropdown-item org-item text-body" role="button" data-bs-toggle="modal" data-bs-target="#createOrgModal">+ Create Organization</a>`)
       });
       this.dropDown.load();
     },
@@ -866,7 +866,7 @@ account.PendingUsers = twentyc.cls.define(
         if ( value === '' ) {
           return value + '<span class="user-badge ub-pending">Pending</span>';
         } else {
-          return value + '<span class="user-badge ub-pending ml-2">Pending</span>';
+          return value + '<span class="user-badge ub-pending ms-2">Pending</span>';
         }
       }
 

@@ -78,6 +78,7 @@ INSTALLED_APPS += (
     "rest_framework",
     # rendering
     "crispy_forms",
+    "crispy_bootstrap5",
     # oauth
     "social_django",
     # aaactl apps
@@ -88,7 +89,8 @@ INSTALLED_APPS += (
     "fullctl.django.apps.DjangoFullctlConfig",
 )
 
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.permissions",

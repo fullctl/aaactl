@@ -13,6 +13,19 @@
   --danger: #dc3545;
 }
 
+.accordion {
+  --bs-accordion-bg: var(--lightest-gray);
+  --bs-accordion-btn-color: var(--dark-gray);
+  --bs-accordion-color: var(--text-accent);
+  --bs-accordion-active-color: var(--bs-accordion-btn-color);
+  --bs-accordion-active-bg: rgba(224, 225, 226, 0.6);
+  --bs-accordion-border-color: var(--bs-gray-400);
+  --bs-accordion-btn-padding-y: 1rem;
+  --bs-accordion-btn-padding-x: 1.5rem;
+  --bs-accordion-body-padding-x: 1rem;
+  --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='var%28--bs-body-color%29'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
 body {
   background-color: var(--dark-gray);
   font-family: 'IBM Plex Sans', sans-serif !important;
@@ -625,11 +638,15 @@ div.page_error {
 td.status {
   padding: 3px;
 }
-.status-ok {
+
+.status-ok,
+td.status-ok {
   background-color: darkgreen;
   color: #fff;
 }
-.status-failure {
+
+.status-failure,
+td.status-failure {
   background-color: darkred;
   color: #fff;
   text-decoration: underline;

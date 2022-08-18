@@ -36,6 +36,7 @@ django-oauth-toolkit = "*"
 python-jose = "^3.3"
 
 stripe = "^2.55.2"
+crispy-bootstrap5 = "^0.6"
 
 [tool.poetry.dev-dependencies]
 # testing

@@ -461,8 +461,17 @@ class Organization(viewsets.ViewSet):
             return Response(serializer.errors, status=400)
         org_key = serializer.save()
 
+        # TODO: api key roles
+
         for mperm in models.ManagedPermission.objects.all():
-            mperm.auto_grant_key(org_key)
+            if mperm.can_grant_to_org(org):
+                models.OrganizationAPIKeyPermission.objects.create(
+                    api_key=org_key,
+                    namespace=mperm.namespace.format(org_id=org.id),
+                    permission=0x01,
+                )
+
+
         return Response(Serializers.org_key(org_key, many=False).data)
 
     @action(detail=True, methods=["GET"])

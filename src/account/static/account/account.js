@@ -389,12 +389,13 @@ account.UsersList = twentyc.cls.define(
         var role_options_container = $('<div class="dropdown" style="display:inline-block;">');
         var btn_show_role_choices = $('<button>').addClass("btn btn-manage btn-slim-dynamic dropdown-toggle").text('+');
         btn_show_role_choices.
-          attr('data-toggle', "dropdown").
+          attr('data-bs-toggle', "dropdown").
           attr('role', 'button').
           attr('type', 'button').
           attr("aria-expanded","false").
           attr('id', 'role-options-'+data.id);
         role_options_container.append(btn_show_role_choices);
+
 
         var dd_role_options = $('<div class="dropdown-menu role-options">')
         $(data.role_options).each(function() {
@@ -431,9 +432,10 @@ account.UsersList = twentyc.cls.define(
 
         role_options_container.append(btn_show_role_choices);
         role_options_container.append(dd_role_options);
-        role_options_container.dropdown();
 
         container.append(role_options_container);
+
+        new bootstrap.Dropdown(btn_show_role_choices);
 
         return container;
       }.bind(this.rest_api_list)

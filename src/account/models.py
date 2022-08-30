@@ -694,7 +694,8 @@ class ManagedPermission(HandleRefModel):
 
         # delete all those namespaces for the user in the org
         for ns in cls.namespaces():
-            user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
+            user.grainy_permissions.all().delete()
+            #user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
 
         # re-apply automatically granted permissions through roles
         for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(

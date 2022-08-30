@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, PermissionField, PermissionManager
+from django_grainy.models import Permission, UserPermission, PermissionField, PermissionManager
 from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 
@@ -688,14 +688,14 @@ class ManagedPermission(HandleRefModel):
         tag = "mperm"
 
     @classmethod
-    def apply_roles(cls, org, user):
+    def apply_roles(cls, org, user, delete_permissions=True):
 
         user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
 
         # delete all those namespaces for the user in the org
-        for ns in cls.namespaces():
-            user.grainy_permissions.all().delete()
-            #user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
+        if delete_permissions:
+            for ns in cls.namespaces():
+                user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
 
         # re-apply automatically granted permissions through roles
         for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(
@@ -733,9 +733,12 @@ class ManagedPermission(HandleRefModel):
         if org_id:
             org_qset = org_qset.filter(id=org_id)
 
+        # delete all user permissions
+        UserPermission.objects.all().delete()
+
         for org in org_qset:
             for user in org.org_user_set.all().select_related("user", "org"):
-                cls.apply_roles(org, user.user)
+                cls.apply_roles(org, user.user, delete_permissions=False)
 
     @classmethod
     def namespaces(cls):

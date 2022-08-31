@@ -2,9 +2,9 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from django_grainy.util import Permissions
 
+from account.impersonate import is_impersonating
 from account.models import Organization
 from account.session import set_selected_org
-from account.impersonate import is_impersonating
 
 
 class RequestAugmentation:
@@ -53,7 +53,6 @@ class RequestAugmentation:
         self.set_selected_org(request)
 
 
-
 class Impersonation:
 
     """
@@ -97,5 +96,3 @@ class Impersonation:
 
             # finalize impersonation by setting the request user
             request.user = user
-
-

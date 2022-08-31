@@ -2,8 +2,10 @@
 Superuser user impersonation
 """
 
-from account.models import Impersonation
 from django.contrib.auth import get_user_model
+
+from account.models import Impersonation
+
 
 def is_impersonating(request):
     """
@@ -28,6 +30,7 @@ def is_impersonating(request):
         return request.user.impersonating.user
     except Impersonation.DoesNotExist:
         return None
+
 
 def start_impersonation(request, user):
 
@@ -72,6 +75,3 @@ def stop_impersonation(request):
         pass
 
     request.impersonating = None
-
-
-

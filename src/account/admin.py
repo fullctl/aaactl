@@ -1,22 +1,24 @@
 import reversion
 from django import forms
-from django.utils.safestring import mark_safe
-from django.conf.urls import url
-from django.urls import reverse
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from django_grainy.admin import GrainyUserAdmin
 from django_grainy.forms import (
     PERM_CHOICES_FOR_FIELD,
     BitmaskSelect,
     PermissionFormField,
     UserPermissionForm,
 )
-from django_grainy.admin import GrainyUserAdmin
-
 from fullctl.django.admin import BaseAdmin, UrlActionMixin
 from fullctl.django.context import current_request
 
+from account.impersonate import (
+    is_impersonating,
+    start_impersonation,
+    stop_impersonation,
+)
 from account.models import (
     APIKey,
     APIKeyPermission,
@@ -36,12 +38,6 @@ from account.models import (
     Role,
     UserPermissionOverride,
     UserSettings,
-)
-
-from account.impersonate import (
-    start_impersonation,
-    stop_impersonation,
-    is_impersonating,
 )
 
 # registered models
@@ -222,6 +218,7 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         ].queryset = ManagedPermission.objects.filter(grant_mode="restricted")
         return form
 
+
 # need to unregister the existing user admin in order
 # to implement our own with additional functionality
 #
@@ -239,40 +236,46 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
 
     readonly_fields = GrainyUserAdmin.readonly_fields + ("impersonate",)
 
-    actions = GrainyUserAdmin.actions + ["start_impersonation",]
-
+    actions = GrainyUserAdmin.actions + [
+        "start_impersonation",
+    ]
 
     def get_queryset(self, request):
 
         if is_impersonating(request):
-            self.message_user(request, f"Currently impersonating {is_impersonating(request)}", messages.INFO)
+            self.message_user(
+                request,
+                f"Currently impersonating {is_impersonating(request)}",
+                messages.INFO,
+            )
 
         return super().get_queryset(request)
 
     def impersonate(self, obj):
 
-
         with current_request() as request:
             user = is_impersonating(request)
 
             if user == obj:
-                url = reverse("admin:auth_user_actions", args=(obj.id, "stop_impersonation"))
-                return mark_safe(f"<a href=\"{url}\">Stop</a>")
+                url = reverse(
+                    "admin:auth_user_actions", args=(obj.id, "stop_impersonation")
+                )
+                return mark_safe(f'<a href="{url}">Stop</a>')
             if request.user == obj:
                 return "-"
 
         url = reverse("admin:auth_user_actions", args=(obj.id, "start_impersonation"))
-        return mark_safe(f"<a href=\"{url}\">Start</a>")
+        return mark_safe(f'<a href="{url}">Start</a>')
 
     @admin.action(description="Impersonate user")
     def start_impersonation(self, request, queryset):
         if queryset.count() > 1:
-            self.message_user(request, "Please only select one user to impersonate", messages.ERROR)
-
+            self.message_user(
+                request, "Please only select one user to impersonate", messages.ERROR
+            )
 
         user = queryset.first()
         start_impersonation(request, user)
-
 
     @admin.action(description="Stop impersonating user")
     def stop_impersonation(self, request, queryset):
@@ -284,6 +287,3 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
         stop_impersonation(request)
 
         self.message_user(request, f"No longer impersonating {user}", messages.SUCCESS)
-
-
-

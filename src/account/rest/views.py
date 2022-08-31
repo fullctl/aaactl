@@ -471,7 +471,6 @@ class Organization(viewsets.ViewSet):
                     permission=0x01,
                 )
 
-
         return Response(Serializers.org_key(org_key, many=False).data)
 
     @action(detail=True, methods=["GET"])

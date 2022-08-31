@@ -10,7 +10,12 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, UserPermission, PermissionField, PermissionManager
+from django_grainy.models import (
+    Permission,
+    PermissionField,
+    PermissionManager,
+    UserPermission,
+)
 from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 
@@ -890,11 +895,14 @@ class Invitation(HandleRefModel):
 
 class Impersonation(models.Model):
 
-    superuser = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="impersonating")
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="impersonated_by")
+    superuser = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, related_name="impersonating"
+    )
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="impersonated_by"
+    )
 
     class Meta:
         db_table = "account_impersonation"
         verbose_name = _("Impersonation")
         verbose_name_plural = _("Impersonations")
-

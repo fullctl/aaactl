@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from rest_framework.response import Response
@@ -48,6 +47,7 @@ class Service(AaactlDataViewSet):
 
     queryset = application_models.Service.objects.filter(status="ok")
     serializer_class = Serializers.service_application
+
 
 @route
 class User(AaactlDataViewSet):

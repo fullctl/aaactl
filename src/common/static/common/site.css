@@ -461,6 +461,26 @@ table.table-sm {
   font-size: .875rem;
   line-height: 1.125rem;
   border-radius: 100px;
+
+}
+
+.btn-slim-dynamic {
+  padding: .2rem .75rem;
+  max-height: 1.6rem;
+  font-size: .875rem;
+  line-height: 1.125rem;
+  border-radius: 100px;
+}
+
+
+.btn-slim.role {
+  position: relative;
+  margin-right: 3px;
+}
+
+.btn-slim.role:hover {
+  background-color: #dc3545;
+  color: #fff;
 }
 
 .btn-manage {
@@ -652,3 +672,22 @@ td.status-failure {
   text-decoration: underline;
 }
 
+/*
+ * user management in organization
+ */
+
+div.permissions {
+  opacity: 0.66;
+}
+
+div.permissions.override {
+  opacity: 1;
+}
+
+div.permissions .delete-override {
+  display: none;
+}
+
+div.permissions.override .delete-override {
+  display: inline;
+}

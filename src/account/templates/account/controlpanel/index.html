@@ -103,7 +103,6 @@
     </div>
     {% endif %}
 
-    {% if permissions.read_org_billing %}
     <div class="row service-container">
       <div class="col-12 ps-0">
         {% block services %}
@@ -111,7 +110,7 @@
         {% endblock %}
       </div>
     </div>
-    {% endif %}
+
     {% if permissions.read_org_billing %}
     <div class="row order-history-container">
       <div class="col-12 ps-0 pe-0">

@@ -1,7 +1,11 @@
 import reversion
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
+from django_grainy.helpers import str_flags
+from django_grainy.util import get_permissions
 from fullctl.django.auditlog import auditlog
+from fullctl.django.rest.core import BadRequest
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -307,6 +311,50 @@ class Organization(viewsets.ViewSet):
 
         return Response(Serializers.org_user(instance=org_user, many=False).data)
 
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def add_role(self, request, pk, org, auditlog=None):
+
+        user = models.OrganizationUser.objects.get(
+            id=request.data.get("org_user")
+        ).user_id
+        role = models.Role.objects.get(id=request.data.get("role"))
+
+        if models.OrganizationRole.objects.filter(
+            org=org, user=user, role=role
+        ).exists():
+            return BadRequest({"non_field_errors": [_("User already has this role")]})
+
+        serializer = Serializers.org_user_role(
+            data={
+                "org": org.id,
+                "user": user,
+                "role": request.data.get("role"),
+            },
+            many=False,
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def remove_role(self, request, pk, org, auditlog=None):
+        user = models.OrganizationUser.objects.get(
+            id=request.data.get("org_user")
+        ).user_id
+        role = models.Role.objects.get(id=request.data.get("role"))
+        user_role = models.OrganizationRole.objects.get(org=org, user=user, role=role)
+        serializer = Serializers.org_user_role(user_role)
+        response = Response(serializer.data)
+        user_role.delete()
+        return response
+
     @action(detail=True, methods=["PUT"])
     @set_org
     @auditlog()
@@ -326,6 +374,23 @@ class Organization(viewsets.ViewSet):
         serializer.save()
 
         return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def remove_permissions(self, request, pk, org, auditlog=None):
+        override = models.UserPermissionOverride.objects.get(
+            org=org, id=request.data.get("id")
+        )
+        user = override.user
+        namespace = override.namespace
+        override.delete()
+        permissions = get_permissions(
+            get_user_model().objects.get(id=user.id), namespace
+        )
+
+        return Response({"perms": str_flags(permissions)})
 
     @action(detail=True, methods=["GET"])
     @set_org
@@ -396,8 +461,17 @@ class Organization(viewsets.ViewSet):
             return Response(serializer.errors, status=400)
         org_key = serializer.save()
 
+        # TODO: api key roles
+
         for mperm in models.ManagedPermission.objects.all():
-            mperm.auto_grant_key(org_key)
+            if mperm.can_grant_to_org(org):
+                models.OrganizationAPIKeyPermission.objects.create(
+                    api_key=org_key,
+                    namespace=mperm.namespace.format(org_id=org.id),
+                    permission=0x01,
+                )
+
+
         return Response(Serializers.org_key(org_key, many=False).data)
 
     @action(detail=True, methods=["GET"])

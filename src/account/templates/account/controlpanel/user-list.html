@@ -6,6 +6,7 @@
   data-api-action="users">
   <div class="templates" style="display:none">
     <div
+      class="permissions"
       data-template="permissions"
       data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
       data-api-action="set_permissions"
@@ -17,9 +18,12 @@
         </div>
 
         <div class="col-md-7" data-field="component"></div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <span style="white-space: nowrap"><input data-permission-flag="r" type="checkbox"> read</span>
           <span style="white-space: nowrap"><input data-permission-flag="cud" type="checkbox"> write</span>
+        </div>
+        <div class="col-md-1 right">
+          <button class="btn btn-slim-dynamic btn-danger delete-override">x</button>
         </div>
       </div>
     </div>
@@ -36,7 +40,14 @@
       <td colspan="3" scope="col">
         <div class="row">
           <div class="col-xs-12 col-md-9 col-lg-10">
-            <div data-field="permissions"></div>
+            <div>
+              <h6>{% trans "Roles" %}</h6>
+              <div data-field="roles"></div>
+            </div>
+            <div class="marg-top">
+              <h6>{% trans "Permissions" %}</h6>
+              <div data-field="permissions"></div>
+            </div>
           </div>
           <div class="col-xs-12 col-md-3 col-lg-2 right">
             <button class="btn btn-slim btn-danger" data-api-action="user" data-api-method="DELETE" data-api-callback="remove" data-confirm="Remove user from organization?">Remove</button>

@@ -3,14 +3,20 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
+from reversion.signals import post_revision_commit
 
 from account.models import (
     APIKey,
     EmailConfirmation,
     ManagedPermission,
+    ManagedPermissionRoleAutoGrant,
     Organization,
     OrganizationManagedPermission,
+    OrganizationRole,
     OrganizationUser,
+    Role,
+    UpdatePermissions,
+    UserPermissionOverride,
     UserSettings,
 )
 
@@ -71,36 +77,73 @@ def create_personal_org(sender, **kwargs):
         Organization.personal_org(user)
 
 
-@receiver(post_save, sender=ManagedPermission)
-def set_permissions(sender, **kwargs):
-
-    created = kwargs.get("created")
-    mperm = kwargs.get("instance")
-
-    if created:
-        for org in Organization.objects.all():
-            mperm.auto_grant(org)
-    else:
-        for org in Organization.objects.all():
-            mperm.revoke(org)
-            mperm.auto_grant(org)
-
-
-@receiver(post_delete, sender=ManagedPermission)
-def revoke_permissions(sender, **kwargs):
-    mperm = kwargs.get("instance")
-
-    for org in Organization.objects.all():
-        mperm.revoke(org)
+@receiver(post_delete, sender=ManagedPermissionRoleAutoGrant)
+def delete_auto_grant(sender, **kwargs):
+    UpdatePermissions.create_task()
 
 
 @receiver(post_save, sender=OrganizationManagedPermission)
 def set_org_manage_permission(sender, **kwargs):
     instance = kwargs.get("instance")
-    instance.apply()
+    ManagedPermission.apply_roles_all(org_id=instance.org_id)
 
 
-@receiver(pre_delete, sender=OrganizationManagedPermission)
+@receiver(post_delete, sender=OrganizationManagedPermission)
 def delete_org_manage_permission(sender, **kwargs):
     instance = kwargs.get("instance")
-    instance.managed_permission.revoke(instance.org)
+    ManagedPermission.apply_roles_all(org_id=instance.org_id)
+
+
+@receiver(pre_delete, sender=OrganizationUser)
+def delete_org_user(sender, **kwargs):
+    instance = kwargs.get("instance")
+    OrganizationRole.objects.filter(user=instance.user, org=instance.org).delete()
+
+
+@receiver(post_save, sender=OrganizationUser)
+def save_org_user(sender, **kwargs):
+    instance = kwargs.get("instance")
+    created = kwargs.get("created")
+
+    if not created:
+        return
+
+    if instance.org.org_user_set.count() == 1:
+        qset = Role.objects.filter(auto_set_on_creator=True)
+    else:
+        qset = Role.objects.filter(auto_set_on_member=True)
+
+    for role in qset:
+        OrganizationRole.objects.get_or_create(
+            user=instance.user, org=instance.org, role=role
+        )
+
+
+@receiver(post_delete, sender=OrganizationRole)
+def del_org_role(sender, **kwargs):
+    instance = kwargs.get("instance")
+    ManagedPermission.apply_roles(instance.org, instance.user)
+
+
+@receiver(post_delete, sender=UserPermissionOverride)
+def del_user_permission_override(sender, **kwargs):
+    instance = kwargs.get("instance")
+    ManagedPermission.apply_roles(instance.org, instance.user)
+
+
+def sync_roles(**kwargs):
+
+    update_all_permissions = False
+
+    for vs in kwargs.get("versions"):
+        instance = vs.object
+        if isinstance(instance, (OrganizationRole, UserPermissionOverride)):
+            ManagedPermission.apply_roles(instance.org, instance.user)
+        elif isinstance(instance, ManagedPermissionRoleAutoGrant):
+            update_all_permissions = True
+
+    if update_all_permissions:
+        UpdatePermissions.create_task()
+
+
+post_revision_commit.connect(sync_roles)

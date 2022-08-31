@@ -300,6 +300,10 @@ account.UsersList = twentyc.cls.define(
 
       this.rest_api_list = new twentyc.rest.List(this.elements.user_listing);
 
+      var rest_api_list = this.rest_api_list;
+
+      // user permission management
+
       this.rest_api_list.formatters.permissions = function(value, data) {
         if(!data.manageable.match(/ud/))
           return;
@@ -312,10 +316,131 @@ account.UsersList = twentyc.cls.define(
           widget.fill({component:component});
           widget.set_flag_values(value[component]);
           editor.find('[data-field="component"]').text(label);
+
+          $(widget).on("api-write:success", function(e, ev, d, response) {
+            this.element.addClass("override");
+            var data = response.first();
+            data.perms = data.permissions;
+            this.set_flag_values(data);
+            console.log("DATA",data);
+            this.override_id = data["override_id"];
+          });
+
+          if(value[component].override) {
+            editor.addClass("override");
+          }
+
+          var node_remove_override = editor.find('.delete-override')
+          node_remove_override.
+            data("api-base", widget.base_url).
+            data("api-action", "remove_permissions");
+
+          var btn_remove_override = new twentyc.rest.Button(editor.find('.delete-override'));
+          widget.override_id = value[component].override;
+          btn_remove_override.form = widget;
+
+          $(btn_remove_override).on("api-write:before", function (ev, e, data) {
+            data["id"] = this.form.override_id;
+          });
+          $(btn_remove_override).on("api-write:success", function (ev, e, data, response) {
+            $(this.element).parents(".permissions").removeClass("override");
+            this.form.set_flag_values(response.first());
+          });
+
           container.append(editor)
         }
         return container;
       }.bind(this.rest_api_list)
+
+      // user role management
+
+      this.rest_api_list.formatters.roles = function(value, data) {
+        if(!data.manageable.match(/ud/))
+          return;
+        var component, editor, widget, container = $('<div>');
+        for(component in value) {
+          var label = value[component].name;
+          var role_id = value[component].role;
+          var badge = $('<button>').addClass("btn btn-manage btn-slim role").attr("data-confirm", "Remove user from "+label+" role?");
+          badge.append($('<span>').text(label));
+
+          badge.data('api-base', rest_api_list.base_url).
+            data('api-action', 'remove_role').
+            data('role', role_id).
+            data("orguser", data.id);
+
+          var btn_role = new twentyc.rest.Button(badge);
+
+          $(btn_role).on("api-write:before", function (ev, e, data_o, data_r) {
+            data_o["org_user"] = data.id;
+            data_o["role"] = this.element.data('role');
+          });
+
+          $(btn_role).on("api-write:success", function() {
+            var orguser = this.element.data("orguser");
+            rest_api_list.load().then(() => {
+              rest_api_list.element.find('.row-'+orguser+' .manage').trigger("click");
+            });
+          });
+
+          container.append(badge);
+        }
+
+        var role_options_container = $('<div class="dropdown" style="display:inline-block;">');
+        var btn_show_role_choices = $('<button>').addClass("btn btn-manage btn-slim-dynamic dropdown-toggle").text('+');
+        btn_show_role_choices.
+          attr('data-bs-toggle', "dropdown").
+          attr('role', 'button').
+          attr('type', 'button').
+          attr("aria-expanded","false").
+          attr('id', 'role-options-'+data.id);
+        role_options_container.append(btn_show_role_choices);
+
+
+        var dd_role_options = $('<div class="dropdown-menu role-options">')
+        $(data.role_options).each(function() {
+
+          var i;
+          for(i = 0; i < data.roles.length; i++) {
+            if(data.roles[i].role == this.id) {
+              return;
+            }
+          }
+
+          var btn_add_role = new twentyc.rest.Button(
+            $('<a href="#" class="dropdown-item">').
+              data("api-base", rest_api_list.base_url).
+              data("api-action", "add_role").
+              data("orguser", data.id).
+              text(this.name)
+          );
+
+          $(btn_add_role).on("api-write:before", (ev, e, data_o, data_r) => {
+            data_o["org_user"] = data.id;
+            data_o["role"] = this.id;
+          });
+
+          $(btn_add_role).on("api-write:success", function() {
+            var orguser = this.element.data("orguser");
+            rest_api_list.load().then(() => {
+              rest_api_list.element.find('.row-'+orguser+' .manage').trigger("click");
+            });
+          });
+
+          dd_role_options.append(btn_add_role.element);
+        })
+
+        role_options_container.append(btn_show_role_choices);
+        role_options_container.append(dd_role_options);
+
+        container.append(role_options_container);
+
+        new bootstrap.Dropdown(btn_show_role_choices);
+
+        return container;
+      }.bind(this.rest_api_list)
+
+      // user management
 
       this.rest_api_list.formatters.row = function(row,data) {
         var manage_container = row.filter('.manage')

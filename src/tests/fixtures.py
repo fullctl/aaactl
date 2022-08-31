@@ -1,5 +1,6 @@
 import pytest
 from django.test import Client
+from grainy.const import PERM_CRUD
 
 
 class BillingObjects:
@@ -7,7 +8,13 @@ class BillingObjects:
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
 
-        from account.models import ManagedPermission, Organization
+        from account.models import (
+            ManagedPermission,
+            ManagedPermissionRoleAutoGrant,
+            Organization,
+            OrganizationRole,
+            Role,
+        )
         from billing.models import (
             BillingContact,
             PaymentMethod,
@@ -16,30 +23,6 @@ class BillingObjects:
             ProductModifier,
             RecurringProduct,
             Subscription,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="org.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="user.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="billing.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
         )
 
         self.product_group = ProductGroup.objects.create(
@@ -152,6 +135,54 @@ class BillingObjects:
         )
         self.org.add_user(self.user, perms="crud")
 
+        admin_role = Role.objects.create(
+            name="admin",
+            description="",
+            level=15,
+            auto_set_on_creator=True,
+            auto_set_on_member=False,
+        )
+
+        OrganizationRole.objects.create(org=self.org, user=self.user, role=admin_role)
+
+        org_managed_permission = ManagedPermission.objects.create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=org_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        user_managed_permission = ManagedPermission.objects.create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=user_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        billing_managed_permission = ManagedPermission.objects.create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=billing_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        ManagedPermission.apply_roles_all()
+
         self.api_client = APIClient()
         self.api_client.login(username=self.user.username, password="test")
 
@@ -165,30 +196,12 @@ class AccountObjects:
         from django_grainy.util import Permissions
         from rest_framework.test import APIClient
 
-        from account.models import ManagedPermission, Organization
-
-        ManagedPermission.objects.get_or_create(
-            namespace="org.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="user.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="billing.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
+        from account.models import (
+            ManagedPermission,
+            ManagedPermissionRoleAutoGrant,
+            Organization,
+            OrganizationRole,
+            Role,
         )
 
         self.user = user = get_user_model().objects.create_user(
@@ -207,6 +220,54 @@ class AccountObjects:
 
         self.org = org = Organization.objects.create(name=handle, slug=handle)
         org.add_user(user, perms="crud")
+
+        admin_role = Role.objects.create(
+            name="admin",
+            description="",
+            level=15,
+            auto_set_on_creator=True,
+            auto_set_on_member=False,
+        )
+
+        OrganizationRole.objects.create(org=self.org, user=self.user, role=admin_role)
+
+        org_managed_permission = ManagedPermission.objects.create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=org_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        user_managed_permission = ManagedPermission.objects.create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=user_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        billing_managed_permission = ManagedPermission.objects.create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=billing_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        ManagedPermission.apply_roles_all()
 
         self.other_org = Organization.objects.create(
             name=f"Other {handle}", slug=f"other-{handle}"

@@ -25,6 +25,9 @@ class Command(CommandInterface):
         pk = kwargs.get("id")
 
         for svc in Service.objects.filter(status="ok"):
+            if not svc.api_url:
+                self.log_info(f"No api url specified for {svc.name}, skipping ..")
+                continue
             fn = getattr(self, f"sync_{typ}")
             self.log_info(f"Syncing {typ} {pk} to {svc.name}")
             if self.commit:

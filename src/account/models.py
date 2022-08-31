@@ -886,3 +886,15 @@ class Invitation(HandleRefModel):
         if not self.expired and not self.org.org_user_set.filter(user=user).exists():
             self.org.add_user(user, "r")
         Invitation.objects.filter(org=self.org, email=self.email).delete()
+
+
+class Impersonation(models.Model):
+
+    superuser = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name="impersonating")
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="impersonated_by")
+
+    class Meta:
+        db_table = "account_impersonation"
+        verbose_name = _("Impersonation")
+        verbose_name_plural = _("Impersonations")
+

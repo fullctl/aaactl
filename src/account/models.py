@@ -10,7 +10,12 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, UserPermission, PermissionField, PermissionManager
+from django_grainy.models import (
+    Permission,
+    PermissionField,
+    PermissionManager,
+    UserPermission,
+)
 from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 

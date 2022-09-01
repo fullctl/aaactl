@@ -40,8 +40,9 @@ COPY Ctl/VERSION Ctl/
 
 FROM base as final
 
+ARG whitelabel_dir
 ARG run_deps
-ARG run_dirs="locale main/whitelabel media static"
+ARG run_dirs="locale media static"
 ARG uid
 ARG user
 
@@ -68,7 +69,7 @@ FROM final
 
 ARG uid
 
-COPY src/ main/
+COPY src/ $whitelabel_dir main/
 COPY Ctl/docker/entrypoint.sh .
 RUN ln -s $SERVICE_HOME/entrypoint.sh /entrypoint
 RUN ln -s /venv $SERVICE_HOME/venv

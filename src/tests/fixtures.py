@@ -135,7 +135,7 @@ class BillingObjects:
         )
         self.org.add_user(self.user, perms="crud")
 
-        admin_role = Role.objects.create(
+        admin_role, _ = Role.objects.get_or_create(
             name="admin",
             description="",
             level=15,
@@ -143,15 +143,17 @@ class BillingObjects:
             auto_set_on_member=False,
         )
 
-        OrganizationRole.objects.create(org=self.org, user=self.user, role=admin_role)
+        OrganizationRole.objects.get_or_create(
+            org=self.org, user=self.user, role=admin_role
+        )
 
-        org_managed_permission = ManagedPermission.objects.create(
+        org_managed_permission, _ = ManagedPermission.objects.get_or_create(
             namespace="org.{org_id}",
             description="",
             group="aaactl",
         )
 
-        ManagedPermissionRoleAutoGrant.objects.create(
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
             managed_permission=org_managed_permission,
             role=admin_role,
             permissions=PERM_CRUD,
@@ -221,7 +223,7 @@ class AccountObjects:
         self.org = org = Organization.objects.create(name=handle, slug=handle)
         org.add_user(user, perms="crud")
 
-        admin_role = Role.objects.create(
+        admin_role, _ = Role.objects.get_or_create(
             name="admin",
             description="",
             level=15,
@@ -229,15 +231,17 @@ class AccountObjects:
             auto_set_on_member=False,
         )
 
-        OrganizationRole.objects.create(org=self.org, user=self.user, role=admin_role)
+        OrganizationRole.objects.get_or_create(
+            org=self.org, user=self.user, role=admin_role
+        )
 
-        org_managed_permission = ManagedPermission.objects.create(
+        org_managed_permission, _ = ManagedPermission.objects.get_or_create(
             namespace="org.{org_id}",
             description="",
             group="aaactl",
         )
 
-        ManagedPermissionRoleAutoGrant.objects.create(
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
             managed_permission=org_managed_permission,
             role=admin_role,
             permissions=PERM_CRUD,
@@ -249,7 +253,7 @@ class AccountObjects:
             group="aaactl",
         )
 
-        ManagedPermissionRoleAutoGrant.objects.create(
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
             managed_permission=user_managed_permission,
             role=admin_role,
             permissions=PERM_CRUD,
@@ -261,7 +265,7 @@ class AccountObjects:
             group="aaactl",
         )
 
-        ManagedPermissionRoleAutoGrant.objects.create(
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
             managed_permission=billing_managed_permission,
             role=admin_role,
             permissions=PERM_CRUD,

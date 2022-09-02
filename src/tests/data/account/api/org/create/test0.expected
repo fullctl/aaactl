@@ -1,1 +1,1 @@
-{"data": [{"id": 5, "name": "Foo Bar Org", "is_default": false, "label": "Foo Bar Org", "slug": "foobar", "selected": null, "personal": false, "is_admin": true}], "errors": {}, "profiling": {"queries": 0}}
+{"data": [{"id": 5, "name": "Foo Bar Org", "label": "Foo Bar Org", "slug": "foobar", "selected": null, "personal": false, "is_admin": false, "is_default": false}], "errors": {}, "profiling": {"queries": 0}}

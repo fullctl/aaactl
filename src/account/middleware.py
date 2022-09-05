@@ -70,7 +70,6 @@ class Impersonation:
         user = is_impersonating(request)
         if user:
             response.headers["X-User"] = user.id
-            response.headers["User"] = user.id
 
         return response
 

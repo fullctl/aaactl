@@ -68,12 +68,9 @@ class Impersonation:
         response = self.get_response(request)
 
         user = is_impersonating(request)
-        print("sup", request.user, user)
         if user:
             response.headers["X-User"] = user.id
             response.headers["User"] = user.id
-
-        print(response.headers)
 
         return response
 

@@ -245,16 +245,20 @@ def test_org_users(db, account_objects, data_account_api_org_users):
     assert response.status_code == 403
 
 
-# Use this mark to have Django reset Postgres index,
-# needed when client uses id as pk
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_org_userdel(db, account_objects, data_account_api_org_userdel):
 
     slug = account_objects.org.slug
 
+    data = {}
+
+    if data_account_api_org_userdel.name == "test0":
+        data.update(id=account_objects.user_unpermissioned.org_user_set.filter(org=account_objects.org).first().id)
+    else:
+        data.update(id=account_objects.user.org_user_set.filter(org=account_objects.org).first().id)
+
     response = account_objects.api_client.delete(
         reverse("account_api:org-user", args=(slug,)),
-        data=json.loads(data_account_api_org_userdel.input),
+        data=data,
     )
 
     assert response.status_code == int(data_account_api_org_userdel.status)
@@ -284,14 +288,13 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     assert response.status_code == 403
 
 
-# Use this mark to have Django reset Postgres index,
-# needed when client uses id as pk
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_org_set_permissions(db, account_objects, data_account_api_org_setperm):
 
     input = json.loads(data_account_api_org_setperm.input)
     expected = data_account_api_org_setperm.expected
     slug = input.get("slug", account_objects.org.slug)
+
+    input["data"].update(id=account_objects.user_unpermissioned.org_user_set.filter(org=account_objects.org).first().id)
 
     response = getattr(account_objects, input["client"]).put(
         reverse("account_api:org-set-permissions", args=(slug,)), data=input["data"]

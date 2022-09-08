@@ -1,1 +1,47 @@
-{"data": [{"name": " ", "email": "test_unperm@localhost", "you": false, "manageable": "r", "permissions": {"org.{org_id}": {"perms": "", "label": ""}, "user.{org_id}": {"perms": "", "label": ""}, "billing.{org_id}": {"perms": "", "label": ""}}}], "errors": {}, "profiling": {"queries": 0}}
+{
+  "data": [
+    {
+      "id": 4,
+      "name": " ",
+      "email": "test_unperm@localhost",
+      "you": false,
+      "manageable": "r",
+      "role_options": [
+        {
+          "id": 1,
+          "name": "Admin"
+        },
+        {
+          "id": 2,
+          "name": "Member"
+        },
+        {
+          "id": 3,
+          "name": "admin"
+        }
+      ],
+      "roles": [],
+      "permissions": {
+        "org.{org_id}": {
+          "perms": "",
+          "label": "",
+          "override": null
+        },
+        "user.{org_id}": {
+          "perms": "",
+          "label": "",
+          "override": null
+        },
+        "billing.{org_id}": {
+          "perms": "",
+          "label": "",
+          "override": null
+        }
+      }
+    }
+  ],
+  "errors": {},
+  "profiling": {
+    "queries": 0
+  }
+}

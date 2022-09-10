@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from rest_framework.response import Response
@@ -46,3 +47,18 @@ class Service(AaactlDataViewSet):
 
     queryset = application_models.Service.objects.filter(status="ok")
     serializer_class = Serializers.service_application
+
+
+@route
+class User(AaactlDataViewSet):
+
+    path_prefix = "/data"
+    allowed_http_methods = ["GET"]
+    valid_filters = [
+        ("username", "username__iexact"),
+    ]
+    allow_unfiltered = False
+    autocomplete = "username"
+
+    queryset = get_user_model().objects.all()
+    serializer_class = Serializers.user

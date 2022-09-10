@@ -33,6 +33,15 @@ twentyc.rest.config.csrf = "{{ csrf_token }}"
 
 <body>
 
+{% if request.impersonating %}
+<div class="alert alert-warning" role="alert">
+  {% blocktrans with user=request.user %}
+  Currently impersonating <b>{{ user }}</b>
+  {% endblocktrans %}
+  <a class="btn btn-sm btn-warning" href="{% url "admin:auth_user_actions" request.user.id "stop_impersonation" %}">{% trans "Stop" %}</a>
+</div>
+{% endif %}
+
 <div class="container-fluid header-outer">
   <div class="container header">
   {% include "account/header.html" %}

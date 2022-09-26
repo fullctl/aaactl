@@ -75,7 +75,7 @@
         {% include "account/controlpanel/pending-user-list.html" %}
         {% if permissions.create_org_user and request.selected_org.user != request.user %}
           <div class="text-center">
-            <button type="button" class="btn btn-manage btn-slim" data-toggle="modal" data-target="#inviteModal">
+            <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#inviteModal">
               + Invite Users to Your Organization
             </button>
           </div>

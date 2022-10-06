@@ -84,13 +84,13 @@ def delete_auto_grant(sender, **kwargs):
 
 @receiver(post_save, sender=OrganizationManagedPermission)
 def set_org_manage_permission(sender, **kwargs):
-    instance = kwargs.get("instance")
+    kwargs.get("instance")
     UpdatePermissions.create_task()
 
 
 @receiver(post_delete, sender=OrganizationManagedPermission)
 def delete_org_manage_permission(sender, **kwargs):
-    instance = kwargs.get("instance")
+    kwargs.get("instance")
     UpdatePermissions.create_task()
 
 

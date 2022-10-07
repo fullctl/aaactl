@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 
 from account.models import EmailConfirmation, Invitation, PasswordReset
 
@@ -86,3 +86,25 @@ def test_invite_user_del(db, account_objects, account_objects_b, capsys):
 
     invite.complete(account_objects_b.user)
     assert account_objects.org.org_user_set.filter(user=account_objects_b.user).exists()
+
+
+def test_auto_user_to_org(db, account_objects, settings):
+    settings.AUTO_USER_TO_ORG = "test"
+
+    user = get_user_model().objects.create_user(
+        username="new_user",
+        password="new_user",
+        email="new_user@localhost",
+    )
+
+    assert user.org_user_set.filter(org__slug="test").exists()
+
+    settings.AUTO_USER_TO_ORG = None
+
+    user = get_user_model().objects.create_user(
+        username="new_user_2",
+        password="new_user_2",
+        email="new_user_2@localhost",
+    )
+
+    assert not user.org_user_set.filter(org__slug="test").exists()

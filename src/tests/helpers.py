@@ -1,8 +1,10 @@
 import json
 
+
 def set_assert_field_exists(field, data):
     if field in data:
         data[field] = "assert-field-exists"
+
 
 def strip_api_fields(data):
     """
@@ -35,7 +37,9 @@ def assert_expected(response, expected):
         print(json.dumps(strip_api_fields(response.json()), indent=2))
         print("EXP")
         print(json.dumps(strip_api_fields(expected), indent=2))
-        assert strip_api_fields(response.json()) == strip_api_fields(expected["response"])
+        assert strip_api_fields(response.json()) == strip_api_fields(
+            expected["response"]
+        )
     else:
         print(response.content.decode("utf-8"))
         assert response.content.decode("utf-8") == expected["response"]

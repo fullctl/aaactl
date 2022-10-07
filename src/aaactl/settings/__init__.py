@@ -242,6 +242,9 @@ settings_manager.set_option("ENABLE_EMAIL_CONFIRMATION", True)
 # automatic email confirm on oauath
 settings_manager.set_option("CONFIRM_EMAIL_ON_OAUTH", True)
 
+# add new users to this org (needs to be org slug)
+settings_manager.set_option("AUTO_USER_TO_ORG", None, str)
+
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")
 settings_manager.try_include(env_file)

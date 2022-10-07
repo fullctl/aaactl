@@ -1,6 +1,5 @@
 import json
 
-import pytest
 from django.contrib.auth import authenticate
 from django.urls import reverse
 
@@ -252,9 +251,19 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     data = {}
 
     if data_account_api_org_userdel.name == "test0":
-        data.update(id=account_objects.user_unpermissioned.org_user_set.filter(org=account_objects.org).first().id)
+        data.update(
+            id=account_objects.user_unpermissioned.org_user_set.filter(
+                org=account_objects.org
+            )
+            .first()
+            .id
+        )
     else:
-        data.update(id=account_objects.user.org_user_set.filter(org=account_objects.org).first().id)
+        data.update(
+            id=account_objects.user.org_user_set.filter(org=account_objects.org)
+            .first()
+            .id
+        )
 
     response = account_objects.api_client.delete(
         reverse("account_api:org-user", args=(slug,)),
@@ -294,7 +303,13 @@ def test_org_set_permissions(db, account_objects, data_account_api_org_setperm):
     expected = data_account_api_org_setperm.expected
     slug = input.get("slug", account_objects.org.slug)
 
-    input["data"].update(id=account_objects.user_unpermissioned.org_user_set.filter(org=account_objects.org).first().id)
+    input["data"].update(
+        id=account_objects.user_unpermissioned.org_user_set.filter(
+            org=account_objects.org
+        )
+        .first()
+        .id
+    )
 
     response = getattr(account_objects, input["client"]).put(
         reverse("account_api:org-set-permissions", args=(slug,)), data=input["data"]

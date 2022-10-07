@@ -63,6 +63,23 @@ def generate_api_key(sender, **kwargs):
         APIKey.objects.create(user=user, managed=True)
 
 
+@receiver(post_save, sender=get_user_model())
+def auto_user_to_org(sender, **kwargs):
+    if kwargs.get("created"):
+        user = kwargs.get("instance")
+
+        if not settings.AUTO_USER_TO_ORG:
+            return
+
+        org = Organization.objects.get(slug=settings.AUTO_USER_TO_ORG)
+        OrganizationUser.objects.create(
+            org=org,
+            user=user,
+        )
+
+        ManagedPermission.apply_roles(org, user)
+
+
 # @receiver(post_save, sender=get_user_model())
 # def set_initial_permissions(sender, **kwargs):
 #    if kwargs.get("created"):
@@ -84,13 +101,11 @@ def delete_auto_grant(sender, **kwargs):
 
 @receiver(post_save, sender=OrganizationManagedPermission)
 def set_org_manage_permission(sender, **kwargs):
-    instance = kwargs.get("instance")
     UpdatePermissions.create_task()
 
 
 @receiver(post_delete, sender=OrganizationManagedPermission)
 def delete_org_manage_permission(sender, **kwargs):
-    instance = kwargs.get("instance")
     UpdatePermissions.create_task()
 
 

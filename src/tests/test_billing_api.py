@@ -59,7 +59,7 @@ def test_post_billing_setup(billing_objects, mocker):
     assert response.json()["data"][0] == output
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.django_db
 def test_get_payment_methods(billing_objects, data_billing_api_billing_contact):
     response = billing_objects.api_client.get(
         reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
@@ -164,7 +164,7 @@ def test_delete_active_billing_contact(billing_objects):
     assert models.BillingContact.objects.count() == 0
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.django_db
 def test_get_services(billing_objects, data_billing_api_subscriptions):
     response = billing_objects.api_client.get(
         reverse("billing_api:org-services", args=[billing_objects.org.slug])
@@ -174,7 +174,7 @@ def test_get_services(billing_objects, data_billing_api_subscriptions):
     )
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.django_db
 def test_get_orders(billing_objects, charge_objects):
     response = billing_objects.api_client.get(
         reverse("billing_api:org-orders", args=[billing_objects.org.slug])
@@ -182,7 +182,7 @@ def test_get_orders(billing_objects, charge_objects):
     assert response.status_code == 200
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.django_db
 def test_get_products(billing_objects, data_billing_api_product):
     response = billing_objects.api_client.get(reverse("billing_api:product-list"))
     assert response.status_code == 200

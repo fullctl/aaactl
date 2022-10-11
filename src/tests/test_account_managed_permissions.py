@@ -75,6 +75,8 @@ def test_grant_mode_restricted(account_objects, role_objects):
 
     omperm.delete()
 
+    ManagedPermission.apply_roles_all()
+
     assert not Permissions(account_objects.user).check("test.mperm", "r")
 
 
@@ -116,6 +118,8 @@ def test_grant_mode_restricted_add_user(account_objects, role_objects):
 
     omperm.delete()
 
+    ManagedPermission.apply_roles_all()
+
     assert not Permissions(user_2).check("test.mperm", "r")
 
 
@@ -154,6 +158,8 @@ def test_grant_mode_restricted_add_user_granted(account_objects, role_objects):
     assert Permissions(user_2).check("test.mperm", "r")
 
     omperm.delete()
+
+    ManagedPermission.apply_roles_all()
 
     assert not Permissions(user_2).check("test.mperm", "r")
 

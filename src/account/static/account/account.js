@@ -357,7 +357,7 @@ account.UsersList = twentyc.cls.define(
       this.rest_api_list.formatters.roles = function(value, data) {
         if(!data.manageable.match(/ud/))
           return;
-        var component, editor, widget, container = $('<div>');
+        var component, container = $('<div>');
         for(component in value) {
           var label = value[component].name;
           var role_id = value[component].role;

@@ -1,6 +1,6 @@
 import social_core.pipeline.user
 
-from account.models import UserSettings
+from account.models import UserPermissionOverride, UserSettings
 
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
@@ -34,14 +34,20 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
             asn = network["asn"]
             perms = network["perms"]
             namespace = f"verified.asn.{asn}.peeringdb"
-            user.grainy_permissions.add_permission(namespace, perms)
+            overrides = []
+            override = UserPermissionOverride.objects.create(
+                namespace=namespace,
+                org=None,
+                user=user,
+                permissions=perms,
+            )
+            overrides.append(override)
+            user = override.user
             namespaces.append(namespace)
 
         # delete old
-
-        user.grainy_permissions.filter(
-            namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
-        ).exclude(namespace__in=namespaces).delete()
+        for override in overrides:
+            override.delete()
 
 
 def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):

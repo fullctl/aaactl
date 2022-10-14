@@ -27,7 +27,7 @@ jobs:
       - name: Launch database container
         run: Ctl/dev/compose.sh up -d postgres
       - name: Build container
-        run: Ctl/dev/compose.sh build account_django
+        run: Ctl/dev/compose.sh build django
       - name: Run tests
         run: Ctl/dev/run.sh run_tests
       # upload coverage stats

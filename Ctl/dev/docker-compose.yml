@@ -24,6 +24,7 @@ services:
     environment:
       DATABASE_PASSWORD: devPASSWORD
       DATABASE_HOST: postgres
+      COVERAGE_FILE: /srv/service/coverage/.coverage
       # defaults
       # DATABASE_USER: aaactl
       # DATABASE_NAME: aaactl
@@ -37,6 +38,7 @@ services:
       - "${DJANGO_PORT:-8000}:8000"
     volumes:
       - ../../src:/srv/service/main
+      - ../../coverage:/srv/service/coverage
 
 volumes:
   postgres_data:

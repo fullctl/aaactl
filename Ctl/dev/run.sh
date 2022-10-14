@@ -1,10 +1,10 @@
 #!/bin/bash
 
-COMPOSE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PROJECT_NAME=$(basename $(git rev-parse --show-toplevel))$( basename $COMPOSE_DIR )
+COMPOSE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+PROJECT_NAME=$(basename $(git rev-parse --show-toplevel))$(basename $COMPOSE_DIR)
 
 # check for UID / github actions
-if [[ -n "$UID"]]; then
+if [[ -n "$UID" ]]; then
   run_options="-u $UID"
 fi
 

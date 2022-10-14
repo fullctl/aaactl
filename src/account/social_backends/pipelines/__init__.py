@@ -16,7 +16,7 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
 def _sync_peeringdb_verified_asns(user, networks):
 
     """
-    Takes a user and a dictionar of peeringdb networks as they are
+    Takes a user and a dictionary of peeringdb networks as they are
     returned from peeringdb oauth and sets up verified.asn
     permissions accordingly
     """

@@ -65,8 +65,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "fullctl.django.middleware.CurrentRequestContext",
-    "account.middleware.RequestAugmentation",
     "account.middleware.Impersonation",
+    "account.middleware.RequestAugmentation",
 ]
 
 INSTALLED_APPS += (

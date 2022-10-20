@@ -61,9 +61,16 @@ pyupgrade = ">=2.19"
 
 # ctl
 ctl = ">=1"
+tomlkit = ">=0.11"
 tmpl = ">=1"
 Jinja2 = ">=3"
+
+###
+
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+

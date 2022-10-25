@@ -1,6 +1,6 @@
 import social_core.pipeline.user
 
-from account.models import UserSettings
+from account.models import UserPermissionOverride, UserSettings
 
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
@@ -13,6 +13,47 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
     )
 
 
+def _sync_peeringdb_verified_asns(user, networks):
+
+    """
+    Takes a user and a dictionary of peeringdb networks as they are
+    returned from peeringdb oauth and sets up verified.asn
+    permissions accordingly
+    """
+
+    namespaces = []
+
+    for network in networks:
+        asn = network["asn"]
+        perms = network["perms"]
+        namespace = f"verified.asn.{asn}.peeringdb"
+
+        try:
+            override = user.permission_overrides.get(namespace=namespace)
+            override.permissions = perms
+            override.save()
+        except UserPermissionOverride.DoesNotExist:
+            override = UserPermissionOverride.objects.create(
+                user=user, namespace=namespace, permissions=perms
+            )
+
+        override.apply()
+
+        namespaces.append(namespace)
+
+    # delete old overrides
+
+    user.permission_overrides.filter(
+        namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
+    ).exclude(namespace__in=namespaces).delete()
+
+    # delete old permissions
+
+    user.grainy_permissions.filter(
+        namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
+    ).exclude(namespace__in=namespaces).delete()
+
+
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
     if backend.name != "peeringdb":
@@ -23,25 +64,11 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
     )
 
     if social:
-
-        namespaces = []
-
         social.extra_data["email"] = details["email"]
         social.save()
         networks = social.extra_data.get("networks") or []
 
-        for network in networks:
-            asn = network["asn"]
-            perms = network["perms"]
-            namespace = f"verified.asn.{asn}.peeringdb"
-            user.grainy_permissions.add_permission(namespace, perms)
-            namespaces.append(namespace)
-
-        # delete old
-
-        user.grainy_permissions.filter(
-            namespace__regex=r"^verified\.asn\.\d+\.peeringdb$"
-        ).exclude(namespace__in=namespaces).delete()
+        _sync_peeringdb_verified_asns(user, networks)
 
 
 def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):

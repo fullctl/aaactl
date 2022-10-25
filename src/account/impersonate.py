@@ -54,6 +54,12 @@ def start_impersonation(request, user):
     if request.user == user:
         return
 
+    # clear selected org from session
+    try:
+        del request.session["selected_org"]
+    except KeyError:
+        pass
+
     Impersonation.objects.create(user=user, superuser=request.user)
 
 

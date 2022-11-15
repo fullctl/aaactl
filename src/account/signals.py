@@ -64,6 +64,13 @@ def generate_api_key(sender, **kwargs):
 
 
 @receiver(post_save, sender=get_user_model())
+def create_personal_org(sender, **kwargs):
+    if kwargs.get("created"):
+        user = kwargs.get("instance")
+        Organization.personal_org(user)
+
+
+@receiver(post_save, sender=get_user_model())
 def auto_user_to_org(sender, **kwargs):
     if kwargs.get("created"):
         user = kwargs.get("instance")
@@ -77,6 +84,8 @@ def auto_user_to_org(sender, **kwargs):
             user=user,
         )
 
+        org.set_as_default(user)
+
         ManagedPermission.apply_roles(org, user)
 
 
@@ -85,13 +94,6 @@ def auto_user_to_org(sender, **kwargs):
 #    if kwargs.get("created"):
 #        user = kwargs.get("instance")
 #        user.grainy_permissions.add_permission(f"user.{user.id}", "crud")
-
-
-@receiver(post_save, sender=get_user_model())
-def create_personal_org(sender, **kwargs):
-    if kwargs.get("created"):
-        user = kwargs.get("instance")
-        Organization.personal_org(user)
 
 
 @receiver(post_delete, sender=ManagedPermissionRoleAutoGrant)

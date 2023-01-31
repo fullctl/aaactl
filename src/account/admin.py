@@ -208,6 +208,7 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         "org",
         "managed_permission",
         "reason",
+        "product",
         "created",
     )
 

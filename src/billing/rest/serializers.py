@@ -30,6 +30,12 @@ class Product(serializers.ModelSerializer):
 
         fields = ["name", "component", "description", "group", "price"]
 
+@register
+class OrganizationProduct(serializers.ModelSerializer):
+    class Meta:
+        model = models.OrganizationProduct
+        fields = ["org", "product", "expires"]
+
 
 @register
 class RecurringProduct(serializers.ModelSerializer):

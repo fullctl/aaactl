@@ -698,7 +698,7 @@ class ManagedPermission(HandleRefModel):
         user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
 
         # delete all those namespaces for the user in the org
-        if delete_permissions:
+        if delete_permissions and org:
             for ns in cls.namespaces():
                 user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
 
@@ -811,6 +811,14 @@ class OrganizationManagedPermission(HandleRefModel):
     reason = models.CharField(
         max_length=255,
         help_text=_("Reason organization was granted to manage this permission"),
+    )
+
+    product = models.ForeignKey(
+        "billing.OrganizationProduct",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text=_("Perimission management enabled through product")
     )
 
     class HandleRef:

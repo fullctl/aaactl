@@ -18,7 +18,11 @@ import applications.models
 import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
+
+from billing.exceptions import OrgProductAlreadyExists
+
 from common.models import HandleRefModel
+from fullctl.django.models.concrete import AuditLog
 
 # Create your models here.
 
@@ -73,6 +77,7 @@ class Product(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
+        related_name="products",
         help_text=_("Product belongs to component"),
     )
 
@@ -105,6 +110,19 @@ class Product(HandleRefModel):
         blank=True,
         default=dict,
     )
+
+    expiry_period = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Product expires after N days"),
+    )
+
+    renewable = models.IntegerField(
+        default=0,
+        help_text=_("Product can be renewed N days after it expired. 0 for instantly, -1 for never."),
+    )
+
+
+
 
     class HandleRef:
         tag = "product"
@@ -159,6 +177,97 @@ class Product(HandleRefModel):
             invoice_number=invoice_number,
         )
         return payment
+
+
+    def can_add_to_org(self, org):
+        """
+        Checks whether or not this product can be added to the supplied org.
+        """
+
+        org_product = org.products.filter(product=self)
+
+        if org_product.exists():
+            return False
+
+        most_recent = AuditLog.objects.filter(
+            org_id = org.id,
+            action = "product_added_to_org",
+            object_id = self.id,
+        ).order_by("-created").first()
+
+        if not most_recent:
+            return True
+
+        if self.renewable == 0:
+            return True
+
+        if self.renewable == -1:
+            return False
+
+        tdiff = ((timezone.now() - most_recent.created).total_seconds() / 86400)
+
+        return (tdiff > self.renewable)
+
+
+    def add_to_org(self, org, notes=None):
+
+        if org.products.filter(product=self).exists():
+            raise OrgProductAlreadyExists(f"{org.slug} - {self}")
+
+        if self.expiry_period:
+            expires = timezone.now() + datetime.timedelta(days=self.expiry_period)
+        else:
+            expires = None
+
+        OrganizationProduct.objects.create(
+            org = org,
+            product = self,
+            notes = notes,
+            expires = expires
+        )
+
+
+@reversion.register()
+class ProductPermissionGrant(HandleRefModel):
+    """
+    Describes what permissions are granted by the product when owned or activated
+    by an organization.
+
+    A product can have multiple permission grants
+    """
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="managed_permissions")
+
+    managed_permission = models.ForeignKey(account.models.ManagedPermission, on_delete=models.CASCADE, related_name="products")
+
+    class HandleRef:
+        tag = "product_permission_grant"
+
+    class Meta:
+        db_table = "billing_product_permission_grant"
+        verbose_name = _("Product permission grant")
+        verbose_name_plural = _("Product permission grants")
+
+
+    def apply(self, org_product):
+
+        """
+        Takes and OrganizationProduct instance and ensures that the required
+        OrganizationManagedPermission entries exist.
+        """
+
+        org = org_product.org
+
+        if org.org_managed_permission_set.filter(product__product=self.product).exists():
+            return
+
+        account.models.OrganizationManagedPermission.objects.create(
+            org=org,
+            managed_permission=self.managed_permission,
+            product=org_product,
+            reason="product grant",
+        )
+
 
 
 @reversion.register()
@@ -219,6 +328,7 @@ class RecurringProduct(HandleRefModel):
         blank=True,
         default=dict,
     )
+
 
     class Meta:
         db_table = "billing_recurring_product"
@@ -306,6 +416,7 @@ class Subscription(HandleRefModel):
         "billing.PaymentMethod",
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="subscription_set",
         help_text=_("User payment option that will be charged by this subscription"),
     )
@@ -757,6 +868,64 @@ class SubscriptionProductModifier(HandleRefModel):
             price -= price * (self.value / 100.0)
 
         return max(price, 0)
+
+
+@reversion.register()
+class OrganizationProduct(HandleRefModel):
+    """
+    Describes organization access to a product
+    """
+
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text=_("Products the organization has access to")
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="organizations",
+        help_text=_("Organizations that have access to this product")
+    )
+
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.CASCADE,
+        related_name="applied_product_ownership",
+        null=True,
+        blank=True,
+        help_text=_("Product access is granted through this subscription")
+    )
+
+    expires = models.DateTimeField(
+        help_text=_("Product access expires at this date"),
+        null=True,
+        blank=True,
+    )
+
+    notes = models.TextField(
+        help_text=_("Custom notes for why produt access was granted. Useful when access is granted manually"),
+        null=True,
+        blank=True,
+    )
+
+    class HandleRef:
+        tag = "org_product"
+
+    class Meta:
+        db_table = "billing_org_product"
+        verbose_name = _("Organization Product Access")
+        verbose_name_plural = _("Organization Product Access")
+
+    @property
+    def expired(self):
+
+        if not self.expires:
+            return False
+
+        return (timezone.now() >= self.expires)
 
 
 def unique_id(Model, field):

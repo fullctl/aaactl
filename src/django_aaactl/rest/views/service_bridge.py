@@ -4,6 +4,7 @@ from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from rest_framework.response import Response
 
 import applications.models as application_models
+import account.models as account_models
 from common.rest.decorators import grainy_endpoint
 from django_aaactl.rest.serializers.service_bridge import Serializers
 
@@ -41,12 +42,21 @@ class Service(AaactlDataViewSet):
     allowed_http_methods = ["GET"]
     valid_filters = [
         ("group", "group__iexact"),
+        ("name", "name__iexact"),
     ]
     autocomplete = "name"
     allow_unfiltered = True
 
     queryset = application_models.Service.objects.filter(status="ok")
     serializer_class = Serializers.service_application
+
+    def serializer_context(self, request, context):
+
+        if request.GET.get("org"):
+            org = account_models.Organization.objects.get(slug=request.GET.get("org"))
+            context.update(org=org)
+
+        return context
 
 
 @route

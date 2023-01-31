@@ -40,6 +40,15 @@ class Service(HandleRefModel):
         help_text=_("Service application is exclusive to this organization"),
     )
 
+    trial_product = models.ForeignKey(
+        "billing.Product",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="service_applications",
+        help_text=_("When user is missing permissions to the service.{slug}.{org_id} namespace, use this product to allow the user to unlock access via a trial")
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")
@@ -48,11 +57,23 @@ class Service(HandleRefModel):
     class HandleRef:
         tag = "service_application"
 
+    @property
+    def products_that_grant_access(self):
+        """
+        Returns a billing.Product queryset of products that can grant
+        acces to this service
+        """
+
+        namespace = ".".join(["service", self.slug, "{org_id}"])
+        qset = self.products.filter(managed_permissions__managed_permission__namespace=namespace)
+        return qset
+
     def __str__(self):
         return self.name
 
     def bridge(self, org):
         return Bridge(self, org)
+
 
 
 @grainy_model("service")

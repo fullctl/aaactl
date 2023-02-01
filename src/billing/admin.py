@@ -43,6 +43,7 @@ class RecurringProductInline(admin.StackedInline):
     fields = ("type", "price", "unit", "unit_plural", "metered_url", "data")
     extra = 0
 
+
 class ProductPermissionGrantInline(admin.StackedInline):
     model = ProductPermissionGrant
     fields = ("managed_permission",)
@@ -61,7 +62,11 @@ class ProductAdmin(BaseAdmin):
     )
     search_fields = ("name", "component", "group")
     readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
-    inlines = (ProductModifierInline, RecurringProductInline, ProductPermissionGrantInline)
+    inlines = (
+        ProductModifierInline,
+        RecurringProductInline,
+        ProductPermissionGrantInline,
+    )
     form = ProductForm
 
     def recurring_product(self, obj):
@@ -80,6 +85,7 @@ class ProductModifieradmin(BaseAdmin):
 class OrganizationProduct(BaseAdmin):
     list_display = ("org", "product", "subscription", "created", "updated", "expires")
     search_fields = ("product__name", "org__name", "org__slug")
+
 
 class SubscriptionProductModifierInline(admin.TabularInline):
     model = SubscriptionProductModifier

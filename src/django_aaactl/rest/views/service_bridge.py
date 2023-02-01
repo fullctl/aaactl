@@ -3,8 +3,8 @@ from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from rest_framework.response import Response
 
-import applications.models as application_models
 import account.models as account_models
+import applications.models as application_models
 from common.rest.decorators import grainy_endpoint
 from django_aaactl.rest.serializers.service_bridge import Serializers
 

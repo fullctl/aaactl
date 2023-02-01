@@ -1,11 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
 from rest_framework import serializers
 
 import applications.models as application_models
-import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
 
 Serializers, register = serializer_registry()
@@ -22,7 +20,20 @@ class Service(ModelSerializer):
 
     class Meta:
         model = application_models.Service
-        fields = ["id", "name", "slug", "service_url", "api_url", "group", "logo", "trial_product", "trial_product_name", "products", "org_can_trial", "org_has_access"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "service_url",
+            "api_url",
+            "group",
+            "logo",
+            "trial_product",
+            "trial_product_name",
+            "products",
+            "org_can_trial",
+            "org_has_access",
+        ]
 
     def get_products(self, obj):
         return [product.name for product in obj.products_that_grant_access]
@@ -52,9 +63,6 @@ class Service(ModelSerializer):
                 return True
 
         return False
-
-
-
 
 
 @register

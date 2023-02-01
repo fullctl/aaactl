@@ -46,7 +46,9 @@ class Service(HandleRefModel):
         blank=True,
         null=True,
         related_name="service_applications",
-        help_text=_("When user is missing permissions to the service.{slug}.{org_id} namespace, use this product to allow the user to unlock access via a trial")
+        help_text=_(
+            "When user is missing permissions to the service.{slug}.{org_id} namespace, use this product to allow the user to unlock access via a trial"
+        ),
     )
 
     class Meta:
@@ -65,7 +67,9 @@ class Service(HandleRefModel):
         """
 
         namespace = ".".join(["service", self.slug, "{org_id}"])
-        qset = self.products.filter(managed_permissions__managed_permission__namespace=namespace)
+        qset = self.products.filter(
+            managed_permissions__managed_permission__namespace=namespace
+        )
         return qset
 
     def __str__(self):
@@ -73,7 +77,6 @@ class Service(HandleRefModel):
 
     def bridge(self, org):
         return Bridge(self, org)
-
 
 
 @grainy_model("service")

@@ -30,6 +30,7 @@ class Product(serializers.ModelSerializer):
 
         fields = ["name", "component", "description", "group", "price"]
 
+
 @register
 class OrganizationProduct(serializers.ModelSerializer):
     class Meta:

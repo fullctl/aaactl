@@ -12,17 +12,15 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
+from fullctl.django.models.concrete import AuditLog
 
 import account.models
 import applications.models
 import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
-
 from billing.exceptions import OrgProductAlreadyExists
-
 from common.models import HandleRefModel
-from fullctl.django.models.concrete import AuditLog
 
 # Create your models here.
 
@@ -118,11 +116,10 @@ class Product(HandleRefModel):
 
     renewable = models.IntegerField(
         default=0,
-        help_text=_("Product can be renewed N days after it expired. 0 for instantly, -1 for never."),
+        help_text=_(
+            "Product can be renewed N days after it expired. 0 for instantly, -1 for never."
+        ),
     )
-
-
-
 
     class HandleRef:
         tag = "product"
@@ -178,7 +175,6 @@ class Product(HandleRefModel):
         )
         return payment
 
-
     def can_add_to_org(self, org):
         """
         Checks whether or not this product can be added to the supplied org.
@@ -189,11 +185,15 @@ class Product(HandleRefModel):
         if org_product.exists():
             return False
 
-        most_recent = AuditLog.objects.filter(
-            org_id = org.id,
-            action = "product_added_to_org",
-            object_id = self.id,
-        ).order_by("-created").first()
+        most_recent = (
+            AuditLog.objects.filter(
+                org_id=org.id,
+                action="product_added_to_org",
+                object_id=self.id,
+            )
+            .order_by("-created")
+            .first()
+        )
 
         if not most_recent:
             return True
@@ -204,10 +204,9 @@ class Product(HandleRefModel):
         if self.renewable == -1:
             return False
 
-        tdiff = ((timezone.now() - most_recent.created).total_seconds() / 86400)
+        tdiff = (timezone.now() - most_recent.created).total_seconds() / 86400
 
-        return (tdiff > self.renewable)
-
+        return tdiff > self.renewable
 
     def add_to_org(self, org, notes=None):
 
@@ -220,10 +219,7 @@ class Product(HandleRefModel):
             expires = None
 
         OrganizationProduct.objects.create(
-            org = org,
-            product = self,
-            notes = notes,
-            expires = expires
+            org=org, product=self, notes=notes, expires=expires
         )
 
 
@@ -236,9 +232,15 @@ class ProductPermissionGrant(HandleRefModel):
     A product can have multiple permission grants
     """
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="managed_permissions")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="managed_permissions"
+    )
 
-    managed_permission = models.ForeignKey(account.models.ManagedPermission, on_delete=models.CASCADE, related_name="products")
+    managed_permission = models.ForeignKey(
+        account.models.ManagedPermission,
+        on_delete=models.CASCADE,
+        related_name="products",
+    )
 
     class HandleRef:
         tag = "product_permission_grant"
@@ -247,7 +249,6 @@ class ProductPermissionGrant(HandleRefModel):
         db_table = "billing_product_permission_grant"
         verbose_name = _("Product permission grant")
         verbose_name_plural = _("Product permission grants")
-
 
     def apply(self, org_product):
 
@@ -258,7 +259,9 @@ class ProductPermissionGrant(HandleRefModel):
 
         org = org_product.org
 
-        if org.org_managed_permission_set.filter(product__product=self.product).exists():
+        if org.org_managed_permission_set.filter(
+            product__product=self.product
+        ).exists():
             return
 
         account.models.OrganizationManagedPermission.objects.create(
@@ -267,7 +270,6 @@ class ProductPermissionGrant(HandleRefModel):
             product=org_product,
             reason="product grant",
         )
-
 
 
 @reversion.register()
@@ -328,7 +330,6 @@ class RecurringProduct(HandleRefModel):
         blank=True,
         default=dict,
     )
-
 
     class Meta:
         db_table = "billing_recurring_product"
@@ -880,14 +881,14 @@ class OrganizationProduct(HandleRefModel):
         account.models.Organization,
         on_delete=models.CASCADE,
         related_name="products",
-        help_text=_("Products the organization has access to")
+        help_text=_("Products the organization has access to"),
     )
 
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
         related_name="organizations",
-        help_text=_("Organizations that have access to this product")
+        help_text=_("Organizations that have access to this product"),
     )
 
     subscription = models.ForeignKey(
@@ -896,7 +897,7 @@ class OrganizationProduct(HandleRefModel):
         related_name="applied_product_ownership",
         null=True,
         blank=True,
-        help_text=_("Product access is granted through this subscription")
+        help_text=_("Product access is granted through this subscription"),
     )
 
     expires = models.DateTimeField(
@@ -906,7 +907,9 @@ class OrganizationProduct(HandleRefModel):
     )
 
     notes = models.TextField(
-        help_text=_("Custom notes for why produt access was granted. Useful when access is granted manually"),
+        help_text=_(
+            "Custom notes for why produt access was granted. Useful when access is granted manually"
+        ),
         null=True,
         blank=True,
     )
@@ -925,7 +928,7 @@ class OrganizationProduct(HandleRefModel):
         if not self.expires:
             return False
 
-        return (timezone.now() >= self.expires)
+        return timezone.now() >= self.expires
 
 
 def unique_id(Model, field):

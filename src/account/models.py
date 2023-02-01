@@ -752,7 +752,6 @@ class ManagedPermission(HandleRefModel):
         for user in org.org_user_set.all().select_related("user", "org"):
             cls.apply_roles(org, user.user)
 
-
     @classmethod
     def namespaces(cls):
         for managed_permission in cls.objects.all():
@@ -826,7 +825,7 @@ class OrganizationManagedPermission(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        help_text=_("Perimission management enabled through product")
+        help_text=_("Perimission management enabled through product"),
     )
 
     class HandleRef:

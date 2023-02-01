@@ -4,9 +4,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-import billing.models as models
 import applications.models as application_models
-
+import billing.models as models
 from account.rest.decorators import set_org
 from billing.rest.route import route
 from billing.rest.serializers import Serializers
@@ -152,13 +151,15 @@ class Organization(viewsets.ViewSet):
             return Response({"service_id": ["This service has no trial"]}, status=400)
 
         if not service.trial_product.can_add_to_org(org):
-            return Response({"non_field_errors": ["Trial could not be started at this time"]}, status=400)
+            return Response(
+                {"non_field_errors": ["Trial could not be started at this time"]},
+                status=400,
+            )
 
         org_product = service.trial_product.add_to_org(org)
 
         serializer = Serializers.org_product(org_product)
         return Response(serializer.data)
-
 
     @action(detail=True, methods=["GET"])
     @set_org

@@ -713,7 +713,6 @@ class ManagedPermission(HandleRefModel):
                 continue
 
             ns = managed_permission.namespace.format(org_id=org.id)
-            print("granting", ns, user)
             user.grainy_permissions.add_permission(ns, auto_grant.permissions)
 
         # re-apply permission overrides
@@ -721,7 +720,7 @@ class ManagedPermission(HandleRefModel):
             override.apply()
 
     @classmethod
-    def apply_roles_all(cls, org_id=None):
+    def apply_roles_all(cls):
 
         """
         Reapplies roles for all users across all orgs
@@ -735,15 +734,24 @@ class ManagedPermission(HandleRefModel):
 
         org_qset = Organization.objects.all()
 
-        if org_id:
-            org_qset = org_qset.filter(id=org_id)
-
         # delete all user permissions
         UserPermission.objects.all().delete()
 
         for org in org_qset:
             for user in org.org_user_set.all().select_related("user", "org"):
                 cls.apply_roles(org, user.user, delete_permissions=False)
+
+    @classmethod
+    def apply_roles_org(cls, org):
+
+        """
+        Takes an organization id and re-applies permissions for all
+        users in the organization.
+        """
+
+        for user in org.org_user_set.all().select_related("user", "org"):
+            cls.apply_roles(org, user.user)
+
 
     @classmethod
     def namespaces(cls):

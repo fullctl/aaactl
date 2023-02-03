@@ -6,13 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('billing', '0017_alter_product_component'),
+        ("billing", "0017_alter_product_component"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='renewable',
-            field=models.IntegerField(default=0, help_text='Product can be renewed N days after it expired. 0 for instantly, -1 for never.'),
+            model_name="product",
+            name="renewable",
+            field=models.IntegerField(
+                default=0,
+                help_text="Product can be renewed N days after it expired. 0 for instantly, -1 for never.",
+            ),
         ),
     ]

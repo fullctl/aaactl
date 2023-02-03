@@ -92,10 +92,8 @@ class User(ModelSerializer):
         ]
 
 
-
 @register
 class Product(ModelSerializer):
-
     class Meta:
         model = billing_models.Product
         fields = ["name", "description", "data", "price", "expiry_period", "renewable"]
@@ -110,8 +108,15 @@ class OrgnaizationProduct(ModelSerializer):
 
     class Meta:
         model = billing_models.OrganizationProduct
-        fields = ["org", "product", "name", "component", "expires", "subscription", "product_data"]
-
+        fields = [
+            "org",
+            "product",
+            "name",
+            "component",
+            "expires",
+            "subscription",
+            "product_data",
+        ]
 
     def get_component(self, org_product):
         return org_product.product.component.name.lower()
@@ -121,4 +126,3 @@ class OrgnaizationProduct(ModelSerializer):
 
     def get_product_data(self, org_product):
         return org_product.product.data
-

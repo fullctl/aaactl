@@ -4,6 +4,7 @@ from fullctl.django import auditlog
 
 from billing.models import OrganizationProduct, Subscription, SubscriptionProduct
 
+
 @receiver(post_save, sender=OrganizationProduct)
 def handle_orgproduct_save(sender, **kwargs):
 
@@ -51,10 +52,11 @@ def handle_subscription_product_save(sender, **kwargs):
     sub_product = kwargs.get("instance")
 
     OrganizationProduct.objects.get_or_create(
-        subscription = sub_product.subscription,
-        product = sub_product.product,
-        org = sub_product.subscription.org,
+        subscription=sub_product.subscription,
+        product=sub_product.product,
+        org=sub_product.subscription.org,
     )
+
 
 @receiver(post_delete, sender=SubscriptionProduct)
 def handle_subscription_product_delete(sender, **kwargs):
@@ -67,8 +69,8 @@ def handle_subscription_product_delete(sender, **kwargs):
     sub_product = kwargs.get("instance")
 
     qset = OrganizationProduct.objects.filter(
-        subscription = sub_product.subscription,
-        product = sub_product.product,
+        subscription=sub_product.subscription,
+        product=sub_product.product,
     )
 
     for org_product in qset:

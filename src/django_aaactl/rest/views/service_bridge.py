@@ -59,6 +59,7 @@ class Service(AaactlDataViewSet):
 
         return context
 
+
 @route
 class Product(AaactlDataViewSet):
     path_prefix = "/data"
@@ -86,7 +87,9 @@ class OrganizationProduct(AaactlDataViewSet):
     autocomplete = "name"
     allow_unfiltered = True
 
-    queryset = billing_models.OrganizationProduct.objects.filter(status="ok").order_by("-created")
+    queryset = billing_models.OrganizationProduct.objects.filter(status="ok").order_by(
+        "-created"
+    )
     serializer_class = Serializers.org_product
 
 

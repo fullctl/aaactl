@@ -1,10 +1,9 @@
 from django.db import transaction
-
-from billing.models import Subscription
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
-from billing.models import OrganizationProduct
+from billing.models import OrganizationProduct, Subscription
+
 
 class Command(CommandInterface):
     help = "Progresses billing subscription cycles and product expiry"
@@ -12,7 +11,6 @@ class Command(CommandInterface):
     def run(self, *args, **kwargs):
         self.progress_product_expiry()
         self.progress_subscription_cycles()
-
 
     def progress_product_expiry(self, *args, **kwargs):
         qset = OrganizationProduct.objects.filter(expires__lt=timezone.now())

@@ -22,7 +22,6 @@ from billing.payment_processors import PROCESSORS
 @login_required
 @org_view(["billing", "orderhistory"])
 def order_history(request):
-
     order_history = OrderHistory.objects.filter(
         billing_contact__org=request.selected_org
     )
@@ -58,7 +57,6 @@ def order_history_details(request, id):
 @login_required
 @org_view(["billing", "contact"])
 def billing_contacts(request):
-
     billing_contacts = request.selected_org.billing_contact_set.filter(status="ok")
     env = dict(billing_contacts=billing_contacts)
     return render(request, "billing/controlpanel/billing_contacts.html", env)
@@ -67,7 +65,6 @@ def billing_contacts(request):
 @login_required
 @org_view(["billing", "contact"])
 def billing_contact(request, id):
-
     try:
         billing_contact = request.selected_org.billing_contact_set.get(id=id)
     except request.user.payment_method_set.model.DoesNotExist:
@@ -85,7 +82,6 @@ def billing_contact(request, id):
 @login_required
 @org_view(["billing", "service"])
 def services(request):
-
     billing_is_setup = PaymentMethod.objects.filter(
         billing_contact__org=request.selected_org, status="ok"
     ).exists()
@@ -122,7 +118,6 @@ def setup_test(request):
 @login_required
 @org_view(["billing", "contact"])
 def setup(request, **kwargs):
-
     test_init = kwargs.get("test_init")
     real_init = {"email": request.user.email, "product": request.GET.get("product")}
     billing_address_init = {}
@@ -154,9 +149,7 @@ def setup(request, **kwargs):
         form_init = None
 
     if form_init:
-
         if not form_init.is_valid():
-
             # something wrong with initializing configuration
 
             messages.error(request, form_init.errors.as_ul())

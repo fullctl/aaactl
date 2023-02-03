@@ -32,8 +32,14 @@ class Product(serializers.ModelSerializer):
 
 
 @register
-class RecurringProduct(serializers.ModelSerializer):
+class OrganizationProduct(serializers.ModelSerializer):
+    class Meta:
+        model = models.OrganizationProduct
+        fields = ["org", "product", "expires"]
 
+
+@register
+class RecurringProduct(serializers.ModelSerializer):
     product = Product(read_only=True)
 
     class Meta:
@@ -44,7 +50,6 @@ class RecurringProduct(serializers.ModelSerializer):
 
 @register
 class PaymentMethod(serializers.ModelSerializer):
-
     country = serializers.CharField()
 
     class Meta:
@@ -64,7 +69,6 @@ class PaymentMethod(serializers.ModelSerializer):
 
 @register
 class BillingContact(FormValidationMixin, serializers.ModelSerializer):
-
     form = forms.BillingContactForm
     required_context = []
 
@@ -75,7 +79,6 @@ class BillingContact(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class OrderHistory(serializers.ModelSerializer):
-
     items = serializers.SerializerMethodField()
     billing_contact = BillingContact()
 
@@ -99,7 +102,6 @@ class OrderHistory(serializers.ModelSerializer):
 
 @register
 class Subscription(serializers.ModelSerializer):
-
     recurring_product = RecurringProduct(read_only=True)
     items = serializers.SerializerMethodField()
     subscription_cycle = serializers.SerializerMethodField()

@@ -13,7 +13,6 @@ from account.models import (
 
 @pytest.mark.django_db
 def test_organization_role_add_and_delete(account_objects):
-
     test_role = Role.objects.create(
         name="test",
         description="",

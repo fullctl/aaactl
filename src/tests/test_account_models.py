@@ -29,7 +29,6 @@ def test_api_key_autocreate(db, account_objects):
 
 
 def test_email_confirmation_process(db, account_objects):
-
     user = account_objects.user
     email_confirmation = EmailConfirmation.start(user)
 
@@ -43,7 +42,6 @@ def test_email_confirmation_process(db, account_objects):
 
 
 def test_password_reset_process(db, account_objects):
-
     user = account_objects.user
 
     assert authenticate(username=user.username, password="test")

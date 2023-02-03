@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 def create_roles(apps, schema_editor):
-
     Role = apps.get_model("account", "Role")
 
     Role.handleref.all().delete()
@@ -14,7 +13,6 @@ def create_roles(apps, schema_editor):
 
 
 def create_auto_grants(apps, schema_editor):
-
     Role = apps.get_model("account", "Role")
     AutoGrant = apps.get_model("account", "ManagedPermissionRoleAutoGrant")
     ManagedPermission = apps.get_model("account", "ManagedPermission")
@@ -30,7 +28,6 @@ def create_auto_grants(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0029_permission_roles_2"),
     ]

@@ -46,7 +46,6 @@ def test_recurring_product_type(db, billing_objects):
 
 
 def test_subscription_products(db, billing_objects):
-
     """
     Test adding a product to subscription.
     """
@@ -57,7 +56,6 @@ def test_subscription_products(db, billing_objects):
 
 
 def test_subscription_cycle_start(db, billing_objects):
-
     """
     Test how subscription_cycle is calculated in terms of time.
     """
@@ -74,7 +72,6 @@ def test_subscription_cycle_start(db, billing_objects):
 
 
 def test_subscription_cycle(db, billing_objects):
-
     """
     Test how subscription_cycle is calculated in terms of time and frequency.
     """
@@ -100,7 +97,6 @@ def test_subscription_cycle(db, billing_objects):
 
 
 def test_end_subscription_cycle(db, billing_objects, mocker):
-
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
@@ -352,7 +348,6 @@ def test_withdrawal_init(withdrawal, billing_objects):
 
 @pytest.mark.django_db
 def test_ledger_init(ledger):
-
     assert (
         Ledger.objects.filter(
             content_type=ContentType.objects.get_for_model(Withdrawal)

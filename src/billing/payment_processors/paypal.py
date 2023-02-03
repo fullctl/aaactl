@@ -71,7 +71,6 @@ class PaypalProcessor(PaymentProcessor):
         billing_plan = BillingPlan(payload, api=self.paypal_api)
 
         if billing_plan.create():
-
             self.plan_id = billing_plan.id
             billing_plan.activate()
             billing_plan = BillingPlan.find(self.plan_id, api=self.paypal_api)
@@ -110,7 +109,6 @@ class PaypalProcessor(PaymentProcessor):
             raise OSError(billing_agreement.error)
 
     def subscription_to_paydef(self, subscription):
-
         return {
             "amount": {
                 "currency": self.default_currency,

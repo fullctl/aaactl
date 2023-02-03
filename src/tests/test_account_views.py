@@ -34,7 +34,6 @@ def test_confirm_email(db, account_objects):
 
 
 def test_reset_password(db, account_objects, client_anon):
-
     response = client_anon.get(reverse("account:auth-reset-password-start"))
 
     assert response.status_code == 200
@@ -49,7 +48,6 @@ def test_reset_password(db, account_objects, client_anon):
 
 
 def test_accept_invite(db, account_objects, account_objects_b):
-
     invite = models.Invitation.objects.create(
         org=account_objects.org, created_by=account_objects.user, email="test@localhost"
     )
@@ -65,7 +63,6 @@ def test_accept_invite(db, account_objects, account_objects_b):
 
 
 def test_index(db, account_objects, client_anon):
-
     response = account_objects.client.get(reverse("account:controlpanel"))
     assert response.status_code == 200
 

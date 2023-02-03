@@ -12,12 +12,10 @@ class Command(CommandInterface):
     """
 
     def run(self, *args, **kwargs):
-
         for org in Organization.objects.all():
             self.assign_roles(org)
 
     def assign_roles(self, org):
-
         for org_user in org.org_user_set.all():
             user = get_user_model().objects.get(id=org_user.user.id)
 

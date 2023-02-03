@@ -12,7 +12,6 @@ class Stripe(PaymentProcessor):
     name = _("Stripe")
 
     class Form(forms.Form):
-
         stripe_token = forms.CharField(widget=forms.HiddenInput())
 
         @property
@@ -41,7 +40,6 @@ class Stripe(PaymentProcessor):
         self.api_key = settings.STRIPE_SECRET_KEY
 
     def setup_customer(self):
-
         # check if customer has already been created
         # on stripe's end
 
@@ -59,7 +57,6 @@ class Stripe(PaymentProcessor):
         return customer["id"]
 
     def setup_card(self, token):
-
         if self.data.get("stripe_card"):
             return self.data["stripe_card"]
 
@@ -119,7 +116,6 @@ class Stripe(PaymentProcessor):
         payment_charge.save()
 
     def _sync_charge(self, payment_charge, status=None):
-
         reversion.set_comment("Stripe charge status sync")
 
         if not payment_charge.data.get("stripe_charge"):

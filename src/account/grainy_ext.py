@@ -11,7 +11,6 @@ from account.rest.authentication import (
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):
-
         permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
         User = get_user_model()
 

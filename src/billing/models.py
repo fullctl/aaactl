@@ -12,12 +12,14 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
+from fullctl.django.models.concrete import AuditLog
 
 import account.models
 import applications.models
 import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
+from billing.exceptions import OrgProductAlreadyExists
 from common.models import HandleRefModel
 
 # Create your models here.
@@ -73,6 +75,7 @@ class Product(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
+        related_name="products",
         help_text=_("Product belongs to component"),
     )
 
@@ -104,6 +107,18 @@ class Product(HandleRefModel):
         help_text=_("Arbitrary extra data you want to define for this product"),
         blank=True,
         default=dict,
+    )
+
+    expiry_period = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Product expires after N days"),
+    )
+
+    renewable = models.IntegerField(
+        default=0,
+        help_text=_(
+            "Product can be renewed N days after it expired. 0 for instantly, -1 for never."
+        ),
     )
 
     class HandleRef:
@@ -160,6 +175,100 @@ class Product(HandleRefModel):
         )
         return payment
 
+    def can_add_to_org(self, org):
+        """
+        Checks whether or not this product can be added to the supplied org.
+        """
+
+        org_product = org.products.filter(product=self)
+
+        if org_product.exists():
+            return False
+
+        most_recent = (
+            AuditLog.objects.filter(
+                org_id=org.id,
+                action="product_added_to_org",
+                object_id=self.id,
+            )
+            .order_by("-created")
+            .first()
+        )
+
+        if not most_recent:
+            return True
+
+        if self.renewable == 0:
+            return True
+
+        if self.renewable == -1:
+            return False
+
+        tdiff = (timezone.now() - most_recent.created).total_seconds() / 86400
+
+        return tdiff > self.renewable
+
+    def add_to_org(self, org, notes=None):
+        if org.products.filter(product=self).exists():
+            raise OrgProductAlreadyExists(f"{org.slug} - {self}")
+
+        if self.expiry_period:
+            expires = timezone.now() + datetime.timedelta(days=self.expiry_period)
+        else:
+            expires = None
+
+        OrganizationProduct.objects.create(
+            org=org, product=self, notes=notes, expires=expires
+        )
+
+
+@reversion.register()
+class ProductPermissionGrant(HandleRefModel):
+    """
+    Describes what permissions are granted by the product when owned or activated
+    by an organization.
+
+    A product can have multiple permission grants
+    """
+
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="managed_permissions"
+    )
+
+    managed_permission = models.ForeignKey(
+        account.models.ManagedPermission,
+        on_delete=models.CASCADE,
+        related_name="products",
+    )
+
+    class HandleRef:
+        tag = "product_permission_grant"
+
+    class Meta:
+        db_table = "billing_product_permission_grant"
+        verbose_name = _("Product permission grant")
+        verbose_name_plural = _("Product permission grants")
+
+    def apply(self, org_product):
+        """
+        Takes and OrganizationProduct instance and ensures that the required
+        OrganizationManagedPermission entries exist.
+        """
+
+        org = org_product.org
+
+        if org.org_managed_permission_set.filter(
+            product__product=self.product
+        ).exists():
+            return
+
+        account.models.OrganizationManagedPermission.objects.create(
+            org=org,
+            managed_permission=self.managed_permission,
+            product=org_product,
+            reason="product grant",
+        )
+
 
 @reversion.register()
 class RecurringProduct(HandleRefModel):
@@ -188,20 +297,20 @@ class RecurringProduct(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price in the context of recurring_product charges. For fixed recurring_product pricing this would be the price charged each subscription_cycle. For metered pricing this would be the usage price per metered unit."
+            "Price for recurring product charges. For fixed pricing this is the total price charged each subscription cycle. For metered unit this would be the usage price per unit."
         ),
     )
 
     unit = models.CharField(
         max_length=32,
         default="Unit",
-        help_text=_("Label for a unit in the context of usage"),
+        help_text=_("Label for a unit in the context of metered usage"),
     )
 
     unit_plural = models.CharField(
         max_length=40,
         default="Units",
-        help_text=_("Label for multiple units in the context of usage"),
+        help_text=_("Label for multiple units in the context of metered usage"),
     )
 
     metered_url = models.URLField(
@@ -306,6 +415,7 @@ class Subscription(HandleRefModel):
         "billing.PaymentMethod",
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name="subscription_set",
         help_text=_("User payment option that will be charged by this subscription"),
     )
@@ -324,7 +434,6 @@ class Subscription(HandleRefModel):
 
     @classmethod
     def get_or_create(cls, org, group, subscription_cycle="month"):
-
         subscription, created_subscription = cls.objects.get_or_create(
             org=org, group=group, subscription_cycle_interval=subscription_cycle
         )
@@ -350,6 +459,23 @@ class Subscription(HandleRefModel):
     @property
     def charge_description(self):
         return f"{self.group.name} Service Charges"
+
+    @property
+    def charge_type(self):
+        """
+        if there is a metered product in the subscription
+        the charge type is `end` meaning, charges will
+        process at the end of the cycle
+
+        otherwise the charge type will be `start`, charges
+        will process at the beginniung of the cyle
+        """
+
+        if self.subscription_product_set.filter(
+            product__recurring_product__type="metered"
+        ).exists():
+            return "end"
+        return "start"
 
     def __str__(self):
         return f"{self.group.name} : {self.org}"
@@ -504,7 +630,6 @@ class SubscriptionCycle(HandleRefModel):
 
     @property
     def price(self):
-
         """
         The current total of the subscription_cycle
         """
@@ -536,7 +661,6 @@ class SubscriptionCycle(HandleRefModel):
         return f"{self.subscription} {self.start} - {self.end}"
 
     def update_usage(self, subscription_product, usage):
-
         """
         Set the usage for a subscription product in this subscription_cycle
         """
@@ -554,7 +678,6 @@ class SubscriptionCycle(HandleRefModel):
         subscription_cycle_product.save()
 
     def charge(self):
-
         """
         Charge the cost of the subscription_cycle to the customer's payment method
         """
@@ -687,7 +810,6 @@ class SubscriptionCycleProduct(HandleRefModel):
 
     @property
     def price(self):
-
         """
         price of the product in the subscription subscription_cycle
         """
@@ -757,6 +879,65 @@ class SubscriptionProductModifier(HandleRefModel):
             price -= price * (self.value / 100.0)
 
         return max(price, 0)
+
+
+@reversion.register()
+class OrganizationProduct(HandleRefModel):
+    """
+    Describes organization access to a product
+    """
+
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text=_("Products the organization has access to"),
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="organizations",
+        help_text=_("Organizations that have access to this product"),
+    )
+
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.CASCADE,
+        related_name="applied_product_ownership",
+        null=True,
+        blank=True,
+        help_text=_("Product access is granted through this subscription"),
+    )
+
+    expires = models.DateTimeField(
+        help_text=_("Product access expires at this date"),
+        null=True,
+        blank=True,
+    )
+
+    notes = models.TextField(
+        help_text=_(
+            "Custom notes for why produt access was granted. Useful when access is granted manually"
+        ),
+        null=True,
+        blank=True,
+    )
+
+    class HandleRef:
+        tag = "org_product"
+
+    class Meta:
+        db_table = "billing_org_product"
+        verbose_name = _("Organization Product Access")
+        verbose_name_plural = _("Organization Product Access")
+
+    @property
+    def expired(self):
+        if not self.expires:
+            return False
+
+        return timezone.now() >= self.expires
 
 
 def unique_id(Model, field):
@@ -884,7 +1065,6 @@ class OrderHistory(HandleRefModel):
 
 @reversion.register()
 class OrderHistoryItem(HandleRefModel):
-
     order = models.ForeignKey(
         OrderHistory, on_delete=models.CASCADE, related_name="order_history_item_set"
     )
@@ -934,7 +1114,6 @@ class CustomerData(HandleRefModel):
 @reversion.register()
 @grainy_model("billing.contact", related="org")
 class BillingContact(HandleRefModel):
-
     org = models.ForeignKey(
         account.models.Organization,
         on_delete=models.CASCADE,
@@ -1015,7 +1194,6 @@ class PaymentMethod(HandleRefModel):
 
 @reversion.register()
 class PaymentCharge(HandleRefModel):
-
     payment_method = models.ForeignKey(
         PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
     )
@@ -1057,7 +1235,6 @@ class PaymentCharge(HandleRefModel):
 
 
 class Transaction(HandleRefModel):
-
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -1079,7 +1256,6 @@ class Transaction(HandleRefModel):
 
 
 class MoneyTransaction(Transaction):
-
     billing_contact = models.ForeignKey(
         "billing.BillingContact",
         on_delete=models.CASCADE,
@@ -1126,7 +1302,6 @@ class Order(Transaction):
 
 @reversion.register()
 class Invoice(Transaction):
-
     product = models.ForeignKey(
         "billing.Product",
         on_delete=models.CASCADE,
@@ -1153,7 +1328,6 @@ class Invoice(Transaction):
 
 @reversion.register()
 class Payment(MoneyTransaction):
-
     invoice_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
@@ -1189,7 +1363,6 @@ class Withdrawal(MoneyTransaction):
 
 @reversion.register()
 class Ledger(models.Model):
-
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")

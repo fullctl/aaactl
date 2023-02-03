@@ -6,7 +6,6 @@ import account.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("account", "0008_organization_slug")]
 
     operations = [

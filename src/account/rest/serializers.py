@@ -53,7 +53,6 @@ class PermissionNamespacesMixin:
             ).order_by("group", "description")
             r = []
             for mperm in mperms:
-
                 if mperm.grant_mode == "restricted":
                     if not mperm.org_managed_permission_set.filter(org=org).exists():
                         continue
@@ -113,7 +112,6 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
 @register
 class OrganizationRole(serializers.ModelSerializer):
-
     name = serializers.CharField(source="role.name", read_only=True)
 
     ref_tag = "org_user_role"
@@ -125,7 +123,6 @@ class OrganizationRole(serializers.ModelSerializer):
 
 @register
 class Role(serializers.ModelSerializer):
-
     ref_tag = "role"
 
     class Meta:
@@ -185,7 +182,6 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
         return "r"
 
     def get_permissions(self, obj):
-
         if not hasattr(obj, "_overrides"):
             obj._overrides = {
                 o.namespace: o.id
@@ -338,7 +334,6 @@ class EditOrg(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class EditOrgPasswordProtected(EditOrg):
-
     ref_tag = "orgeditpwdprotected"
     form = forms.EditOrganizationPasswordProtected
     required_context = ["org", "user"]
@@ -492,7 +487,6 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
-
     ref_tag = "start_password_reset"
     required_context = []
     form = forms.StartPasswordReset
@@ -523,7 +517,6 @@ class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class PasswordReset(FormValidationMixin, serializers.Serializer):
-
     required_context = []
     form = forms.PasswordReset
 

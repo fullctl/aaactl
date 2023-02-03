@@ -12,7 +12,6 @@ class Services(viewsets.ViewSet):
     queryset = Serializers.service_application.Meta.model.objects.all()
 
     def list(self, request):
-
         services = []
 
         # if request has context for a specific org, check specifically for application
@@ -23,7 +22,6 @@ class Services(viewsets.ViewSet):
             org_id = "?"
 
         for service in Service.objects.filter(status="ok").order_by("name"):
-
             if service.org_id and org_id != service.org_id:
                 continue
 

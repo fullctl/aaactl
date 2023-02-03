@@ -11,9 +11,7 @@ def email_noreply(address, subscriptionject, message, **kwargs):
 
 
 def email(sender, addresses, subscriptionject, message, **kwargs):
-
     for address in addresses:
-
         if settings.DEBUG_EMAIL:
             logger.info("FROM: " + sender)
             logger.info("TO: " + address)

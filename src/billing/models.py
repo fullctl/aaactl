@@ -463,6 +463,23 @@ class Subscription(HandleRefModel):
     def charge_description(self):
         return f"{self.group.name} Service Charges"
 
+    @property
+    def charge_type(self):
+        """
+        if there is a metered product in the subscription
+        the charge type is `end` meaning, charges will
+        process at the end of the cycle
+
+        otherwise the charge type will be `start`, charges
+        will process at the beginniung of the cyle
+        """
+
+        if self.subscription_product_set.filter(product__recurring_product__type="metered").exists():
+            return "end"
+        return "start"
+
+
+
     def __str__(self):
         return f"{self.group.name} : {self.org}"
 

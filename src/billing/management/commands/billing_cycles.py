@@ -1,3 +1,4 @@
+import reversion
 from django.db import transaction
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
@@ -36,18 +37,18 @@ class Command(CommandInterface):
             for subscription_cycle in subscription.subscription_cycle_set.filter(
                 status="ok"
             ):
-                if not subscription_cycle.ended:
+                if not subscription_cycle.ended and subscription.charge_type == "end":
                     continue
                 if not subscription.payment_method_id:
                     Subscription.set_payment_method(subscription.org)
                 if not subscription.payment_method_id:
                     self.log_info(
-                        f"-- no payment method set, unable to charge previous subscription_cycle for org {subscription.org}"
+                        f"-- no payment method set, unable to charge subscription cycle for org {subscription.org}"
                     )
                     break
                 if not subscription_cycle.charged:
                     self.log_info(
-                        f"-- charging ${subscription_cycle.price} for previous subscription_cycle: {subscription_cycle}"
+                        f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
                     )
 
                     if not self.commit:

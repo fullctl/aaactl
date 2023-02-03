@@ -11,7 +11,6 @@ import billing.models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [("account", "0012_auto_20200324_1357")]

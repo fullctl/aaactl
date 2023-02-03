@@ -90,7 +90,6 @@ class PasswordProtectedForm(forms.Form):
 
 
 class ChangePasswordBase(forms.Form):
-
     password_new = forms.CharField(widget=forms.PasswordInput, label=_("New Password"))
     password_confirmation = forms.CharField(
         widget=forms.PasswordInput, label=_("Confirm Password")

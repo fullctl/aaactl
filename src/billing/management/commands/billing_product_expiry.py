@@ -5,7 +5,6 @@ from billing.models import OrganizationProduct
 
 
 class Command(CommandInterface):
-
     help = "Handles organization product access expiry"
 
     def run(self, *args, **kwargs):

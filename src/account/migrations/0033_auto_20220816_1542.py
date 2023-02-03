@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_fullctl", "0020_auditlog_action_length"),
         ("account", "0032_alter_userpermissionoverride_unique_together"),

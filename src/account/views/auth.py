@@ -34,7 +34,6 @@ def valid_redirect(path, fallback):
 
 
 def login(request):
-
     env = {}
 
     if request.user.is_authenticated:
@@ -78,7 +77,6 @@ def logout(request):
 
 
 def register(request):
-
     env = {}
 
     if request.method == "POST":
@@ -177,7 +175,6 @@ oauth_profile_scopes = ["profile", "api_keys", "provider:peeringdb"]
 
 # @protected_resource(scopes=oauth_profile_scopes)
 def oauth_profile(request):
-
     from account.rest.serializers import Serializers
 
     user = request.user

@@ -20,7 +20,6 @@ class Command(CommandInterface):
         parser.add_argument("id", type=int)
 
     def run(self, *args, **kwargs):
-
         typ = kwargs.get("type")
         pk = kwargs.get("id")
 

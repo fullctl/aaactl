@@ -88,7 +88,6 @@ class UserInformation(viewsets.ViewSet):
     @action(detail=False, methods=["POST"])
     @user_endpoint()
     def resend_confirmation_mail(self, request):
-
         user_settings, created = models.UserSettings.objects.get_or_create(
             user=request.user
         )
@@ -316,7 +315,6 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
     def add_role(self, request, pk, org, auditlog=None):
-
         user = models.OrganizationUser.objects.get(
             id=request.data.get("org_user")
         ).user_id

@@ -7,7 +7,6 @@ class org_view:
         self.explicit = explicit
 
     def __call__(self, fn):
-
         decorator = self
 
         def wrapped(request, *args, **kwargs):

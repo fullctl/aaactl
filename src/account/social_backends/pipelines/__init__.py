@@ -4,7 +4,6 @@ from account.models import UserPermissionOverride, UserSettings
 
 
 def get_username(strategy, details, backend, user=None, *args, **kwargs):
-
     if "username" in details:
         details["username"] = details["username"].lower()
 
@@ -14,7 +13,6 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
 
 
 def _sync_peeringdb_verified_asns(user, networks):
-
     """
     Takes a user and a dictionary of peeringdb networks as they are
     returned from peeringdb oauth and sets up verified.asn
@@ -55,7 +53,6 @@ def _sync_peeringdb_verified_asns(user, networks):
 
 
 def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
-
     if backend.name != "peeringdb":
         return
 
@@ -72,7 +69,6 @@ def sync_peeringdb(backend, details, response, uid, user, *args, **kwargs):
 
 
 def auto_confirm_email(backend, details, response, uid, user, *args, **kwargs):
-
     if user.email and user.email == details.get("email"):
         user_settings, _ = UserSettings.objects.get_or_create(user=user)
         user_settings.email_confirmed = True

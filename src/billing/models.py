@@ -209,7 +209,6 @@ class Product(HandleRefModel):
         return tdiff > self.renewable
 
     def add_to_org(self, org, notes=None):
-
         if org.products.filter(product=self).exists():
             raise OrgProductAlreadyExists(f"{org.slug} - {self}")
 
@@ -251,7 +250,6 @@ class ProductPermissionGrant(HandleRefModel):
         verbose_name_plural = _("Product permission grants")
 
     def apply(self, org_product):
-
         """
         Takes and OrganizationProduct instance and ensures that the required
         OrganizationManagedPermission entries exist.
@@ -436,7 +434,6 @@ class Subscription(HandleRefModel):
 
     @classmethod
     def get_or_create(cls, org, group, subscription_cycle="month"):
-
         subscription, created_subscription = cls.objects.get_or_create(
             org=org, group=group, subscription_cycle_interval=subscription_cycle
         )
@@ -474,11 +471,11 @@ class Subscription(HandleRefModel):
         will process at the beginniung of the cyle
         """
 
-        if self.subscription_product_set.filter(product__recurring_product__type="metered").exists():
+        if self.subscription_product_set.filter(
+            product__recurring_product__type="metered"
+        ).exists():
             return "end"
         return "start"
-
-
 
     def __str__(self):
         return f"{self.group.name} : {self.org}"
@@ -633,7 +630,6 @@ class SubscriptionCycle(HandleRefModel):
 
     @property
     def price(self):
-
         """
         The current total of the subscription_cycle
         """
@@ -665,7 +661,6 @@ class SubscriptionCycle(HandleRefModel):
         return f"{self.subscription} {self.start} - {self.end}"
 
     def update_usage(self, subscription_product, usage):
-
         """
         Set the usage for a subscription product in this subscription_cycle
         """
@@ -683,7 +678,6 @@ class SubscriptionCycle(HandleRefModel):
         subscription_cycle_product.save()
 
     def charge(self):
-
         """
         Charge the cost of the subscription_cycle to the customer's payment method
         """
@@ -816,7 +810,6 @@ class SubscriptionCycleProduct(HandleRefModel):
 
     @property
     def price(self):
-
         """
         price of the product in the subscription subscription_cycle
         """
@@ -941,7 +934,6 @@ class OrganizationProduct(HandleRefModel):
 
     @property
     def expired(self):
-
         if not self.expires:
             return False
 
@@ -1073,7 +1065,6 @@ class OrderHistory(HandleRefModel):
 
 @reversion.register()
 class OrderHistoryItem(HandleRefModel):
-
     order = models.ForeignKey(
         OrderHistory, on_delete=models.CASCADE, related_name="order_history_item_set"
     )
@@ -1123,7 +1114,6 @@ class CustomerData(HandleRefModel):
 @reversion.register()
 @grainy_model("billing.contact", related="org")
 class BillingContact(HandleRefModel):
-
     org = models.ForeignKey(
         account.models.Organization,
         on_delete=models.CASCADE,
@@ -1204,7 +1194,6 @@ class PaymentMethod(HandleRefModel):
 
 @reversion.register()
 class PaymentCharge(HandleRefModel):
-
     payment_method = models.ForeignKey(
         PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
     )
@@ -1246,7 +1235,6 @@ class PaymentCharge(HandleRefModel):
 
 
 class Transaction(HandleRefModel):
-
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -1268,7 +1256,6 @@ class Transaction(HandleRefModel):
 
 
 class MoneyTransaction(Transaction):
-
     billing_contact = models.ForeignKey(
         "billing.BillingContact",
         on_delete=models.CASCADE,
@@ -1315,7 +1302,6 @@ class Order(Transaction):
 
 @reversion.register()
 class Invoice(Transaction):
-
     product = models.ForeignKey(
         "billing.Product",
         on_delete=models.CASCADE,
@@ -1342,7 +1328,6 @@ class Invoice(Transaction):
 
 @reversion.register()
 class Payment(MoneyTransaction):
-
     invoice_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
@@ -1378,7 +1363,6 @@ class Withdrawal(MoneyTransaction):
 
 @reversion.register()
 class Ledger(models.Model):
-
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")

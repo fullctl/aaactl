@@ -10,7 +10,6 @@ import account.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("account", "0009_auto_20200323_1425"),

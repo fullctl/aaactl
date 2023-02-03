@@ -151,7 +151,6 @@ def del_user_permission_override(sender, **kwargs):
 
 
 def sync_roles(**kwargs):
-
     update_all_permissions = False
 
     for vs in kwargs.get("versions"):

@@ -14,7 +14,6 @@ from account.models import (
 
 @pytest.mark.django_db
 def test_managed_permission_role_auto_grant_add_and_delete(account_objects):
-
     test_role = Role.objects.create(
         name="test",
         description="",

@@ -5,7 +5,6 @@ from account.models import InternalAPIKey, Organization
 
 class Bridge(client.Bridge):
     def __init__(self, service, org, user=None):
-
         api_key = InternalAPIKey.objects.first()
 
         if not api_key:

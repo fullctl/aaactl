@@ -1,5 +1,4 @@
 import reversion
-from django.db import transaction
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
@@ -62,7 +61,6 @@ class Command(CommandInterface):
                             subscription_cycle_charge.payment_charge.sync_status()
 
     def collect(self, subscription_product, subscription_cycle):
-
         org = subscription_cycle.subscription.org
 
         service = subscription_product.product.component

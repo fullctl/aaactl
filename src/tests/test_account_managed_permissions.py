@@ -14,7 +14,6 @@ from account.models import (
 
 @pytest.mark.django_db
 def test_grant_mode_auto(account_objects, role_objects):
-
     OrganizationRole.objects.create(
         org=account_objects.org, user=account_objects.user, role=role_objects.test_role
     )
@@ -43,7 +42,6 @@ def test_grant_mode_auto(account_objects, role_objects):
 
 @pytest.mark.django_db
 def test_grant_mode_restricted(account_objects, role_objects):
-
     OrganizationRole.objects.create(
         org=account_objects.org, user=account_objects.user, role=role_objects.test_role
     )
@@ -82,7 +80,6 @@ def test_grant_mode_restricted(account_objects, role_objects):
 
 @pytest.mark.django_db
 def test_grant_mode_restricted_add_user(account_objects, role_objects):
-
     mperm = ManagedPermission.objects.create(
         namespace="test.mperm",
         status="ok",
@@ -125,7 +122,6 @@ def test_grant_mode_restricted_add_user(account_objects, role_objects):
 
 @pytest.mark.django_db
 def test_grant_mode_restricted_add_user_granted(account_objects, role_objects):
-
     mperm = ManagedPermission.objects.create(
         namespace="test.mperm",
         status="ok",

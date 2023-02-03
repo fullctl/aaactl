@@ -98,7 +98,6 @@ class Organization(HandleRefModel):
 
     @classmethod
     def personal_org(cls, user):
-
         """
         returns the personal org for the user
 
@@ -178,7 +177,6 @@ class Organization(HandleRefModel):
     def add_user(self, user, perms="r"):
         org_user, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
-
             if user.org_user_set.count() == 2:
                 # switch from personal org to real org as primary org
                 org_user.is_default = True
@@ -198,7 +196,6 @@ class Organization(HandleRefModel):
         return value
 
     def set_as_default(self, user):
-
         """
         Makes this organization the default organization for the user
         """
@@ -276,7 +273,6 @@ class Role(HandleRefModel):
 
 @reversion.register
 class OrganizationRole(HandleRefModel):
-
     org = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="roles"
     )
@@ -308,7 +304,6 @@ def generate_api_key():
 
 
 class APIKeyBase(HandleRefModel):
-
     name = models.CharField(max_length=255, blank=True, null=True)
     key = models.CharField(max_length=255, default=generate_api_key, unique=True)
     managed = models.BooleanField(
@@ -496,7 +491,6 @@ class EmailConfirmation(HandleRefModel):
 
     @classmethod
     def start(cls, user):
-
         if not settings.ENABLE_EMAIL_CONFIRMATION:
             return
 
@@ -694,7 +688,6 @@ class ManagedPermission(HandleRefModel):
 
     @classmethod
     def apply_roles(cls, org, user, delete_permissions=True):
-
         user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
 
         # delete all those namespaces for the user in the org
@@ -706,7 +699,6 @@ class ManagedPermission(HandleRefModel):
         for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(
             role__in=user_roles
         ).order_by("-role__level"):
-
             managed_permission = auto_grant.managed_permission
 
             if not managed_permission.can_grant_to_org(org):
@@ -721,7 +713,6 @@ class ManagedPermission(HandleRefModel):
 
     @classmethod
     def apply_roles_all(cls):
-
         """
         Reapplies roles for all users across all orgs
 
@@ -743,7 +734,6 @@ class ManagedPermission(HandleRefModel):
 
     @classmethod
     def apply_roles_org(cls, org):
-
         """
         Takes an organization id and re-applies permissions for all
         users in the organization.
@@ -761,7 +751,6 @@ class ManagedPermission(HandleRefModel):
         return f"{self.group} - {self.description}"
 
     def can_grant_to_org(self, org):
-
         if self.grant_mode == "auto":
             return True
 
@@ -775,7 +764,6 @@ class ManagedPermission(HandleRefModel):
 
 @reversion.register
 class ManagedPermissionRoleAutoGrant(HandleRefModel):
-
     managed_permission = models.ForeignKey(
         ManagedPermission, related_name="role_auto_grants", on_delete=models.CASCADE
     )
@@ -909,7 +897,6 @@ class Invitation(HandleRefModel):
 
 
 class Impersonation(models.Model):
-
     superuser = models.OneToOneField(
         get_user_model(), on_delete=models.CASCADE, related_name="impersonating"
     )

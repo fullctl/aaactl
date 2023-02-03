@@ -5,7 +5,6 @@ from account.social_backends.pipelines import _sync_peeringdb_verified_asns
 
 @pytest.mark.django_db
 def test_peeringdb_permissions(account_objects):
-
     user = account_objects.user
 
     user.grainy_permissions.add_permission("verified.asn.1234.peeringdb", 15)

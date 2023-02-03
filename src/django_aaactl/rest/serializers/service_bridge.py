@@ -12,7 +12,6 @@ Serializers, register = serializer_registry()
 
 @register
 class Service(ModelSerializer):
-
     products = serializers.SerializerMethodField()
     trial_product_name = serializers.SerializerMethodField()
 
@@ -101,7 +100,6 @@ class Product(ModelSerializer):
 
 @register
 class OrgnaizationProduct(ModelSerializer):
-
     name = serializers.SerializerMethodField()
     component = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()

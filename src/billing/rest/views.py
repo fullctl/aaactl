@@ -26,7 +26,6 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_setup(self, request, pk, org, auditlog=None):
-
         reversion.set_user(request.user)
 
         serializer = Serializers.setup(
@@ -91,7 +90,6 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_contact(self, request, pk, org, auditlog=None):
-
         instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
@@ -104,7 +102,6 @@ class Organization(viewsets.ViewSet):
             serializer.save()
 
         elif request.method == "DELETE":
-
             serializer = Serializers.billing_contact(instance=instance)
             instance.delete()
             models.Subscription.set_payment_method(org)
@@ -176,7 +173,6 @@ class Organization(viewsets.ViewSet):
 
 @route
 class Product(viewsets.ViewSet):
-
     serializer_class = Serializers.product
     queryset = models.Product.objects.all()
 

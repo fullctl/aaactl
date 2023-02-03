@@ -38,7 +38,6 @@ class Heartbeat(SystemViewSet):
 
 @route
 class Service(AaactlDataViewSet):
-
     path_prefix = "/data"
     allowed_http_methods = ["GET"]
     valid_filters = [
@@ -52,7 +51,6 @@ class Service(AaactlDataViewSet):
     serializer_class = Serializers.service_application
 
     def serializer_context(self, request, context):
-
         if request.GET.get("org"):
             org = account_models.Organization.objects.get(slug=request.GET.get("org"))
             context.update(org=org)
@@ -95,7 +93,6 @@ class OrganizationProduct(AaactlDataViewSet):
 
 @route
 class User(AaactlDataViewSet):
-
     path_prefix = "/data"
     allowed_http_methods = ["GET"]
     valid_filters = [

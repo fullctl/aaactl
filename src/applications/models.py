@@ -11,7 +11,6 @@ from common.models import HandleRefModel
 
 @grainy_model("service", namespace_instance="service.{instance.slug}")
 class Service(HandleRefModel):
-
     slug = models.CharField(max_length=16, unique=True)
     name = models.CharField(max_length=255, unique=True)
 
@@ -81,7 +80,6 @@ class Service(HandleRefModel):
 
 @grainy_model("service")
 class ServiceAPIEndpoint(HandleRefModel):
-
     service_application = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,

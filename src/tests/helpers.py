@@ -1,5 +1,14 @@
 import json
 
+from django.conf import settings
+
+
+def mock_csrf_session(request):
+    engine = import_module(settings.SESSION_ENGINE)
+    request.session = engine.SessionStore("deadbeef")
+    request.session[CSRF_SESSION_KEY] = "csrf-session-key"
+    request._dont_enforce_csrf_checks = True
+
 
 def set_assert_field_exists(field, data):
     if field in data:

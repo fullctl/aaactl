@@ -104,6 +104,14 @@ class SubscriptionProductInline(admin.TabularInline):
     fields = ("product",)
     extra = 0
 
+    def has_change_permission(self, request, obj=None):
+        # for signals to work correctly, dont allow changes to
+        # existing sub - product relationships directly
+        #
+        # the user is forced to instead delete the existing relationship
+        # and add a new one to make a change
+        return False
+
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):

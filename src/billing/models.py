@@ -299,20 +299,20 @@ class RecurringProduct(HandleRefModel):
         max_digits=6,
         decimal_places=2,
         help_text=_(
-            "Price in the context of recurring_product charges. For fixed recurring_product pricing this would be the price charged each subscription_cycle. For metered pricing this would be the usage price per metered unit."
+            "Price for recurring product charges. For fixed pricing this is the total price charged each subscription cycle. For metered unit this would be the usage price per unit."
         ),
     )
 
     unit = models.CharField(
         max_length=32,
         default="Unit",
-        help_text=_("Label for a unit in the context of usage"),
+        help_text=_("Label for a unit in the context of metered usage"),
     )
 
     unit_plural = models.CharField(
         max_length=40,
         default="Units",
-        help_text=_("Label for multiple units in the context of usage"),
+        help_text=_("Label for multiple units in the context of metered usage"),
     )
 
     metered_url = models.URLField(

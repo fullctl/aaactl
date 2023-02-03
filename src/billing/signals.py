@@ -2,8 +2,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from fullctl.django import auditlog
 
-from billing.models import OrganizationProduct
-
+from billing.models import OrganizationProduct, Subscription, SubscriptionProduct
 
 @receiver(post_save, sender=OrganizationProduct)
 def handle_orgproduct_save(sender, **kwargs):
@@ -39,3 +38,38 @@ def handle_orgproduct_delete(sender, **kwargs):
     with auditlog.Context() as log:
         log.set("org", org_product.org)
         log.log("product_removed_from_org", log_object=org_product.product)
+
+
+@receiver(post_save, sender=SubscriptionProduct)
+def handle_subscription_product_save(sender, **kwargs):
+
+    """
+    When a product is added to a subscription also create
+    the necessary OrganizationProduct instances
+    """
+
+    sub_product = kwargs.get("instance")
+
+    OrganizationProduct.objects.get_or_create(
+        subscription = sub_product.subscription,
+        product = sub_product.product,
+        org = sub_product.subscription.org,
+    )
+
+@receiver(post_delete, sender=SubscriptionProduct)
+def handle_subscription_product_delete(sender, **kwargs):
+
+    """
+    When a product is removed from a subscription also remove
+    the OrganizationProduct for it if it exists.
+    """
+
+    sub_product = kwargs.get("instance")
+
+    qset = OrganizationProduct.objects.filter(
+        subscription = sub_product.subscription,
+        product = sub_product.product,
+    )
+
+    for org_product in qset:
+        org_product.delete()

@@ -4,6 +4,7 @@ from fullctl.django.rest.serializers import ModelSerializer
 from rest_framework import serializers
 
 import applications.models as application_models
+import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
 
 Serializers, register = serializer_registry()
@@ -89,3 +90,35 @@ class User(ModelSerializer):
             AccountSerializers.org(instance=org.org, context={"user": obj}).data
             for org in obj.org_user_set.all()
         ]
+
+
+
+@register
+class Product(ModelSerializer):
+
+    class Meta:
+        model = billing_models.Product
+        fields = ["name", "description", "data", "price", "expiry_period", "renewable"]
+
+
+@register
+class OrgnaizationProduct(ModelSerializer):
+
+    name = serializers.SerializerMethodField()
+    component = serializers.SerializerMethodField()
+    product_data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = billing_models.OrganizationProduct
+        fields = ["org", "product", "name", "component", "expires", "subscription", "product_data"]
+
+
+    def get_component(self, org_product):
+        return org_product.product.component.name.lower()
+
+    def get_name(self, org_product):
+        return org_product.product.name
+
+    def get_product_data(self, org_product):
+        return org_product.product.data
+

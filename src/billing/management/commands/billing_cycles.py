@@ -16,7 +16,18 @@ class Command(CommandInterface):
         qset = OrganizationProduct.objects.filter(expires__lt=timezone.now())
         for org_prod in qset:
             self.log_info(f"Expiring {org_prod.product} for {org_prod.org}")
+            if org_prod.product.expiry_replacement_product_id:
+                replace = org_prod.product.expiry_replacement_product
+            else:
+                replace = None
+
             org_prod.delete()
+
+            if replace and replace.can_add_to_org(org_prod.org):
+                self.log_info(
+                    f"Replacing expired product with {replace} for {org_prod.org}"
+                )
+                replace.add_to_org(org_prod.org)
 
     def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")

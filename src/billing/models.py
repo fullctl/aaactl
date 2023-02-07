@@ -114,6 +114,17 @@ class Product(HandleRefModel):
         help_text=_("Product expires after N days"),
     )
 
+    expiry_replacement_product = models.ForeignKey(
+        "billing.Product",
+        null=True,
+        blank=True,
+        related_name="expiry_replacement_for",
+        on_delete=models.SET_NULL,
+        help_text=_(
+            "On products that can expire, replace the expired product with this product"
+        ),
+    )
+
     renewable = models.IntegerField(
         default=0,
         help_text=_(
@@ -536,6 +547,12 @@ class Subscription(HandleRefModel):
         subscription_cycle = SubscriptionCycle.objects.create(
             subscription=self, start=start, end=end
         )
+
+        for subscription_product in self.subscription_product_set.all():
+            SubscriptionCycleProduct.objects.create(
+                subscription_cycle=subscription_cycle,
+                subscription_product=subscription_product,
+            )
 
         return subscription_cycle
 

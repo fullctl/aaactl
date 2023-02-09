@@ -455,6 +455,32 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
         return f"{self.namespace} ({self.id})"
 
 
+@reversion.register
+class NewSignUpEmailNotification(HandleRefModel):
+    """
+    Describes email when new sign-up
+    """
+
+    @classmethod
+    def start(cls, user):
+
+        if not settings.SIGNUP_NOTIFICATION_EMAIL:
+            return
+
+        print(settings.SIGNUP_NOTIFICATION_EMAIL)
+        email_noreply(
+            settings.SIGNUP_NOTIFICATION_EMAIL,
+            _("New account registration"),
+            render(
+                None,
+                "account/email/signup-notification.txt",
+                {
+                    "user": user
+                },
+            ).content.decode("utf-8"),
+        )
+
+
 def generate_email_confirmation_secret():
     i = 0
     while i < 1000:

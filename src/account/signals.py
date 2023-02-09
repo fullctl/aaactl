@@ -15,6 +15,7 @@ from account.models import (
     OrganizationRole,
     OrganizationUser,
     Role,
+    NewSignUpEmailNotification,
     UpdatePermissions,
     UserPermissionOverride,
     UserSettings,
@@ -54,6 +55,7 @@ def create_user_config(sender, **kwargs):
             EmailConfirmation.start(user)
         else:
             UserSettings.objects.get_or_create(user=user, email_confirmed=True)
+        NewSignUpEmailNotification.start(user)
 
 
 @receiver(post_save, sender=get_user_model())

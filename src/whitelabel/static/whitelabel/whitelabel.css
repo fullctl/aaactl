@@ -22,7 +22,8 @@ body {
 
 .header img.logo {
   max-height: 100%;
-  padding-top: var(--size-400);
+  padding-top: var(--size-200);
+  padding-top: var(--size-200);
 }
 
 .header-outer {

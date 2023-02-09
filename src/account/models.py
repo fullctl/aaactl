@@ -474,9 +474,7 @@ class NewSignUpEmailNotification(HandleRefModel):
             render(
                 None,
                 "account/email/signup-notification.txt",
-                {
-                    "user": user
-                },
+                {"user": user},
             ).content.decode("utf-8"),
         )
 

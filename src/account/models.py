@@ -463,7 +463,6 @@ class NewSignUpEmailNotification(HandleRefModel):
 
     @classmethod
     def start(cls, user):
-
         if not settings.SIGNUP_NOTIFICATION_EMAIL:
             return
 

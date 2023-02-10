@@ -3,6 +3,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
+from django.shortcuts import render
+from django.utils.translation import gettext as _
 from reversion.signals import post_revision_commit
 
 from account.models import (
@@ -19,6 +21,7 @@ from account.models import (
     UserPermissionOverride,
     UserSettings,
 )
+from common.email import email_noreply
 
 
 @receiver(post_save, sender=Organization)
@@ -54,6 +57,22 @@ def create_user_config(sender, **kwargs):
             EmailConfirmation.start(user)
         else:
             UserSettings.objects.get_or_create(user=user, email_confirmed=True)
+        send_signup_notification(user)
+
+
+def send_signup_notification(user):
+    if not settings.SIGNUP_NOTIFICATION_EMAIL:
+        return
+
+    email_noreply(
+        settings.SIGNUP_NOTIFICATION_EMAIL,
+        _("New account registration"),
+        render(
+            None,
+            "account/email/signup-notification.txt",
+            {"user": user},
+        ).content.decode("utf-8"),
+    )
 
 
 @receiver(post_save, sender=get_user_model())

@@ -237,7 +237,7 @@ settings_manager.set_default_append()
 # misc aaactl settings
 # email to notify new sign-ups to
 settings_manager.set_option(
-    "SIGNUP_NOTIFICATION_EMAIL", settings_manager.get("SERVER_EMAIL"), str
+    "SIGNUP_NOTIFICATION_EMAIL", SERVER_EMAIL
 )
 
 # global toggle email confirmation

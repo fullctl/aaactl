@@ -26,12 +26,14 @@ FROM ghcr.io/fullctl/fullctl-builder-alpine:prep-release as builder
 
 ARG extra_pip_install_dir
 
-# individual files here instead of COPY . . for caching
-COPY pyproject.toml poetry.lock $extra_pip_install_dir ./
+# only these two individual files before install instead for caching
+COPY pyproject.toml poetry.lock ./
 
 # Need to upgrade pip and wheel within Poetry for all its installs
 RUN poetry install --no-root
 
+# gitignore is just a placeholder for if extra is empty
+COPY .gitignore $extra_pip_install_dir ./plugins/
 RUN test -z "$extra_pip_install_dir" || pip install *.tar.gz
 
 COPY Ctl/VERSION Ctl/
@@ -40,7 +42,6 @@ COPY Ctl/VERSION Ctl/
 
 FROM base as final
 
-ARG whitelabel_dir
 ARG run_deps
 ARG run_dirs="locale media static"
 ARG uid
@@ -69,7 +70,7 @@ FROM final
 
 ARG uid
 
-COPY src/ $whitelabel_dir main/
+COPY src/ main/
 COPY Ctl/docker/entrypoint.sh .
 RUN ln -s $SERVICE_HOME/entrypoint.sh /entrypoint
 RUN ln -s /venv $SERVICE_HOME/venv

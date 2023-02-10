@@ -16,7 +16,6 @@ class RequestAugmentation:
         return response
 
     def set_selected_org(self, request):
-
         org_slug = request.GET.get("org")
         if org_slug == "personal":
             set_selected_org(request, request.user.personal_org)
@@ -74,7 +73,6 @@ class Impersonation:
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-
         user = is_impersonating(request)
 
         # cache impersonation on request and set the request user

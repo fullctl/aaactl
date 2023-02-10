@@ -10,7 +10,6 @@ import account.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0019_auto_20210423_1130"),
     ]

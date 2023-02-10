@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from account.impersonate import is_impersonating, start_impersonation
 from account.models import Impersonation
+from tests.helpers import mock_csrf_session
 
 
 def test_start_impersontation(db, account_objects, account_objects_b):
@@ -14,6 +15,7 @@ def test_start_impersontation(db, account_objects, account_objects_b):
     request = HttpRequest()
     request.method = "GET"
     request.user = user
+    mock_csrf_session(request)
     impersontation_count = Impersonation.objects.count()
 
     start_impersonation(request, account_objects_b.user)
@@ -35,6 +37,7 @@ def test_is_impersontating(db, account_objects, account_objects_b):
     request = HttpRequest()
     request.method = "GET"
     request.user = user
+    mock_csrf_session(request)
     start_impersonation(request, account_objects_b.user)
 
     assert is_impersonating(request) == account_objects_b.user
@@ -48,6 +51,7 @@ def test_stop_impersontation(db, account_objects, account_objects_b):
     request = HttpRequest()
     request.method = "GET"
     request.user = user
+    mock_csrf_session(request)
     start_impersonation(request, account_objects_b.user)
 
     assert account_objects_b.user == is_impersonating(request)

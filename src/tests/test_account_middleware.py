@@ -2,7 +2,6 @@ from django.urls import reverse
 
 
 def test_select_org_default(db, account_objects, client_anon):
-
     client = account_objects.client
     response = client.get(reverse("account:controlpanel"))
     request = response.wsgi_request
@@ -16,7 +15,6 @@ def test_select_org_default(db, account_objects, client_anon):
 
 
 def test_select_org_slug(db, account_objects, client_anon):
-
     client = account_objects.client
     org = account_objects.org
     other = account_objects.other_org

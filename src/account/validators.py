@@ -4,7 +4,6 @@ from django.utils.translation import gettext as _
 
 
 def validate_password(value):
-
     required_length = settings.VALIDATE_PASSWORD_LENGTH
 
     if len(value) < required_length:

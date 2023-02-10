@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0026_reftag_pass_2"),
         ("billing", "0011_reftag_pass_4"),

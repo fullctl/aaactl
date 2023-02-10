@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0023_managed_org_perms"),
         ("applications", "0006_service_group"),

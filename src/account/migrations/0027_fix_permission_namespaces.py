@@ -31,7 +31,6 @@ def _rename_backward(qset):
 
 
 def forwards(apps, schema_editor):
-
     models = [
         apps.get_model("account", "ManagedPermission"),
         apps.get_model("account", "APIKeyPermission"),
@@ -47,7 +46,6 @@ def forwards(apps, schema_editor):
 
 
 def backwards(apps, schema_editor):
-
     models = [
         apps.get_model("account", "ManagedPermission"),
         apps.get_model("account", "APIKeyPermission"),
@@ -63,7 +61,6 @@ def backwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0026_reftag_pass_2"),
         ("django_grainy", "0001_initial"),

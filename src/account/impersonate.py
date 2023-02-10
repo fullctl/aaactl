@@ -17,7 +17,6 @@ def is_impersonating(request):
     """
 
     if getattr(request, "impersonating", None):
-
         # Only superusers are ever able to impersonate anyone
         if not getattr(request.impersonating.superuser, "is_superuser", False):
             return None
@@ -33,7 +32,6 @@ def is_impersonating(request):
 
 
 def start_impersonation(request, user):
-
     """
     start impersonating the specified user
     """

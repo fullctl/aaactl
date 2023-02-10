@@ -164,7 +164,6 @@ class PasswordResetAdmin(admin.ModelAdmin):
 
 
 class ManagedPermissionRoleAutoGrantForm(forms.ModelForm):
-
     permissions = PermissionFormField(
         initial=0, widget=BitmaskSelect(choices=PERM_CHOICES_FOR_FIELD)
     )
@@ -208,6 +207,7 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         "org",
         "managed_permission",
         "reason",
+        "product",
         "created",
     )
 
@@ -241,7 +241,6 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
     ]
 
     def get_queryset(self, request):
-
         if is_impersonating(request):
             self.message_user(
                 request,
@@ -252,7 +251,6 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
         return super().get_queryset(request)
 
     def impersonate(self, obj):
-
         with current_request() as request:
             user = is_impersonating(request)
 

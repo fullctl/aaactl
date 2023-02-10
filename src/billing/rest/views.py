@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+import applications.models as application_models
 import billing.models as models
 from account.rest.decorators import set_org
 from billing.rest.route import route
@@ -25,7 +26,6 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_setup(self, request, pk, org, auditlog=None):
-
         reversion.set_user(request.user)
 
         serializer = Serializers.setup(
@@ -90,7 +90,6 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_contact(self, request, pk, org, auditlog=None):
-
         instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
@@ -103,7 +102,6 @@ class Organization(viewsets.ViewSet):
             serializer.save()
 
         elif request.method == "DELETE":
-
             serializer = Serializers.billing_contact(instance=instance)
             instance.delete()
             models.Subscription.set_payment_method(org)
@@ -138,6 +136,28 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.subscription(subscription)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("billing.{org.id}", explicit=False)
+    def start_trial(self, request, pk, org, auditlog=None):
+        service_id = request.data.get("service_id")
+        service = application_models.Service.objects.get(id=service_id)
+
+        if not service.trial_product_id:
+            return Response({"service_id": ["This service has no trial"]}, status=400)
+
+        if not service.trial_product.can_add_to_org(org):
+            return Response(
+                {"non_field_errors": ["Trial could not be started at this time"]},
+                status=400,
+            )
+
+        org_product = service.trial_product.add_to_org(org)
+
+        serializer = Serializers.org_product(org_product)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["GET"])
     @set_org
     @grainy_endpoint("billing.{org.id}", explicit=False)
@@ -153,7 +173,6 @@ class Organization(viewsets.ViewSet):
 
 @route
 class Product(viewsets.ViewSet):
-
     serializer_class = Serializers.product
     queryset = models.Product.objects.all()
 

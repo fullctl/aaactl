@@ -9,11 +9,13 @@ from billing.models import (
     CustomerData,
     OrderHistory,
     OrderHistoryItem,
+    OrganizationProduct,
     PaymentCharge,
     PaymentMethod,
     Product,
     ProductGroup,
     ProductModifier,
+    ProductPermissionGrant,
     RecurringProduct,
     Subscription,
     SubscriptionCycle,
@@ -42,6 +44,12 @@ class RecurringProductInline(admin.StackedInline):
     extra = 0
 
 
+class ProductPermissionGrantInline(admin.StackedInline):
+    model = ProductPermissionGrant
+    fields = ("managed_permission",)
+    extra = 1
+
+
 @admin.register(Product)
 class ProductAdmin(BaseAdmin):
     list_display = (
@@ -54,7 +62,11 @@ class ProductAdmin(BaseAdmin):
     )
     search_fields = ("name", "component", "group")
     readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
-    inlines = (ProductModifierInline, RecurringProductInline)
+    inlines = (
+        ProductModifierInline,
+        RecurringProductInline,
+        ProductPermissionGrantInline,
+    )
     form = ProductForm
 
     def recurring_product(self, obj):
@@ -67,6 +79,12 @@ class ProductAdmin(BaseAdmin):
 class ProductModifieradmin(BaseAdmin):
     list_display = ("product", "type", "value", "duration", "code")
     search_fields = ("product__name", "code")
+
+
+@admin.register(OrganizationProduct)
+class OrganizationProduct(BaseAdmin):
+    list_display = ("org", "product", "subscription", "created", "updated", "expires")
+    search_fields = ("product__name", "org__name", "org__slug")
 
 
 class SubscriptionProductModifierInline(admin.TabularInline):
@@ -85,6 +103,14 @@ class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
     fields = ("product",)
     extra = 0
+
+    def has_change_permission(self, request, obj=None):
+        # for signals to work correctly, dont allow changes to
+        # existing sub - product relationships directly
+        #
+        # the user is forced to instead delete the existing relationship
+        # and add a new one to make a change
+        return False
 
 
 @admin.register(Subscription)

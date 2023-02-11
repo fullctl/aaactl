@@ -166,6 +166,7 @@ def del_org_role(sender, **kwargs):
 @receiver(post_delete, sender=UserPermissionOverride)
 def del_user_permission_override(sender, **kwargs):
     instance = kwargs.get("instance")
+    instance.user.grainy_permissions.filter(namespace=instance.namespace).delete()
     ManagedPermission.apply_roles(instance.org, instance.user)
 
 

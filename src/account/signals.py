@@ -150,6 +150,7 @@ def del_user_permission_override(sender, **kwargs):
     instance.user.grainy_permissions.filter(namespace=instance.namespace).delete()
     ManagedPermission.apply_roles(instance.org, instance.user)
 
+
 def sync_roles(**kwargs):
     update_all_permissions = False
 

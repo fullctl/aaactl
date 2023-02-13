@@ -4,4 +4,4 @@ To accept this invitation please follow the link below. If you do not wish to ac
 
 {{ inv.url }}
 
-20C Account Service
+20C Account Services

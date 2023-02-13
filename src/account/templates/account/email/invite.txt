@@ -2,6 +2,6 @@
 
 To accept this invitation please follow the link below. If you do not wish to accept no further action is required on your part.
 
-{{ inv.url }}
+{{ invite.url }}
 
 FullCtl Account Services

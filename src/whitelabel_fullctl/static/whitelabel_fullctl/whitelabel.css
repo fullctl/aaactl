@@ -244,3 +244,13 @@ button.close[data-bs-dismiss="modal"] {
 #card-element {
   background: white;
 }
+
+.user-listing table td,
+.user-listing table th {
+  border: none;
+  padding: 0.3rem;
+}
+
+.user-listing table td.right {
+  padding-right: var(--size-425);
+}

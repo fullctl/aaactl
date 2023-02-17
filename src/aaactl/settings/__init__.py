@@ -96,6 +96,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.permissions",
     "account.context_processors.info",
+    "fullctl.django.context_processors.conf",
 ]
 
 
@@ -254,3 +255,6 @@ settings_manager.try_include(env_file)
 # TODO combine to log summarry to INFO
 # add BILLING_ENV
 settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DEBUG})")
+
+# support settings
+settings_manager.set_support()

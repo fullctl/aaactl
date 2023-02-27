@@ -6,7 +6,7 @@
 <h5>{{ request.selected_org.label }} - {% trans "Billing Contact: " %} {{ billing_contact.name }}</h5>
 
 <form
-  class="billcon"
+  class="billing_contact"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="billing_contact"
   data-api-method="PUT">
@@ -43,11 +43,11 @@
 <h6>{% trans "Payment Methods" %}</h4>
 
 <div
-  class="pay-listing"
+  class="payment_method-listing"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="payment_methods">
   <div style="display:none" data-api-submit="yes">
-    <input type="hidden" name="billcon" value="{{ billing_contact.id }}" >
+    <input type="hidden" name="billing_contact" value="{{ billing_contact.id }}" >
   </div>
   <div class="templates" style="display:none">
 
@@ -78,7 +78,7 @@
     <tbody class="list-static-body">
       <tr>
         <td>{% trans "Add new payment method ..." %}</td>
-        <td class="right"><a href="{% url "billing:setup" %}?billcon={{ billing_contact.id }}" class="btn btn-sm btn-primary">{% trans "Add" %}</a>
+        <td class="right"><a href="{% url "billing:setup" %}?billing_contact={{ billing_contact.id }}" class="btn btn-sm btn-primary">{% trans "Add" %}</a>
         </td>
       </tr>
     </tbody>

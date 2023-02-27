@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "fullctl.django.middleware.CurrentRequestContext",
+    "account.middleware.Impersonation",
     "account.middleware.RequestAugmentation",
 ]
 
@@ -78,6 +79,7 @@ INSTALLED_APPS += (
     "rest_framework",
     # rendering
     "crispy_forms",
+    "crispy_bootstrap5",
     # oauth
     "social_django",
     # aaactl apps
@@ -88,11 +90,13 @@ INSTALLED_APPS += (
     "fullctl.django.apps.DjangoFullctlConfig",
 )
 
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "account.context_processors.permissions",
     "account.context_processors.info",
+    "fullctl.django.context_processors.conf",
 ]
 
 
@@ -175,6 +179,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "account.social_backends.pipelines.sync_peeringdb",
     "social_core.pipeline.user.user_details",
+    "account.social_backends.pipelines.auto_confirm_email",
 )
 
 # We are using postgres so make use of postgres json field
@@ -230,6 +235,19 @@ REST_FRAMEWORK = {
 
 settings_manager.set_default_append()
 
+# misc aaactl settings
+# email to notify new sign-ups to
+settings_manager.set_option("SIGNUP_NOTIFICATION_EMAIL", SERVER_EMAIL)
+
+# global toggle email confirmation
+settings_manager.set_option("ENABLE_EMAIL_CONFIRMATION", True)
+
+# automatic email confirm on oauath
+settings_manager.set_option("CONFIRM_EMAIL_ON_OAUTH", True)
+
+# add new users to this org (needs to be org slug)
+settings_manager.set_option("AUTO_USER_TO_ORG", None, str)
+
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")
 settings_manager.try_include(env_file)
@@ -237,3 +255,6 @@ settings_manager.try_include(env_file)
 # TODO combine to log summarry to INFO
 # add BILLING_ENV
 settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DEBUG})")
+
+# support settings
+settings_manager.set_support()

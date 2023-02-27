@@ -2,6 +2,7 @@ import datetime
 import secrets
 
 import reversion
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -9,10 +10,16 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
-from django_grainy.models import Permission, PermissionField, PermissionManager
-from django_grainy.util import Permissions, check_permissions
+from django_grainy.models import (
+    Permission,
+    PermissionField,
+    PermissionManager,
+    UserPermission,
+)
+from django_grainy.util import Permissions
 from fullctl.django.util import host_url
 
+from account.tasks import UpdatePermissions  # noqa F401
 from common.email import email_noreply
 from common.models import HandleRefModel
 
@@ -26,7 +33,7 @@ class UserSettings(HandleRefModel):
     """
 
     user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name="usercfg"
+        get_user_model(), on_delete=models.CASCADE, related_name="user_settings"
     )
     email_confirmed = models.BooleanField(
         default=False, help_text=_("Has the user confirmed his email")
@@ -41,7 +48,7 @@ class UserSettings(HandleRefModel):
         verbose_name_plural = _("User Settings")
 
     class HandleRef:
-        tag = "usercfg"
+        tag = "user_settings"
 
 
 def generate_org_name():
@@ -91,7 +98,6 @@ class Organization(HandleRefModel):
 
     @classmethod
     def personal_org(cls, user):
-
         """
         returns the personal org for the user
 
@@ -99,7 +105,7 @@ class Organization(HandleRefModel):
         """
 
         try:
-            return user.orguser_set.get(org__user_id=user.id).org
+            return user.org_user_set.get(org__user_id=user.id).org
         except OrganizationUser.DoesNotExist:
             pass
 
@@ -125,7 +131,7 @@ class Organization(HandleRefModel):
         organization will be returned,
         """
 
-        default_org = user.orguser_set.filter(is_default=True)
+        default_org = user.org_user_set.filter(is_default=True)
 
         if default_org.exists():
             return default_org.first().org
@@ -149,8 +155,8 @@ class Organization(HandleRefModel):
 
     @property
     def users(self):
-        for orguser in self.orguser_set.all():
-            yield orguser.user
+        for org_user in self.org_user_set.all():
+            yield org_user.user
 
     @property
     def label(self):
@@ -169,31 +175,18 @@ class Organization(HandleRefModel):
 
     @reversion.create_revision()
     def add_user(self, user, perms="r"):
-        orguser, created = OrganizationUser.objects.get_or_create(org=self, user=user)
+        org_user, created = OrganizationUser.objects.get_or_create(org=self, user=user)
         if created:
-
-            if user.orguser_set.count() == 2:
+            if user.org_user_set.count() == 2:
                 # switch from personal org to real org as primary org
-                orguser.is_default = True
-                orguser.save()
+                org_user.is_default = True
+                org_user.save()
 
-            for mperm in ManagedPermission.objects.all():
-
-                if not mperm.can_grant_to_org(self):
-                    continue
-
-                if perms == "r":
-                    mperm.auto_grant_user(self, user)
-                else:
-                    mperm.auto_grant_admin(self, user)
-
-        return orguser
+        return org_user
 
     @reversion.create_revision()
     def remove_user(self, user):
-        self.orguser_set.filter(user=user).delete()
-        for mperm in ManagedPermission.objects.all():
-            mperm.revoke_user(self, user)
+        self.org_user_set.filter(user=user).delete()
 
     def clean_slug(self, value):
         value = value.lower()
@@ -202,36 +195,28 @@ class Organization(HandleRefModel):
             raise ValidationError(_("Protected value: {}").format(value))
         return value
 
-    def is_admin_user(self, user):
-
-        if self.user == user:
-            return True
-
-        return check_permissions(user, self, "c", ignore_grant_all=True)
-
     def set_as_default(self, user):
-
         """
         Makes this organization the default organization for the user
         """
 
-        orguser = user.orguser_set.filter(org=self).first()
+        org_user = user.org_user_set.filter(org=self).first()
 
-        if not orguser:
+        if not org_user:
             raise KeyError("Not a member of this organization")
 
         # set new default org
-        orguser.is_default = True
-        orguser.save()
+        org_user.is_default = True
+        org_user.save()
 
 
 @reversion.register
 class OrganizationUser(HandleRefModel):
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="orguser_set"
+        get_user_model(), on_delete=models.CASCADE, related_name="org_user_set"
     )
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orguser_set"
+        Organization, on_delete=models.CASCADE, related_name="org_user_set"
     )
 
     is_default = models.BooleanField(
@@ -245,15 +230,67 @@ class OrganizationUser(HandleRefModel):
         verbose_name_plural = _("Organization User Memberships")
 
     class HandleRef:
-        tag = "orguser"
+        tag = "org_user"
 
     def __str__(self):
         return f"{self.org.slug}:{self.user.username} ({self.id})"
 
     def save(self, **kwargs):
         if self.is_default:
-            self.user.orguser_set.exclude(id=self.id).update(is_default=False)
+            self.user.org_user_set.exclude(id=self.id).update(is_default=False)
         super().save(**kwargs)
+
+
+@reversion.register
+class Role(HandleRefModel):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+    level = models.PositiveIntegerField(
+        help_text=_(
+            "Defines the order in which permissions are applied for user's that are in multiple roles. With the lowest level role being applied last."
+        )
+    )
+    auto_set_on_creator = models.BooleanField(
+        help_text=_("Automatically give the creators of an organization this role"),
+        default=False,
+    )
+    auto_set_on_member = models.BooleanField(
+        help_text=_("Automatically give new members of an organization this role"),
+        default=False,
+    )
+
+    class Meta:
+        db_table = "account_role"
+        verbose_name = _("Role")
+        verbose_name_plural = _("Roles")
+
+    class HandleRef:
+        tag = "role"
+
+    def __str__(self):
+        return f"Role: {self.name} ({self.id})"
+
+
+@reversion.register
+class OrganizationRole(HandleRefModel):
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="roles"
+    )
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="roles"
+    )
+    role = models.ForeignKey(
+        Role, on_delete=models.PROTECT, related_name="organization_roles"
+    )
+
+    class Meta:
+        db_table = "account_organization_user_role"
+        verbose_name = _("User role within organization")
+        verbose_name_plural = _("User roles within organization")
+        unique_together = (("org", "user", "role"),)
+
+    class HandleRef:
+        tag = "org_user_role"
 
 
 def generate_api_key():
@@ -267,7 +304,6 @@ def generate_api_key():
 
 
 class APIKeyBase(HandleRefModel):
-
     name = models.CharField(max_length=255, blank=True, null=True)
     key = models.CharField(max_length=255, default=generate_api_key, unique=True)
     managed = models.BooleanField(
@@ -328,7 +364,7 @@ class APIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("API Key Permissions")
 
     class HandleRef:
-        tag = "keyperm"
+        tag = "key_permission"
 
 
 @reversion.register
@@ -371,18 +407,18 @@ class InternalAPIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("Internal API Key Permissions")
 
     class HandleRef:
-        tag = "keyperm"
+        tag = "key_permission"
 
 
 @reversion.register
-@grainy_model(namespace="orgkey", namespace_instance="{namespace}.{instance.org_id}")
+@grainy_model(namespace="org_key", namespace_instance="{namespace}.{instance.org_id}")
 class OrganizationAPIKey(APIKeyBase):
     """
     Describes a organization APIKey
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="orgkey_set"
+        Organization, on_delete=models.CASCADE, related_name="org_key_set"
     )
     email = models.EmailField()
 
@@ -392,7 +428,7 @@ class OrganizationAPIKey(APIKeyBase):
         verbose_name_plural = _("Organization API Keys")
 
     class HandleRef:
-        tag = "orgkey"
+        tag = "org_key"
 
 
 @reversion.register
@@ -413,13 +449,13 @@ class OrganizationAPIKeyPermission(HandleRefModel, Permission):
         verbose_name_plural = _("Organization API Key Permissions")
 
     class HandleRef:
-        tag = "orgkeyperm"
+        tag = "org_key_permission"
 
     def __str__(self):
         return f"{self.namespace} ({self.id})"
 
 
-def generate_emconf_secret():
+def generate_email_confirmation_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -436,10 +472,12 @@ class EmailConfirmation(HandleRefModel):
     """
 
     user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name="emconf"
+        get_user_model(), on_delete=models.CASCADE, related_name="email_confirmation"
     )
 
-    secret = models.CharField(max_length=255, default=generate_emconf_secret)
+    secret = models.CharField(
+        max_length=255, default=generate_email_confirmation_secret
+    )
 
     email = models.EmailField()
 
@@ -449,12 +487,15 @@ class EmailConfirmation(HandleRefModel):
         verbose_name_plural = _("Email Confirmation Processes")
 
     class HandleRef:
-        tag = "emconf"
+        tag = "email_confirmation"
 
     @classmethod
     def start(cls, user):
+        if not settings.ENABLE_EMAIL_CONFIRMATION:
+            return
+
         try:
-            user.emconf.delete()
+            user.email_confirmation.delete()
         except cls.DoesNotExist:
             pass
 
@@ -480,14 +521,14 @@ class EmailConfirmation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self):
-        usercfg, _ = UserSettings.objects.get_or_create(user=self.user)
-        usercfg.email_confirmed = True
-        usercfg.save()
+        user_settings, _ = UserSettings.objects.get_or_create(user=self.user)
+        user_settings.email_confirmed = True
+        user_settings.save()
 
         self.delete()
 
 
-def generate_pwdrst_secret():
+def generate_password_reset_secret():
     i = 0
     while i < 1000:
         secret = secrets.token_urlsafe()
@@ -507,7 +548,7 @@ class PasswordReset(HandleRefModel):
         get_user_model(), on_delete=models.CASCADE, related_name="password_reset"
     )
 
-    secret = models.CharField(max_length=255, default=generate_pwdrst_secret)
+    secret = models.CharField(max_length=255, default=generate_password_reset_secret)
 
     email = models.EmailField()
 
@@ -517,7 +558,7 @@ class PasswordReset(HandleRefModel):
         verbose_name_plural = _("Password Reset Processes")
 
     class HandleRef:
-        tag = "pwdrst"
+        tag = "password_reset"
 
     @classmethod
     def start(cls, user):
@@ -569,6 +610,37 @@ def generate_invite_secret():
 
 
 @reversion.register
+class UserPermissionOverride(HandleRefModel):
+
+    """
+    Describes a permission override for a user
+    usually set by manually granting a permission level
+    directly to the user through the dashboard interface
+    """
+
+    user = models.ForeignKey(
+        get_user_model(), related_name="permission_overrides", on_delete=models.CASCADE
+    )
+    org = models.ForeignKey(
+        Organization,
+        null=True,
+        blank=True,
+        related_name="permission_overrides",
+        on_delete=models.CASCADE,
+    )
+    namespace = models.CharField(max_length=255)
+    permissions = PermissionField()
+
+    class Meta:
+        verbose_name = _("User permission override")
+        verbose_name_plural = _("User permission overrides")
+        unique_together = (("user", "org", "namespace"),)
+
+    def apply(self):
+        self.user.grainy_permissions.add_permission(self.namespace, self.permissions)
+
+
+@reversion.register
 class ManagedPermission(HandleRefModel):
 
     """
@@ -606,18 +678,6 @@ class ManagedPermission(HandleRefModel):
         help_text=_("How is this permission granted"),
     )
 
-    auto_grant_admins = PermissionField(
-        help_text=_(
-            "Auto grants the permission at the following level to organization admins"
-        )
-    )
-
-    auto_grant_users = PermissionField(
-        help_text=_(
-            "Auto grants the permission at the following level to organization members and api keys"
-        )
-    )
-
     class Meta:
         db_table = "account_managed_permission"
         verbose_name = _("Managed permission")
@@ -627,94 +687,101 @@ class ManagedPermission(HandleRefModel):
         tag = "mperm"
 
     @classmethod
-    def grant_all_key(cls, orgkey, admin=False):
-        for mperm in cls.objects.all():
-            mperm.auto_grant_key(orgkey, admin=admin)
+    def apply_roles(cls, org, user, delete_permissions=True):
+        user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
+
+        # delete all those namespaces for the user in the org
+        if delete_permissions and org:
+            for ns in cls.namespaces():
+                user.grainy_permissions.delete_permission(ns.format(org_id=org.id))
+
+        # re-apply automatically granted permissions through roles
+        for auto_grant in ManagedPermissionRoleAutoGrant.objects.filter(
+            role__in=user_roles
+        ).order_by("-role__level"):
+            managed_permission = auto_grant.managed_permission
+
+            if not managed_permission.can_grant_to_org(org):
+                continue
+
+            ns = managed_permission.namespace.format(org_id=org.id)
+            user.grainy_permissions.add_permission(ns, auto_grant.permissions)
+
+        # re-apply permission overrides
+        for override in UserPermissionOverride.objects.filter(user=user):
+            override.apply()
 
     @classmethod
-    def grant_all_user(cls, user, admin=False):
-        mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.orguser_set.all():
-            for mperm in mperms:
-                if admin:
-                    mperm.auto_grant_admin(orguser.org, orguser.user)
-                else:
-                    mperm.auto_grant_user(orguser.org, orguser.user)
+    def apply_roles_all(cls):
+        """
+        Reapplies roles for all users across all orgs
+
+        TODO: This is a costly operation, and should eventually be replaced
+        with something that does batch inserts, especially once the
+        number of active users grow.
+
+        Alternatively call it from a task. Or both.
+        """
+
+        org_qset = Organization.objects.all()
+
+        # delete all user permissions
+        UserPermission.objects.all().delete()
+
+        for org in org_qset:
+            for user in org.org_user_set.all().select_related("user", "org"):
+                cls.apply_roles(org, user.user, delete_permissions=False)
 
     @classmethod
-    def revoke_all_key(cls, orgkey):
-        for mperm in cls.objects.all():
-            mperm.revoke_key(orgkey)
+    def apply_roles_org(cls, org):
+        """
+        Takes an organization id and re-applies permissions for all
+        users in the organization.
+        """
+
+        for user in org.org_user_set.all().select_related("user", "org"):
+            cls.apply_roles(org, user.user)
 
     @classmethod
-    def revoke_all_user(cls, user):
-        mperms = [mperm for mperm in cls.objects.all()]
-        for orguser in user.orguser_set.all():
-            for mperm in mperms:
-                mperm.revoke_user(orguser.org, orguser.user)
+    def namespaces(cls):
+        for managed_permission in cls.objects.all():
+            yield managed_permission.namespace
 
     def __str__(self):
         return f"{self.group} - {self.description}"
 
     def can_grant_to_org(self, org):
-
         if self.grant_mode == "auto":
             return True
 
         if self.grant_mode == "restricted":
-            return org.org_managed_perm_set.filter(managed_permission=self).exists()
+            return org.org_managed_permission_set.filter(
+                managed_permission=self
+            ).exists()
 
         raise ValueError(f"Invalid value for grant_mode: {self.grant_mode}")
 
-    def auto_grant(self, org):
 
-        if not self.can_grant_to_org(org):
-            self.revoke(org)
-            return
+@reversion.register
+class ManagedPermissionRoleAutoGrant(HandleRefModel):
+    managed_permission = models.ForeignKey(
+        ManagedPermission, related_name="role_auto_grants", on_delete=models.CASCADE
+    )
+    role = models.ForeignKey(
+        Role, related_name="managed_permissions", on_delete=models.CASCADE
+    )
+    permissions = PermissionField(
+        help_text=_("Will grand this level of permissions to the specified role")
+    )
 
-        for user in org.users:
-            if org.is_admin_user(user):
-                self.auto_grant_admin(org, user)
-            else:
-                self.auto_grant_user(org, user)
+    class Meta:
+        db_table = "account_managed_permission_role_auto_grant"
+        verbose_name = _("Permission assignment for role")
+        verbose_name_plural = _("Permission assignments for roles")
+        unique_together = (("managed_permission", "role"),)
 
-        for key in org.orgkey_set.all():
-            self.auto_grant_key(key)
-
-    def revoke(self, org):
-        for user in org.users:
-            self.revoke_user(org, user)
-
-        for key in org.orgkey_set.all():
-            self.revoke_key(key)
-
-    def revoke_user(self, org, user):
-        ns = self.namespace.format(org_id=org.pk)
-        user.grainy_permissions.delete_permission(ns)
-
-    def revoke_key(self, orgkey):
-        org = orgkey.org
-        ns = self.namespace.format(org_id=org.pk)
-        orgkey.grainy_permissions.delete_permission(ns)
-
-    def auto_grant_admin(self, org, user):
-        ns = self.namespace.format(org_id=org.pk)
-        user.grainy_permissions.add_permission(ns, self.auto_grant_admins)
-
-    def auto_grant_user(self, org, user):
-        ns = self.namespace.format(org_id=org.pk)
-        user.grainy_permissions.add_permission(ns, self.auto_grant_users)
-
-    def auto_grant_key(self, orgkey, admin=False):
-        org = orgkey.org
-        ns = self.namespace.format(org_id=org.pk)
-
-        if admin:
-            perms = self.auto_grant_admins
-        else:
-            perms = self.auto_grant_users
-
-        orgkey.grainy_permissions.add_permission(ns, perms)
+    class HandleRef:
+        tag = "managed_permission_role_auto_grant"
 
 
 @reversion.register
@@ -725,11 +792,15 @@ class OrganizationManagedPermission(HandleRefModel):
     """
 
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     managed_permission = models.ForeignKey(
-        ManagedPermission, on_delete=models.CASCADE, related_name="org_managed_perm_set"
+        ManagedPermission,
+        on_delete=models.CASCADE,
+        related_name="org_managed_permission_set",
     )
 
     reason = models.CharField(
@@ -737,30 +808,35 @@ class OrganizationManagedPermission(HandleRefModel):
         help_text=_("Reason organization was granted to manage this permission"),
     )
 
+    product = models.ForeignKey(
+        "billing.OrganizationProduct",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text=_("Perimission management enabled through product"),
+    )
+
     class HandleRef:
-        tag = "org_managed_perm"
+        tag = "org_managed_permission"
 
     class Meta:
-        db_table = "account_org_managed_perms"
+        db_table = "account_org_managed_permissions"
         verbose_name = _("Managed permission for organization")
         verbose_name_plural = _("Managed permissions for organization")
-
-    def apply(self):
-        self.managed_permission.auto_grant(self.org)
 
 
 @reversion.register
 class Invitation(HandleRefModel):
     secret = models.CharField(max_length=255, default=generate_invite_secret)
     org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="inv_set"
+        Organization, on_delete=models.CASCADE, related_name="invite_set"
     )
     created_by = models.ForeignKey(
         get_user_model(),
         null=True,
         blank=False,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
     email = models.EmailField()
     service = models.ForeignKey(
@@ -768,7 +844,7 @@ class Invitation(HandleRefModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="inv_set",
+        related_name="invite_set",
     )
 
     class Meta:
@@ -777,7 +853,7 @@ class Invitation(HandleRefModel):
         verbose_name_plural = _("Invitations")
 
     class HandleRef:
-        tag = "inv"
+        tag = "invite"
 
     @property
     def expired(self):
@@ -805,7 +881,7 @@ class Invitation(HandleRefModel):
                 None,
                 "account/email/invite.txt",
                 {
-                    "inv": self,
+                    "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
                     "host": host_url(),
@@ -815,6 +891,20 @@ class Invitation(HandleRefModel):
 
     @reversion.create_revision()
     def complete(self, user):
-        if not self.expired and not self.org.orguser_set.filter(user=user).exists():
+        if not self.expired and not self.org.org_user_set.filter(user=user).exists():
             self.org.add_user(user, "r")
         Invitation.objects.filter(org=self.org, email=self.email).delete()
+
+
+class Impersonation(models.Model):
+    superuser = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, related_name="impersonating"
+    )
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="impersonated_by"
+    )
+
+    class Meta:
+        db_table = "account_impersonation"
+        verbose_name = _("Impersonation")
+        verbose_name_plural = _("Impersonations")

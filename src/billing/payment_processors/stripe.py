@@ -12,7 +12,6 @@ class Stripe(PaymentProcessor):
     name = _("Stripe")
 
     class Form(forms.Form):
-
         stripe_token = forms.CharField(widget=forms.HiddenInput())
 
         @property
@@ -25,7 +24,7 @@ class Stripe(PaymentProcessor):
 
     @property
     def customer(self):
-        return self.billcon_customer.data.get("stripe_customer")
+        return self.billing_contact_customer.data.get("stripe_customer")
 
     @property
     def form(self):
@@ -41,7 +40,6 @@ class Stripe(PaymentProcessor):
         self.api_key = settings.STRIPE_SECRET_KEY
 
     def setup_customer(self):
-
         # check if customer has already been created
         # on stripe's end
 
@@ -49,17 +47,16 @@ class Stripe(PaymentProcessor):
             return self.customer
 
         customer = stripe.Customer.create(
-            description=f"billcon{self.payment_method.billcon.id}",
+            description=f"billing_contact{self.payment_method.billing_contact.id}",
             api_key=self.api_key,
         )
 
-        self.billcon_customer.data["stripe_customer"] = customer["id"]
+        self.billing_contact_customer.data["stripe_customer"] = customer["id"]
         self.save()
 
         return customer["id"]
 
     def setup_card(self, token):
-
         if self.data.get("stripe_card"):
             return self.data["stripe_card"]
 
@@ -100,35 +97,36 @@ class Stripe(PaymentProcessor):
         self.setup_card(kwargs.pop("stripe_token"), **kwargs)
 
     @reversion.create_revision()
-    def charge(self, chg):
+    def charge(self, payment_charge):
         if not self.source:
             raise ValueError("Payment method not setup.")
 
         charge = stripe.Charge.create(
             customer=self.customer,
             source=self.source,
-            amount=int(chg.price * 100),
-            description=chg.description,
+            amount=int(payment_charge.price * 100),
+            description=payment_charge.description,
             api_key=self.api_key,
             currency=self.default_currency,
         )
 
-        chg.status = "pending"
+        payment_charge.status = "pending"
 
-        chg.data["stripe_charge"] = charge["id"]
-        chg.save()
+        payment_charge.data["stripe_charge"] = charge["id"]
+        payment_charge.save()
 
-    def _sync_charge(self, chg, status=None):
-
+    def _sync_charge(self, payment_charge, status=None):
         reversion.set_comment("Stripe charge status sync")
 
-        if not chg.data.get("stripe_charge"):
-            return super()._sync_charge(chg, "failed")
+        if not payment_charge.data.get("stripe_charge"):
+            return super()._sync_charge(payment_charge, "failed")
 
-        charge = stripe.Charge.retrieve(chg.data["stripe_charge"], api_key=self.api_key)
+        charge = stripe.Charge.retrieve(
+            payment_charge.data["stripe_charge"], api_key=self.api_key
+        )
 
         if charge["status"] == "succeeded":
-            return super()._sync_charge(chg, "ok")
+            return super()._sync_charge(payment_charge, "ok")
 
         elif charge["status"] == "failed":
-            return super()._sync_charge(chg, "failed")
+            return super()._sync_charge(payment_charge, "failed")

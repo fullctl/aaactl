@@ -10,7 +10,6 @@ import account.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("account", "0017_managedpermission"),
     ]

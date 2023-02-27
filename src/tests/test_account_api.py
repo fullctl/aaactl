@@ -1,6 +1,5 @@
 import json
 
-import pytest
 from django.contrib.auth import authenticate
 from django.urls import reverse
 
@@ -9,7 +8,6 @@ from tests.helpers import assert_expected, strip_api_fields
 
 
 def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
-
     """
     tests api key authentication using the `key` url paramater
     """
@@ -29,7 +27,6 @@ def test_api_key_auth_urlparam(db, account_objects, data_account_api_user_list):
 
 
 def test_api_key_auth_header(db, account_objects, data_account_api_user_list):
-
     """
     tests api key authentication using the `Authorization` HTTP header
     """
@@ -61,7 +58,6 @@ def test_user_list(db, account_objects, data_account_api_user_list):
 
 
 def test_user_put(db, account_objects, data_account_api_user_put):
-
     response = account_objects.api_client.put(
         reverse("account_api:user-list"),
         data=json.loads(data_account_api_user_put.input),
@@ -81,7 +77,6 @@ def test_user_put(db, account_objects, data_account_api_user_put):
 
 
 def test_user_set_password(db, account_objects, data_account_api_user_setpassword):
-
     response = account_objects.api_client.put(
         reverse("account_api:user-set-password"),
         data=json.loads(data_account_api_user_setpassword.input),
@@ -103,14 +98,13 @@ def test_user_set_password(db, account_objects, data_account_api_user_setpasswor
 
 
 def test_user_resend_confirmation_mail(db, account_objects):
-
     response = account_objects.api_client.post(
         reverse("account_api:user-resend-confirmation-mail")
     )
 
     assert response.status_code == 200
 
-    account_objects.user.emconf.complete()
+    account_objects.user.email_confirmation.complete()
 
     # test when email has already been confirmed
 
@@ -130,7 +124,6 @@ def test_user_resend_confirmation_mail(db, account_objects):
 
 
 def test_org_list(db, account_objects, data_account_api_org_list):
-
     response = account_objects.api_client.get(reverse("account_api:org-list"))
 
     assert response.status_code == int(data_account_api_org_list.status)
@@ -146,7 +139,6 @@ def test_org_list(db, account_objects, data_account_api_org_list):
 
 
 def test_org_details(db, account_objects, data_account_api_org_details):
-
     response = account_objects.api_client.get(
         reverse("account_api:org-detail", args=(account_objects.org.slug,))
     )
@@ -166,7 +158,6 @@ def test_org_details(db, account_objects, data_account_api_org_details):
 
 
 def test_org_create(db, account_objects, data_account_api_org_create):
-
     response = account_objects.api_client.post(
         reverse("account_api:org-list"),
         data=json.loads(data_account_api_org_create.input),
@@ -188,7 +179,6 @@ def test_org_create(db, account_objects, data_account_api_org_create):
 
 
 def test_org_update(db, account_objects, data_account_api_org_update):
-
     if data_account_api_org_update.name == "test_error_permissions":
         slug = account_objects.other_org.slug
     else:
@@ -216,7 +206,6 @@ def test_org_update(db, account_objects, data_account_api_org_update):
 
 
 def test_org_users(db, account_objects, data_account_api_org_users):
-
     slug = account_objects.org.slug
 
     response = account_objects.api_client.get(
@@ -245,16 +234,29 @@ def test_org_users(db, account_objects, data_account_api_org_users):
     assert response.status_code == 403
 
 
-# Use this mark to have Django reset Postgres index,
-# needed when client uses id as pk
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_org_userdel(db, account_objects, data_account_api_org_userdel):
-
     slug = account_objects.org.slug
+
+    data = {}
+
+    if data_account_api_org_userdel.name == "test0":
+        data.update(
+            id=account_objects.user_unpermissioned.org_user_set.filter(
+                org=account_objects.org
+            )
+            .first()
+            .id
+        )
+    else:
+        data.update(
+            id=account_objects.user.org_user_set.filter(org=account_objects.org)
+            .first()
+            .id
+        )
 
     response = account_objects.api_client.delete(
         reverse("account_api:org-user", args=(slug,)),
-        data=json.loads(data_account_api_org_userdel.input),
+        data=data,
     )
 
     assert response.status_code == int(data_account_api_org_userdel.status)
@@ -263,7 +265,7 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     )
 
     if data_account_api_org_userdel.name == "test0":
-        assert account_objects.org.orguser_set.count() == 1
+        assert account_objects.org.org_user_set.count() == 1
 
     # test user not part of org
 
@@ -284,14 +286,18 @@ def test_org_userdel(db, account_objects, data_account_api_org_userdel):
     assert response.status_code == 403
 
 
-# Use this mark to have Django reset Postgres index,
-# needed when client uses id as pk
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_org_set_permissions(db, account_objects, data_account_api_org_setperm):
-
     input = json.loads(data_account_api_org_setperm.input)
     expected = data_account_api_org_setperm.expected
     slug = input.get("slug", account_objects.org.slug)
+
+    input["data"].update(
+        id=account_objects.user_unpermissioned.org_user_set.filter(
+            org=account_objects.org
+        )
+        .first()
+        .id
+    )
 
     response = getattr(account_objects, input["client"]).put(
         reverse("account_api:org-set-permissions", args=(slug,)), data=input["data"]
@@ -301,7 +307,6 @@ def test_org_set_permissions(db, account_objects, data_account_api_org_setperm):
 
 
 def test_org_invite(db, account_objects, data_account_api_org_invite):
-
     input = json.loads(data_account_api_org_invite.input)
     expected = data_account_api_org_invite.expected
     slug = input.get("slug", account_objects.org.slug)
@@ -313,30 +318,32 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     assert_expected(response, strip_api_fields(expected))
 
 
-def test_password_reset_start(db, account_objects, data_account_api_pwdrst_start):
-
-    input = json.loads(data_account_api_pwdrst_start.input)
-    expected = data_account_api_pwdrst_start.expected
+def test_password_reset_start(
+    db, account_objects, data_account_api_password_reset_start
+):
+    input = json.loads(data_account_api_password_reset_start.input)
+    expected = data_account_api_password_reset_start.expected
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-start"), data=input["data"]
+        reverse("account_api:password_reset-start"), data=input["data"]
     )
 
     assert_expected(response, expected)
 
 
-def test_password_reset_complete(db, account_objects, data_account_api_pwdrst_complete):
+def test_password_reset_complete(
+    db, account_objects, data_account_api_password_reset_complete
+):
+    password_reset = models.PasswordReset.start(account_objects.user)
 
-    pwdrst = models.PasswordReset.start(account_objects.user)
-
-    input = json.loads(data_account_api_pwdrst_complete.input)
-    expected = data_account_api_pwdrst_complete.expected
+    input = json.loads(data_account_api_password_reset_complete.input)
+    expected = data_account_api_password_reset_complete.expected
     data = input["data"]
     if data.get("secret") == "$":
-        data["secret"] = pwdrst.secret
+        data["secret"] = password_reset.secret
 
     response = getattr(account_objects, input["client"]).post(
-        reverse("account_api:pwdrst-complete"), data=data
+        reverse("account_api:password_reset-complete"), data=data
     )
 
     assert_expected(response, expected)

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aaactl"
 repository = "https://github.com/fullctl/aaactl"
-version = "1.0.0"
+version = "1.0.1-rc26"
 description = "authentication, authorization, and accounting for fullctl"
 authors = ["20C <code@20c.com>"]
 license = "Apache-2.0"
@@ -36,6 +36,7 @@ django-oauth-toolkit = "*"
 python-jose = "^3.3"
 
 stripe = "^2.55.2"
+crispy-bootstrap5 = "^0.6"
 
 [tool.poetry.dev-dependencies]
 # testing
@@ -60,9 +61,16 @@ pyupgrade = ">=2.19"
 
 # ctl
 ctl = ">=1"
+tomlkit = ">=0.11"
 tmpl = ">=1"
 Jinja2 = ">=3"
+
+###
+
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+

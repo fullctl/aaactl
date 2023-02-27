@@ -3,6 +3,7 @@ import re
 
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.utils.translation import gettext as _
+from django_grainy.helpers import int_flags
 from django_grainy.util import Permissions
 from rest_framework import serializers
 
@@ -52,9 +53,8 @@ class PermissionNamespacesMixin:
             ).order_by("group", "description")
             r = []
             for mperm in mperms:
-
                 if mperm.grant_mode == "restricted":
-                    if not mperm.org_managed_perm_set.filter(org=org).exists():
+                    if not mperm.org_managed_permission_set.filter(org=org).exists():
                         continue
 
                 r.append((mperm.namespace, mperm.description))
@@ -111,18 +111,49 @@ class PermissionSetterMixin(PermissionNamespacesMixin, serializers.Serializer):
 
 
 @register
+class OrganizationRole(serializers.ModelSerializer):
+    name = serializers.CharField(source="role.name", read_only=True)
+
+    ref_tag = "org_user_role"
+
+    class Meta:
+        model = models.OrganizationRole
+        fields = ["id", "role", "name", "org", "user"]
+
+
+@register
+class Role(serializers.ModelSerializer):
+    ref_tag = "role"
+
+    class Meta:
+        model = models.Role
+        fields = ["id", "name"]
+
+
+@register
 class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
-    ref_tag = "orguser"
+    ref_tag = "org_user"
 
     name = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     you = serializers.SerializerMethodField()
     manageable = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
+    role_options = serializers.SerializerMethodField()
 
     class Meta:
         model = models.OrganizationUser
-        fields = ["id", "name", "email", "you", "manageable", "permissions"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "you",
+            "manageable",
+            "role_options",
+            "roles",
+            "permissions",
+        ]
 
     def get_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
@@ -133,6 +164,17 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
     def get_you(self, obj):
         return obj.user == self.context.get("user")
 
+    def get_roles(self, obj):
+        return OrganizationRole(
+            obj.user.roles.filter(org_id=obj.org_id), many=True
+        ).data
+
+    def get_role_options(self, obj):
+        if not hasattr(self, "_role_options"):
+            self._role_options = list(models.Role.objects.all())
+
+        return Role(self._role_options, many=True).data
+
     def get_manageable(self, obj):
         perms = self.context.get("perms")
         if perms:
@@ -140,11 +182,19 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
         return "r"
 
     def get_permissions(self, obj):
+        if not hasattr(obj, "_overrides"):
+            obj._overrides = {
+                o.namespace: o.id
+                for o in obj.user.permission_overrides.filter(org=obj.org)
+            }
+
         perms = Permissions(obj.user)
         rv = {
             ns: {
                 "perms": perms.get(ns.format(org_id=obj.org.id), as_string=True),
                 "label": label,
+                "override": obj._overrides.get(ns.format(org_id=obj.org.id)),
+                # "override": obj.user.permission_overrides.filter(namespace=ns.format(org_id=obj.org.id)).exists(),
             }
             for ns, label in self.permission_namespaces(obj.org)
         }
@@ -156,16 +206,43 @@ class OrganizationUser(PermissionNamespacesMixin, serializers.ModelSerializer):
 
 @register
 class OrganizationUserPermissions(PermissionSetterMixin):
-    ref_tag = "orguserperm"
-    rel_fld = "orguser"
+    ref_tag = "org_userperm"
+    rel_fld = "org_user"
 
-    orguser = serializers.PrimaryKeyRelatedField(
+    override_id = serializers.IntegerField(read_only=True)
+
+    org_user = serializers.PrimaryKeyRelatedField(
         queryset=models.OrganizationUser.objects.all()
     )
 
     @property
     def permission_holder(self):
         return self.validated_data[self.rel_fld].user
+
+    def save(self):
+        data = self.validated_data
+        org = data["org"]
+        component = data["component"]
+        permissions = data["permissions"]
+        namespace = component.format(org_id=org.id)
+        user = self.permission_holder
+
+        try:
+            override = models.UserPermissionOverride.objects.get(
+                namespace=namespace, org=org, user=user
+            )
+            override.permissions = int_flags(permissions)
+        except models.UserPermissionOverride.DoesNotExist:
+            override = models.UserPermissionOverride.objects.create(
+                namespace=namespace,
+                org=org,
+                user=user,
+                permissions=int_flags(permissions),
+            )
+
+        data["override_id"] = override.id
+
+        return data[self.rel_fld]
 
 
 @register
@@ -257,7 +334,6 @@ class EditOrg(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class EditOrgPasswordProtected(EditOrg):
-
     ref_tag = "orgeditpwdprotected"
     form = forms.EditOrganizationPasswordProtected
     required_context = ["org", "user"]
@@ -291,9 +367,9 @@ class UserInformation(FormValidationMixin, serializers.ModelSerializer):
 
         if user.email != data.get("email"):
             user.email = data.get("email")
-            usercfg, _ = models.UserSettings.objects.get_or_create(user=user)
-            usercfg.email_confirmed = False
-            usercfg.save()
+            user_settings, _ = models.UserSettings.objects.get_or_create(user=user)
+            user_settings.email_confirmed = False
+            user_settings.save()
 
             models.EmailConfirmation.start(user)
 
@@ -315,7 +391,7 @@ class UserInformationPasswordProtected(UserInformation):
 
 @register
 class UserSettings(FormValidationMixin, serializers.ModelSerializer):
-    ref_tag = "usercfg"
+    ref_tag = "user_settings"
     form = forms.UserSettings
 
     class Meta:
@@ -391,28 +467,27 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         data["org"] = self.context.get("org")
         data.pop("form_data", None)
 
-        inv = models.Invitation.objects.filter(
+        invite = models.Invitation.objects.filter(
             email=data["email"], org=data["org"]
         ).first()
 
-        if inv:
-            inv.created_by = data["created_by"]
+        if invite:
+            invite.created_by = data["created_by"]
             if data.get("service"):
-                inv.service = data["service"]
-            inv.save(update_fields=["created_by", "updated", "service"])
+                invite.service = data["service"]
+            invite.save(update_fields=["created_by", "updated", "service"])
 
         else:
-            inv = models.Invitation.objects.create(status="pending", **data)
+            invite = models.Invitation.objects.create(status="pending", **data)
 
-        inv.send()
+        invite.send()
 
-        return inv
+        return invite
 
 
 @register
 class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
-
-    ref_tag = "start_pwdrst"
+    ref_tag = "start_password_reset"
     required_context = []
     form = forms.StartPasswordReset
 
@@ -442,7 +517,6 @@ class StartPasswordReset(FormValidationMixin, serializers.ModelSerializer):
 
 @register
 class PasswordReset(FormValidationMixin, serializers.Serializer):
-
     required_context = []
     form = forms.PasswordReset
 
@@ -456,7 +530,7 @@ class PasswordReset(FormValidationMixin, serializers.Serializer):
 
     def save(self):
         data = self.validated_data
-        instance = data["form_data"]["pwdrst"]
+        instance = data["form_data"]["password_reset"]
         instance.complete(data["password_new"])
         return instance
 
@@ -523,10 +597,10 @@ class OrganizationAPIKey(
 
 @register
 class OrganizationAPIKeyPermissions(PermissionSetterMixin):
-    ref_tag = "orgkeyperm"
-    rel_fld = "orgkey"
+    ref_tag = "org_key_permission"
+    rel_fld = "org_key"
 
-    orgkey = serializers.PrimaryKeyRelatedField(
+    org_key = serializers.PrimaryKeyRelatedField(
         queryset=models.OrganizationAPIKey.objects.all()
     )
 

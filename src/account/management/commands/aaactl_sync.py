@@ -16,15 +16,17 @@ class Command(CommandInterface):
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
-        parser.add_argument("type", type=str, choices=("org", "user", "orguser"))
+        parser.add_argument("type", type=str, choices=("org", "user", "org_user"))
         parser.add_argument("id", type=int)
 
     def run(self, *args, **kwargs):
-
         typ = kwargs.get("type")
         pk = kwargs.get("id")
 
         for svc in Service.objects.filter(status="ok"):
+            if not svc.api_url:
+                self.log_info(f"No api url specified for {svc.name}, skipping ..")
+                continue
             fn = getattr(self, f"sync_{typ}")
             self.log_info(f"Syncing {typ} {pk} to {svc.name}")
             if self.commit:
@@ -40,7 +42,7 @@ class Command(CommandInterface):
         bridge = Bridge(svc, None, user=user)
         bridge.sync_user()
 
-    def sync_orguser(self, svc, pk):
+    def sync_org_user(self, svc, pk):
         user = get_user_model().objects.get(pk=pk)
         bridge = Bridge(svc, None, user=user)
-        bridge.sync_orguser()
+        bridge.sync_org_user()

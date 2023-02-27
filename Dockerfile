@@ -1,19 +1,9 @@
 
 ARG virtual_env=/venv
 ARG install_to=/srv/service
-ARG build_deps=" \
-    postgresql-dev \
-    g++ \
-    git \
-    libffi-dev \
-    libjpeg-turbo-dev \
-    linux-headers \
-    make \
-    openssl-dev \
-    curl \
-    rust \
-    cargo \
-    "
+ARG build_deps=""
+ARG extra_pip_install_dir
+
 ARG run_deps=" \
     libgcc \
     postgresql-libs \
@@ -34,11 +24,17 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # build container
 FROM ghcr.io/fullctl/fullctl-builder-alpine:prep-release as builder
 
-# individual files here instead of COPY . . for caching
+ARG extra_pip_install_dir
+
+# only these two individual files before install instead for caching
 COPY pyproject.toml poetry.lock ./
 
 # Need to upgrade pip and wheel within Poetry for all its installs
 RUN poetry install --no-root
+
+# gitignore is just a placeholder for if extra is empty
+COPY .gitignore $extra_pip_install_dir ./plugins/
+RUN test -z "$extra_pip_install_dir" || pip install *.tar.gz
 
 COPY Ctl/VERSION Ctl/
 

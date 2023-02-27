@@ -28,11 +28,12 @@ def permissions(request):
 
 
 def info(request):
-
     return {
         "billing_env": settings.BILLING_ENV,
         "release_env": settings.RELEASE_ENV,
         "version": settings.PACKAGE_VERSION,
+        "server_email": settings.SERVER_EMAIL,
         "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
         "cloudflare_analytics_id": settings.CLOUDFLARE_ANALYTICS_ID,
+        "enable_email_confirmation": settings.ENABLE_EMAIL_CONFIRMATION,
     }

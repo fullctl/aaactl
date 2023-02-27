@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from django_grainy.util import Permissions
 
+from account.impersonate import is_impersonating
 from account.models import Organization
 from account.session import set_selected_org
 
@@ -15,7 +16,6 @@ class RequestAugmentation:
         return response
 
     def set_selected_org(self, request):
-
         org_slug = request.GET.get("org")
         if org_slug == "personal":
             set_selected_org(request, request.user.personal_org)
@@ -50,3 +50,43 @@ class RequestAugmentation:
     def process_view(self, request, view_func, view_args, view_kwargs):
         request.perms = Permissions(request.user)
         self.set_selected_org(request)
+
+
+class Impersonation:
+
+    """
+    Handles impersonation logic
+
+    Should be added after auth middleware
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        user = is_impersonating(request)
+        if user:
+            response.headers["X-User"] = user.id
+
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        user = is_impersonating(request)
+
+        # cache impersonation on request and set the request user
+        # to the user being impersonated
+        if user:
+            request.impersonating = request.user.impersonating
+
+            # never impersonate in django-admin
+            if request.path.startswith("/admin/"):
+                return
+
+            # never impersonate during oauth
+            if request.path.startswith("/account/auth/o/"):
+                return
+
+            # finalize impersonation by setting the request user
+            request.user = user

@@ -90,7 +90,6 @@ class PasswordProtectedForm(forms.Form):
 
 
 class ChangePasswordBase(forms.Form):
-
     password_new = forms.CharField(widget=forms.PasswordInput, label=_("New Password"))
     password_confirmation = forms.CharField(
         widget=forms.PasswordInput, label=_("Confirm Password")
@@ -127,7 +126,9 @@ class PasswordReset(ChangePasswordBase):
         secret = self.cleaned_data["secret"]
 
         try:
-            self.cleaned_data["pwdrst"] = PasswordResetModel.objects.get(secret=secret)
+            self.cleaned_data["password_reset"] = PasswordResetModel.objects.get(
+                secret=secret
+            )
         except PasswordResetModel.DoesNotExist:
             raise forms.ValidationError(_("Invalid secret"))
 

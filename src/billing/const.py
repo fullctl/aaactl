@@ -10,8 +10,8 @@ BILLING_MODIFIER_TYPES = (
 )
 
 BILLING_PRODUCT_RECURRING_TYPES = (
-    ("fixed", _("Recurring: Fixed Price")),
-    ("metered", _("Recurring: Metered Price")),
+    ("fixed", _("Fixed Price")),
+    ("metered", _("Metered Unit Price")),
 )
 
 CURRENCY_TYPES = (("USD", _("USD")),)

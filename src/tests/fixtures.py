@@ -1,5 +1,6 @@
 import pytest
 from django.test import Client
+from grainy.const import PERM_CRUD
 
 
 class BillingObjects:
@@ -7,7 +8,13 @@ class BillingObjects:
         from django.contrib.auth import get_user_model
         from rest_framework.test import APIClient
 
-        from account.models import ManagedPermission, Organization
+        from account.models import (
+            ManagedPermission,
+            ManagedPermissionRoleAutoGrant,
+            Organization,
+            OrganizationRole,
+            Role,
+        )
         from billing.models import (
             BillingContact,
             PaymentMethod,
@@ -16,30 +23,6 @@ class BillingObjects:
             ProductModifier,
             RecurringProduct,
             Subscription,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="org.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="user.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="billing.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
         )
 
         self.product_group = ProductGroup.objects.create(
@@ -58,8 +41,8 @@ class BillingObjects:
             data={"foo": "bar"},
         )
 
-        self.product_sub_fixed = Product.objects.create(
-            name="test.sub.fixed",
+        self.product_subscription_fixed = Product.objects.create(
+            name="test.subscription.fixed",
             description="test product: fixed subscription",
             group=self.product_group,
             price=0.00,
@@ -67,11 +50,14 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_fixed, type="fixed", price=125.99, data={"foo": "bar"}
+            product=self.product_subscription_fixed,
+            type="fixed",
+            price=125.99,
+            data={"foo": "bar"},
         )
 
-        self.product_sub_metered = Product.objects.create(
-            name="test.sub.metered",
+        self.product_subscription_metered = Product.objects.create(
+            name="test.subscription.metered",
             description="test product: metered subscription",
             group=self.product_group,
             price=0.00,
@@ -79,14 +65,14 @@ class BillingObjects:
         )
 
         RecurringProduct.objects.create(
-            prod=self.product_sub_metered,
+            product=self.product_subscription_metered,
             type="metered",
             price=0.50,
             data={"foo": "bar"},
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="reduction",
             value=10,
             duration=30,
@@ -94,41 +80,43 @@ class BillingObjects:
         )
 
         ProductModifier.objects.create(
-            prod=self.product,
+            product=self.product,
             type="quantity",
             value=2,
             duration=30,
             code="TESTQUANTITY",
         )
 
-        self.org = Organization.objects.create(name="Subscription Org", slug="sub_org")
+        self.org = Organization.objects.create(
+            name="Subscription Org", slug="subscription_org"
+        )
 
         self.monthly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
-            cycle_interval="month",
-            cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            subscription_cycle_interval="month",
+            subscription_cycle_start=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
-        self.monthly_subscription.add_prod(self.product_sub_metered)
+        self.monthly_subscription.add_product(self.product_subscription_metered)
 
         self.yearly_subscription = Subscription.objects.create(
             org=self.org,
             group=self.product_group,
-            cycle_interval="year",
-            cycle_start=None,  # Set none to start
-            pay=None,  # Set none to start
+            subscription_cycle_interval="year",
+            subscription_cycle_start=None,  # Set none to start
+            payment_method=None,  # Set none to start
         )
 
-        self.yearly_subscription.add_prod(self.product_sub_metered)
+        self.yearly_subscription.add_product(self.product_subscription_metered)
 
         self.billing_contact = BillingContact.objects.create(
-            org=self.org, name="William Contact", email="billcon@localhost"
+            org=self.org, name="William Contact", email="billing_contact@localhost"
         )
 
         self.payment_method = PaymentMethod.objects.create(
-            billcon=self.billing_contact,
+            billing_contact=self.billing_contact,
             custom_name="Test Customer",
             processor="stripe",
             holder="William Contact",
@@ -147,6 +135,56 @@ class BillingObjects:
         )
         self.org.add_user(self.user, perms="crud")
 
+        admin_role, _ = Role.objects.get_or_create(
+            name="admin",
+            description="",
+            level=15,
+            auto_set_on_creator=True,
+            auto_set_on_member=False,
+        )
+
+        OrganizationRole.objects.get_or_create(
+            org=self.org, user=self.user, role=admin_role
+        )
+
+        org_managed_permission, _ = ManagedPermission.objects.get_or_create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
+            managed_permission=org_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        user_managed_permission = ManagedPermission.objects.create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=user_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        billing_managed_permission = ManagedPermission.objects.create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.create(
+            managed_permission=billing_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        ManagedPermission.apply_roles_all()
+
         self.api_client = APIClient()
         self.api_client.login(username=self.user.username, password="test")
 
@@ -160,30 +198,12 @@ class AccountObjects:
         from django_grainy.util import Permissions
         from rest_framework.test import APIClient
 
-        from account.models import ManagedPermission, Organization
-
-        ManagedPermission.objects.get_or_create(
-            namespace="org.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="user.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
-        )
-
-        ManagedPermission.objects.get_or_create(
-            namespace="billing.{org_id}",
-            description="",
-            group="aaactl",
-            auto_grant_admins=15,
-            auto_grant_users=1,
+        from account.models import (
+            ManagedPermission,
+            ManagedPermissionRoleAutoGrant,
+            Organization,
+            OrganizationRole,
+            Role,
         )
 
         self.user = user = get_user_model().objects.create_user(
@@ -202,6 +222,56 @@ class AccountObjects:
 
         self.org = org = Organization.objects.create(name=handle, slug=handle)
         org.add_user(user, perms="crud")
+
+        admin_role, _ = Role.objects.get_or_create(
+            name="admin",
+            description="",
+            level=15,
+            auto_set_on_creator=True,
+            auto_set_on_member=False,
+        )
+
+        OrganizationRole.objects.get_or_create(
+            org=self.org, user=self.user, role=admin_role
+        )
+
+        org_managed_permission, _ = ManagedPermission.objects.get_or_create(
+            namespace="org.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
+            managed_permission=org_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        user_managed_permission = ManagedPermission.objects.create(
+            namespace="user.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
+            managed_permission=user_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        billing_managed_permission = ManagedPermission.objects.create(
+            namespace="billing.{org_id}",
+            description="",
+            group="aaactl",
+        )
+
+        ManagedPermissionRoleAutoGrant.objects.get_or_create(
+            managed_permission=billing_managed_permission,
+            role=admin_role,
+            permissions=PERM_CRUD,
+        )
+
+        ManagedPermission.apply_roles_all()
 
         self.other_org = Organization.objects.create(
             name=f"Other {handle}", slug=f"other-{handle}"
@@ -282,30 +352,34 @@ def charge_objects(billing_objects, mocker):
     )
     subscription = billing_objects.monthly_subscription
 
-    product_fixed = billing_objects.product_sub_fixed
-    subscription.add_prod(product_fixed)
-    fixed_subprod = product_fixed.sub_set.first()
+    product_fixed = billing_objects.product_subscription_fixed
+    subscription.add_product(product_fixed)
+    fixed_subscription_product = product_fixed.subscription_set.first()
 
-    subscription.pay = billing_objects.payment_method
+    subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
-    subscription.start_cycle(two_weeks_ago)
-    subcycle = subscription.cycle_set.first()
+    subscription.start_subscription_cycle(two_weeks_ago)
+    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        cycle=subcycle, subprod=fixed_subprod, usage=1
+        subscription_cycle=subscriptionsubscription_cycle,
+        subscription_product=fixed_subscription_product,
+        usage=1,
     )
 
-    subcycle.charge()
+    subscriptionsubscription_cycle.charge()
 
-    subcycle_charge = subcycle.cyclechg_set.first()
-    payment_charge = subcycle_charge.chg
+    subscriptionsubscription_cycle_charge = (
+        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
+    )
+    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
 
-    order_history = OrderHistory.create_from_chg(payment_charge)
+    order_history = OrderHistory.create_from_payment_charge(payment_charge)
 
     return {
         "subscription": subscription,
-        "subcycle": subcycle,
-        "subcycle_charge": subcycle_charge,
+        "subscriptionsubscription_cycle": subscriptionsubscription_cycle,
+        "subscriptionsubscription_cycle_charge": subscriptionsubscription_cycle_charge,
         "payment_charge": payment_charge,
         "order_history": order_history,
     }

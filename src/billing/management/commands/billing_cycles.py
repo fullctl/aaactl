@@ -1,98 +1,89 @@
 import reversion
-from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.utils import timezone
+from fullctl.django.management.commands.base import CommandInterface
 
-from billing.models import Subscription
-
-
-class Rollback(Exception):
-    pass
+from billing.models import OrganizationProduct, Subscription
 
 
-# FIXME: use fullctl.django base command
-class Command(BaseCommand):
-    help = "Progresses billing cycles"
+class Command(CommandInterface):
+    help = "Progresses billing subscription cycles and product expiry"
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "--commit",
-            action="store_true",
-            help="commit database changes and credit card charges",
-        )
+    def run(self, *args, **kwargs):
+        self.progress_product_expiry()
+        self.progress_subscription_cycles()
 
-    def log(self, msg):
-        if not self.commit:
-            msg = f"[pretend] {msg}"
-        self.stdout.write(f"{msg}")
-
-    @reversion.create_revision()
-    def handle(self, *args, **options):
-        self.commit = options.get("commit")
-
-        try:
-            sid = transaction.savepoint()
-            self.progress_cycles()
-
-            if not self.commit:
-                raise Rollback()
-
-        except Rollback:
-            if sid:
-                transaction.savepoint_rollback(sid)
+    def progress_product_expiry(self, *args, **kwargs):
+        qset = OrganizationProduct.objects.filter(expires__lt=timezone.now())
+        for org_prod in qset:
+            self.log_info(f"Expiring {org_prod.product} for {org_prod.org}")
+            if org_prod.product.expiry_replacement_product_id:
+                replace = org_prod.product.expiry_replacement_product
             else:
-                transaction.rollback()
-            self.log("Ran in non-committal mode, rolling back changes")
+                replace = None
 
-    def progress_cycles(self):
+            org_prod.delete()
+
+            if replace and replace.can_add_to_org(org_prod.org):
+                self.log_info(
+                    f"Replacing expired product with {replace} for {org_prod.org}"
+                )
+                replace.add_to_org(org_prod.org)
+
+    def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
-        for sub in qset:
-            self.log(f"checking subscription {sub} ...")
+        for subscription in qset:
+            self.log_info(f"checking subscription {subscription} ...")
 
-            if not sub.cycle:
-                sub.start_cycle()
-                self.log(f"-- started new billing cycle: {sub.cycle}")
+            if not subscription.subscription_cycle:
+                subscription.start_subscription_cycle()
+                self.log_info(
+                    f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
+                )
 
-            for subprod in sub.subprod_set.all():
-                self.collect(subprod, sub.cycle)
+            for subscription_product in subscription.subscription_product_set.all():
+                self.collect(subscription_product, subscription.subscription_cycle)
 
-            for cycle in sub.cycle_set.filter(status="ok"):
-                if not cycle.ended:
+            for subscription_cycle in subscription.subscription_cycle_set.filter(
+                status="ok"
+            ):
+                if not subscription_cycle.ended and subscription.charge_type == "end":
                     continue
-                if not sub.pay_id:
-                    Subscription.set_payment_method(sub.org)
-                if not sub.pay_id:
-                    self.log(
-                        f"-- no payment method set, unable to charge previous cycle for org {sub.org}"
+                if not subscription.payment_method_id:
+                    Subscription.set_payment_method(subscription.org)
+                if not subscription.payment_method_id:
+                    self.log_info(
+                        f"-- no payment method set, unable to charge subscription cycle for org {subscription.org}"
                     )
                     break
-                if not cycle.charged:
-                    self.log(f"-- charging ${cycle.price} for previous cycle: {cycle}")
+                if not subscription_cycle.charged:
+                    self.log_info(
+                        f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
+                    )
 
                     if not self.commit:
                         continue
 
                     with reversion.create_revision():
-                        cyclechg = cycle.charge()
+                        subscription_cycle_charge = subscription_cycle.charge()
 
                     with reversion.create_revision():
-                        if cyclechg:
-                            cyclechg.chg.sync_status()
+                        if subscription_cycle_charge:
+                            subscription_cycle_charge.payment_charge.sync_status()
 
-    def collect(self, subprod, cycle):
+    def collect(self, subscription_product, subscription_cycle):
+        org = subscription_cycle.subscription.org
 
-        org = cycle.sub.org
-
-        service = subprod.prod.component
+        service = subscription_product.product.component
         if not service:
-            cycle.update_usage(subprod, None)
+            subscription_cycle.update_usage(subscription_product, None)
             return
         bridge = service.bridge(org)
-        product = subprod.prod.name
+        product = subscription_product.product.name
 
         try:
             usage = bridge.usage(product)
-            self.log(f"{org} -> {product}: {usage}")
-            cycle.update_usage(subprod, usage)
+            self.log_info(f"{org} -> {product}: {usage}")
+            subscription_cycle.update_usage(subscription_product, usage)
         except KeyError as exc:
-            self.log(f"{exc}")
+            self.log_error(f"{exc}")

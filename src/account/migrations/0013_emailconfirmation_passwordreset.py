@@ -10,7 +10,6 @@ import account.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("account", "0012_auto_20200324_1357"),
@@ -51,7 +50,8 @@ class Migration(migrations.Migration):
                 (
                     "secret",
                     models.CharField(
-                        default=account.models.generate_pwdrst_secret, max_length=255
+                        default=account.models.generate_password_reset_secret,
+                        max_length=255,
                     ),
                 ),
                 ("email", models.EmailField(max_length=254)),
@@ -105,7 +105,8 @@ class Migration(migrations.Migration):
                 (
                     "secret",
                     models.CharField(
-                        default=account.models.generate_emconf_secret, max_length=255
+                        default=account.models.generate_email_confirmation_secret,
+                        max_length=255,
                     ),
                 ),
                 ("email", models.EmailField(max_length=254)),

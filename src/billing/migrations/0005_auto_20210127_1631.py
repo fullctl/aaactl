@@ -13,7 +13,6 @@ def null_components(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("billing", "0004_auto_20210112_1041"),
     ]

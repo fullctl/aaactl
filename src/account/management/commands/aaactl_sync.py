@@ -24,13 +24,21 @@ class Command(CommandInterface):
         pk = kwargs.get("id")
 
         for svc in Service.objects.filter(status="ok"):
+            print(svc.name)
             if not svc.api_url:
                 self.log_info(f"No api url specified for {svc.name}, skipping ..")
                 continue
-            fn = getattr(self, f"sync_{typ}")
+
             self.log_info(f"Syncing {typ} {pk} to {svc.name}")
+            fn = getattr(self, f"sync_{typ}")
+
             if self.commit:
-                fn(svc, pk)
+                try:
+                    fn(svc, pk)
+                except Exception as e:
+                    self.log_error(f"Error syncing {typ} {pk} to {svc.name}: {e}")
+                    self.stdout.write(f"Error syncing {typ} {pk} to {svc.name}: {e}")
+                    continue
 
     def sync_org(self, svc, pk):
         org = Organization.objects.get(pk=pk)

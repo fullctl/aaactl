@@ -24,7 +24,6 @@ class Command(CommandInterface):
         pk = kwargs.get("id")
 
         for svc in Service.objects.filter(status="ok"):
-            print(svc.name)
             if not svc.api_url:
                 self.log_info(f"No api url specified for {svc.name}, skipping ..")
                 continue

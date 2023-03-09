@@ -145,7 +145,7 @@ class Product(HandleRefModel):
         return hasattr(self, "recurring_product") and bool(self.recurring_product.id)
 
     def __str__(self):
-        return f"{self.name}({self.id})"
+        return f"{self.name}({self.id}) {self.description}"
 
     def create_transactions(self, user):
         order_number = "ORDER_" + unique_order_id()
@@ -269,7 +269,8 @@ class ProductPermissionGrant(HandleRefModel):
         org = org_product.org
 
         if org.org_managed_permission_set.filter(
-            product__product=self.product
+            product__product=self.product,
+            managed_permission=self.managed_permission,
         ).exists():
             return
 

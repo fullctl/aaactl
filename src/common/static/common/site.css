@@ -381,6 +381,11 @@ h6 {
   background-color: rgba(255,0,0,0.1);
 }
 
+.alert.error {
+  color: darkred;
+  background-color: rgba(255,0,0,0.1);
+}
+
 .large-table-row {
   height: 4rem;
 }

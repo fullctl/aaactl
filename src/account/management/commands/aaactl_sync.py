@@ -1,3 +1,5 @@
+import traceback
+
 from django.contrib.auth import get_user_model
 from fullctl.django.management.commands.base import CommandInterface
 
@@ -5,7 +7,6 @@ from account.models import Organization
 from applications.models import Service
 from applications.service_bridge import Bridge
 
-import traceback
 
 class Command(CommandInterface):
 
@@ -17,7 +18,9 @@ class Command(CommandInterface):
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
-        parser.add_argument("type", type=str, choices=("org", "user", "org_user", "all"))
+        parser.add_argument(
+            "type", type=str, choices=("org", "user", "org_user", "all")
+        )
         parser.add_argument("id", type=int)
 
     def run(self, *args, **kwargs):
@@ -29,7 +32,6 @@ class Command(CommandInterface):
                 self.log_info(f"No api url specified for {svc.name}, skipping ..")
                 continue
 
-           
             fn = getattr(self, f"sync_{typ}")
 
             if self.commit:
@@ -59,7 +61,6 @@ class Command(CommandInterface):
         bridge.sync_org_user()
 
     def sync_all(self, svc, pk):
-
         """
         Syncs all organizations, users and organization members
         to a service

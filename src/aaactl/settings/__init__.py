@@ -67,6 +67,7 @@ MIDDLEWARE = [
     "fullctl.django.middleware.CurrentRequestContext",
     "account.middleware.Impersonation",
     "account.middleware.RequestAugmentation",
+    "account.middleware.OAuthLoginError",
 ]
 
 INSTALLED_APPS += (

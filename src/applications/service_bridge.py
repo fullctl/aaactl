@@ -83,7 +83,15 @@ class Bridge(client.Bridge):
             "orgs": [org.id for org in Organization.get_for_user(self.user)],
         }
 
-        self.put(path, data=data)
+        try:
+            self.put(path, data=data)
+        except client.ServiceBridgeError as exc:
+            if exc.status == 404:
+                # user does not exist at service yet and creation
+                # should happen through authentication process
+                #
+                # but we also dont want to error here
+                pass
 
     def _endpoint(self, name, default=None):
         endpoint = self.service.api_endpoint_set.filter(name=name).first()

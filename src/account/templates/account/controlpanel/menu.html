@@ -9,18 +9,16 @@
               {{ request.user.get_full_name }}
             </h5>
           </div>
-          <div class="col-4 right">
+          <div class="col-4 d-flex justify-content-end">
             <button
-              class="btn btn-link edit-collapse"
+              class="btn btn-link edit-collapse d-flex align-items-center"
               data-bs-toggle="collapse"
               data-bs-target="#collapseOne"
               aria-expanded="true"
-              aria-controls="collapseOne">
-            <img
-              alt="pencil icon"
-              title="pencil icon"
-              src="{% static "account/icons/pencil.svg" %}"/>
-              Edit
+              aria-controls="collapseOne"
+            >
+              <span class="icon icon-edit"></span>
+              <span>Edit</span>
             </button>
           </div>
         </div>

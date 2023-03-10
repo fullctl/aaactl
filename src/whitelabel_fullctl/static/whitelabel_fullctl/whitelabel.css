@@ -221,6 +221,10 @@ button.close[data-bs-dismiss="modal"] {
   background: transparent;
 }
 
+.personal-key-container .pkb + .d-flex.me-1 {
+  margin-right: 0 !important;
+}
+
 .footer {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;

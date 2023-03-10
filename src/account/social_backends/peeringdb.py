@@ -16,8 +16,6 @@ class PeeringDBOAuth2(BaseOAuth2):
 
     def get_user_details(self, response):
         """Return user details."""
-        if response.get("verified_user") is not True:
-            raise AuthFailed(self, "User is not verified")
 
         return {
             "username": response.get("given_name"),

@@ -1,4 +1,7 @@
 
+ARG builder_repo=ghcr.io/fullctl/fullctl-builder-alpine
+ARG builder_tag=prep-release
+
 ARG virtual_env=/venv
 ARG install_to=/srv/service
 ARG build_deps=""
@@ -22,7 +25,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 
 # build container
-FROM ghcr.io/fullctl/fullctl-builder-alpine:prep-release as builder
+FROM $builder_repo:$builder_tag as builder
 
 ARG extra_pip_install_dir
 

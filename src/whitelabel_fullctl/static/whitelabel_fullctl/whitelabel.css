@@ -189,7 +189,7 @@ button.close[data-bs-dismiss="modal"] {
 
 .oauth-backend img {
   display: inline-block;
-  height: 40px;
+  max-height: 40px;
 }
 
 #changePwdPopover {

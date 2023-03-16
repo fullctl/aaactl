@@ -214,7 +214,7 @@ img.linked-auth-google  {
 }
 
 img.linked-auth-peering {
-  height: 32px;
+  max-height: 32px;
 }
 
 /* Remove default button styling for dropdown button*/

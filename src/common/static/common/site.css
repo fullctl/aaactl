@@ -188,12 +188,12 @@ img.smaller-logo{
 
 img.login-oauth-fix-height,
 img.login-peeringdb {
-  height: 40px;
+  max-height: 40px;
 }
 
 img.login-oauth-fix-width,
 img.login-google {
-  width: 40px;
+  max-width: 40px;
 }
 
 .linked-auth {

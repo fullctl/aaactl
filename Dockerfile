@@ -1,4 +1,5 @@
-
+ARG base_repo=python
+ARG base_tag=3.11-alpine
 ARG builder_repo=ghcr.io/fullctl/fullctl-builder-alpine
 ARG builder_tag=prep-release
 
@@ -14,7 +15,7 @@ ARG run_deps=" \
 ARG uid=6300
 ARG user=fullctl
 
-FROM python:3.9-alpine as base
+FROM ${base_repo}:${base_tag} as base
 
 ARG virtual_env
 ARG install_to

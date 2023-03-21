@@ -136,12 +136,15 @@ class OrganizationRoleInline(admin.TabularInline):
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
     search_fields = ("org_user_set__last_name", "name")
-    inlines = (OrganizationUserInline, OrganizationRoleInline)
+
+    def get_inlines(self, request, obj=None):
+        if obj is not None:
+            return [OrganizationUserInline, OrganizationRoleInline]
+        return [OrganizationUserInline]
 
     @reversion.create_revision()
     def save_formset(self, request, form, formset, change):
         return super().save_formset(request, form, formset, change)
-
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):

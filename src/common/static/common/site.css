@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:300,400,500,600" rel="stylesheet);
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
 :root {
   --dark-gray: #4A4D50;
@@ -331,7 +331,7 @@ appears when the header is clicked.*/
 .user-info button.edit-collapse {
   padding: 0 0 4px 0;
   color: var(--dark-gray);
-  line-height: 0;
+  line-height: 1;
   border-radius: 0;
   border-bottom: 1px solid var(--dark-gray);
   text-decoration: none;
@@ -511,6 +511,10 @@ table.table-sm {
   color: #fff;
 }
 
+.btn img {
+  display: inline-block;
+}
+
 .user-badge {
   font-size: 14px;
   line-height: 20px;
@@ -596,7 +600,7 @@ table.table-sm {
   background-color: var(--white);
   border: none;
   padding: .2rem .5rem;
-  width: 100%;
+  flex: 1;
   height: 100%;
   resize: none;
 }

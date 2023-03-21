@@ -187,6 +187,11 @@ button.close[data-bs-dismiss="modal"] {
   background-color: transparent !important;
 }
 
+.oauth-backend img {
+  display: inline-block;
+  max-height: 40px;
+}
+
 #changePwdPopover {
   background-color: transparent !important;
 }

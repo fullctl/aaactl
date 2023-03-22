@@ -146,6 +146,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_formset(self, request, form, formset, change):
         return super().save_formset(request, form, formset, change)
 
+
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
     list_display = ("org", "email", "created_by", "created", "status")

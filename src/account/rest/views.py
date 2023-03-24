@@ -193,8 +193,14 @@ class Organization(viewsets.ViewSet):
 
     @user_endpoint()
     def list(self, request):
+        # get array of Organization instance that the user
+        # is allowed to access and sort them by name
+
+        organizations = models.Organization.get_for_user(request.user)
+        organizations = sorted(organizations, key=lambda x: x.label.lower())
+
         serializer = Serializers.org(
-            models.Organization.get_for_user(request.user),
+            organizations,
             many=True,
             context={
                 "user": request.user,

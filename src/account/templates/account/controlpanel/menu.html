@@ -13,9 +13,9 @@
             <button
               class="btn btn-link edit-collapse d-flex align-items-center"
               data-bs-toggle="collapse"
-              data-bs-target="#collapseOne"
+              data-bs-target="#userInfoCollapse"
               aria-expanded="true"
-              aria-controls="collapseOne"
+              aria-controls="userInfoCollapse"
             >
               <span class="icon icon-edit"></span>
               <span>Edit</span>
@@ -24,7 +24,7 @@
         </div>
         <p>{{ request.user.email }}</p>
       </div>
-      <div id="collapseOne" class="collapse" aria-labelledby="userInformation" data-parent="#accordion">
+      <div id="userInfoCollapse" class="collapse" aria-labelledby="userInformation" data-parent="#accordion">
         <div class="accordion-body">
           <form
             class="change-information"

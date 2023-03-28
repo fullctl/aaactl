@@ -929,4 +929,24 @@ account.PendingUsers = twentyc.cls.define(
       this.rest_api_list.load();
     }
 })
+
+
+/**
+ * Expand account edit if account is the edit parameter in the URL
+ *
+ * @method account.handleEditUrlParameter
+ */
+account.handleEditUrlParameter = () => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const editParameter = urlSearchParams.get("edit");
+  if (editParameter && editParameter == "account") {
+    $('#userInfoCollapse').addClass('show');
+    $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
+    $('#userInformation').get(0).scrollIntoView();
+  }
+}
+$(document).ready(() => {
+  account.handleEditUrlParameter();
+});
+
 })();

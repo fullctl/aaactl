@@ -70,18 +70,6 @@
     {% if permissions.read_org_user %}
     <div class="row user-container">
       <div class="col-12 ps-0">
-        {% block users %}
-        {% include "account/controlpanel/user-list.html" %}
-        {% include "account/controlpanel/pending-user-list.html" %}
-        {% if permissions.create_org_user and request.selected_org.user != request.user %}
-          <div class="text-center">
-            <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#inviteModal">
-              + Invite Users to Your Organization
-            </button>
-          </div>
-          {% include "account/controlpanel/invite-modal.html" %}
-        {% endif %}
-        {% endblock %}
       </div>
     </div>
     {% endif %}

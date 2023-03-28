@@ -1,11 +1,13 @@
+{% load i18n static %}
+<h5>{% trans "Pending users" %}</h3>
 <div
   class="pending-user-listing"
   data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="invites">
   <table class="templates" style="display:none">
     <tr data-template="row" class="large-table-row">
-      <td scope="col" class="name-column table-text-bold dark-grey op-40" data-field="user_name"></td>
-      <td scope="col" class="light-grey op-40" data-field="email"></td>
+      <td scope="col" class="name-column table-text-bold dark-grey" data-field="user_name"></td>
+      <td scope="col" class="light-grey" data-field="email"></td>
       <td scope="col" class="manage-column right small-links">
         {% if permissions.create_org_user %}
         <a

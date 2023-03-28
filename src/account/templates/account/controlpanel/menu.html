@@ -101,6 +101,32 @@
       </div>
     </div>
 
+    {% if permissions.read_org_user %}
+    <div class="accordion-item">
+      <h5 class="accordion-header" id="users">
+        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false" aria-controls="collapseTwo">
+          {% trans "Users" %}
+        </button>
+      </h5>
+      <div id="userCollapse" class="accordion-collapse collapse" aria-labelledby="users">
+        <div class="accordion-body">
+          {% block users %}
+          {% include "account/controlpanel/user-list.html" %}
+          {% include "account/controlpanel/pending-user-list.html" %}
+          {% if permissions.create_org_user and request.selected_org.user != request.user %}
+            <div class="text-center">
+              <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                + {% trans "Invite Users to Your Organization" %}
+              </button>
+            </div>
+            {% include "account/controlpanel/invite-modal.html" %}
+          {% endif %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="accordion-item">
       <h5 class="accordion-header" id="headingThree">
         <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">

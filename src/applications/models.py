@@ -50,6 +50,14 @@ class Service(HandleRefModel):
         ),
     )
 
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_(
+            "Service description - will be shown in the service tiles on the dashboard"
+        ),
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")

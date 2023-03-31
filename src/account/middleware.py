@@ -8,12 +8,15 @@ from account.impersonate import is_impersonating
 from account.models import Organization
 from account.session import set_selected_org
 
+
 class OrgGone(KeyError):
     """
     Raised when the org set in the user's request session is no longer available
     to the user.
     """
+
     pass
+
 
 class RequestAugmentation:
     def __init__(self, get_response):

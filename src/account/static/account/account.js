@@ -2,7 +2,20 @@
 
 window.account = {}
 
-account.api_client = new twentyc.rest.Client("/api/account")
+account.api_client = new twentyc.rest.Client("/api/account");
+
+$().ready(function() {
+  if (!aaactl_user_info.has_org_setup) {
+    $('#createOrgModal').modal('show');
+  } else if (!aaactl_user_info.has_asn) {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const editParameter = urlSearchParams.get("edit");
+    if (!editParameter || !editParameter == "linked-auth-pdb") {
+      account.prompt_link_to_pdb();
+      window.location = '?edit=linked-authentication';
+    }
+  }
+});
 
 account.ControlPanel = twentyc.cls.define(
   "ControlPanel",
@@ -943,4 +956,49 @@ account.PendingUsers = twentyc.cls.define(
       this.rest_api_list.load();
     }
 })
+
+
+account.expand_user_info = () => {
+  $('#userInfoCollapse').addClass('show');
+  $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
+  $('#userInformation').get(0).scrollIntoView();
+}
+
+account.prompt_link_to_pdb = () => {
+  $('#linkedAuthCollapse').addClass('show');
+  $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
+  $('#linkedAuthCollapse').get(0).scrollIntoView();
+  $('#linkedAuthCollapse .peeringdb')[0].animate(
+    [
+      {"background": "var(--background)"},
+      {"background": "transparent"}
+    ],
+    {
+      duration: 750,
+      iterations: 2
+    }
+  );
+}
+
+/**
+ * Expand account edit if account is the edit parameter in the URL
+ *
+ * @method account.handleEditUrlParameter
+ */
+account.handleEditUrlParameter = () => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const editParameter = urlSearchParams.get("edit");
+  if (editParameter) {
+    if (editParameter == "account") {
+      account.expand_user_info();
+    } else if (editParameter == "linked-auth-pdb") {
+      account.prompt_link_to_pdb();
+    }
+  }
+}
+
+$(document).ready(() => {
+  account.handleEditUrlParameter();
+});
+
 })();

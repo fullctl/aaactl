@@ -1,6 +1,6 @@
 {% load i18n static %}
 <div
-  class="user-listing container-fluid"
+  class="user-listing"
   data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="users">
   <div class="templates" style="display:none">
@@ -64,10 +64,8 @@
     </div>
   </div>
 
-  <table class="table table-sm">
-    <tbody class="list-body">
-    </tbody>
-  </table>
+  <div class="list-body container-fluid">
+  </div>
 </div>
 
 

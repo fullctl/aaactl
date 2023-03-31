@@ -8,6 +8,12 @@ from account.impersonate import is_impersonating
 from account.models import Organization
 from account.session import set_selected_org
 
+class OrgGone(KeyError):
+    """
+    Raised when the org set in the user's request session is no longer available
+    to the user.
+    """
+    pass
 
 class RequestAugmentation:
     def __init__(self, get_response):
@@ -38,7 +44,9 @@ class RequestAugmentation:
         try:
             request.session["selected_org"]
             org = Organization.objects.get(id=request.session["selected_org"])
-        except Organization.DoesNotExist:
+            if not org.org_user_set.filter(user=request.user).exists():
+                raise OrgGone()
+        except (Organization.DoesNotExist, OrgGone):
             org = Organization.default_org(request.user)
             set_selected_org(request, org)
         except KeyError:

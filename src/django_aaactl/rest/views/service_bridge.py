@@ -30,6 +30,7 @@ class AaactlDataViewSet(DataViewSet):
     def destroy(self, request, *args, **kwargs):
         return self._destroy(request, *args, **kwargs)
 
+
 @route
 class Heartbeat(SystemViewSet):
     ref_tag = "heartbeat"
@@ -119,4 +120,4 @@ class Impersonation(AaactlDataViewSet):
     allow_unfiltered = True
 
     queryset = account_models.Impersonation.objects.all()
-    serializer_class = Serializers.impersonation 
+    serializer_class = Serializers.impersonation

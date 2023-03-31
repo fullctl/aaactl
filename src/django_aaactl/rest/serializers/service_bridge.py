@@ -3,9 +3,9 @@ from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
 from rest_framework import serializers
 
+import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
-import account.models as account_models
 from account.rest.serializers import Serializers as AccountSerializers
 
 Serializers, register = serializer_registry()
@@ -94,7 +94,6 @@ class User(ModelSerializer):
 
 @register
 class Impersonation(ModelSerializer):
-
     ref_tag = "impersonation"
 
     class Meta:

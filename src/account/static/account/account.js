@@ -607,15 +607,29 @@ account.ServiceApplications = twentyc.cls.define(
       this.rest_api_list = new twentyc.rest.List(this.element);
 
       this.rest_api_list.formatters.row = (row, data) => {
-        let redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
-        let img= row.find("img.logo")
-        row.find("a.redirect").attr("href", redirect_url);
+        const redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
+        const img =  row.find("img.logo")
+
+        row.attr("href", redirect_url);
         if(!data.logo) {
           img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
         } else {
           img.attr("src", data.logo);
         }
       };
+
+      // order services
+      $(this.rest_api_list).on("load:after", () => {
+        const service_list_order = ["ixctl", "peerctl", "aclctl", "prefixctl", "devicectl", "pdbctl"];
+        const service_list = {};
+        this.rest_api_list.list_body.find(".row").each(function() {
+          service_list[$(this).data("apiobject").slug] = $(this);
+        })
+
+        service_list_order.reverse().forEach((value, index) => {
+          this.rest_api_list.list_body.prepend(service_list[value]);
+        });
+      })
 
       this.rest_api_list.load();
 

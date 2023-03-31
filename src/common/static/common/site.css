@@ -561,24 +561,27 @@ table.table-sm {
   height: 28px;
 }
 
-.service-apps-list {
-  text-align: center;
-}
-
-.service-app {
-  display: inline-block;
-  background-color: #4a4d50;
-  padding: 5px;
-  border-radius: 5px;
-  margin-right: 5px;
-}
-
-.service-app a {
+a.service-app,
+a.service-app:hover,
+a.service-app:focus {
   border: none;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--size-400);
+  margin-bottom: var(--size-400);
+  padding: var(--size-400);
+}
+
+a.service-app .description{
+  margin-bottom: 0;
+}
+
+a.service-app:hover {
+  background: var(--box-bg);
 }
 
 .service-app img {
-  height: 25px;
+  max-height: 40px;
 }
 
 .service-list td {

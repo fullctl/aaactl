@@ -448,12 +448,6 @@ table.table-sm {
   font-weight: 300;
 }
 
-
-.order-history {
-  border-top: 1px solid var(--light-gray);
-  border-bottom: 1px solid var(--light-gray);
-}
-
 .mt-large {
   margin-top: 4rem;
 }

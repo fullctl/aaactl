@@ -99,32 +99,6 @@
       </div>
     </div>
 
-    {% if permissions.read_org_billing %}
-    <div class="row order-history-container">
-      <div class="col-12 ps-0 pe-0">
-        <h5>Order History</h5>
-        <div
-          class="order-history"
-          data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
-          data-api-action="orders">
-          <div class="templates" style="display:none">
-            <table>
-              <tr data-template="row">
-                <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
-                <td scope="col" data-field="processed" class="light-grey"></td>
-                <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
-                <td scope="col" data-field="order_id" class="small-links"></td>
-              </tr>
-            </table>
-          </div>
-          <table class="table table-sm table-inline small-table-row">
-            <tbody id="orderHistoryListBody" class="list-body">
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    {% endif %}
     {% endblock %}
   </div>
   <div class="col-xs-12 col-md-4">

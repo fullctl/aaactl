@@ -104,7 +104,7 @@
     {% if permissions.read_org_user %}
     <div class="accordion-item">
       <h5 class="accordion-header" id="users">
-        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false" aria-controls="collapseTwo">
+        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false" aria-controls="userCollapse">
           {% trans "Users" %}
         </button>
       </h5>
@@ -122,6 +122,41 @@
             {% include "account/controlpanel/invite-modal.html" %}
           {% endif %}
           {% endblock %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if permissions.read_org_billing %}
+    <div class="accordion-item">
+      <h5 class="accordion-header" id="order-history">
+        <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#orderHistoryCollapse" aria-expanded="false" aria-controls="orderHistoryCollapse">
+          {% trans "Order History" %}
+        </button>
+      </h5>
+      <div id="orderHistoryCollapse" class="accordion-collapse collapse order-history-container" aria-labelledby="order-history">
+        <div
+          class="order-history"
+          data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+          data-api-action="orders">
+          <div class="templates" style="display:none">
+            <div data-template="row" class="row">
+              <div class="col">
+                <div class="row">
+                  <div scope="col" data-field="processed" class="col mb-0 light-grey my-1"></div>
+                </div>
+                <div class="row">
+                  <div scope="col" data-field="description" class="col dark-grey mt-0 mb-1"></div>
+                  <div scope="col" data-field="price" class="col-auto dark-grey mt-0 mb-1"></div>
+                  <div scope="col" data-field="order_id" class="col-auto small-links mt-0 mb-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="orderHistoryListBody" class="list-body container-fluid">
+          </div>
+
         </div>
       </div>
     </div>

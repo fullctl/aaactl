@@ -549,8 +549,8 @@ table.table-sm {
 }
 
 .item-group {
-  background-color: var(--dark-gray);
-  color: var(--white);
+  background-color: var(--clr-bg-900);
+  color: var(--foreground);
   font-size: 20px;
   height: 28px;
 }

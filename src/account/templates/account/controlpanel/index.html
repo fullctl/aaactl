@@ -44,6 +44,9 @@
       {% include "account/controlpanel/edit-organization-modal.html" %}
       </div>
     </div>
+
+    
+
     <div class="row">
       <div class="col ps-0 mt-4 mb-4">
         {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
@@ -67,8 +70,17 @@
         {% endif %}
       </div>
     </div>
+
+    <div class="row service-container marg-top-lg">
+      <div class="col-12 ps-0">
+        {% block services %}
+        {% include "account/controlpanel/service-list.html" %}
+        {% endblock %}
+      </div>
+    </div>
+
     {% if permissions.read_org_user %}
-    <div class="row user-container">
+    <div class="row user-container  marg-top-lg">
       <div class="col-12 ps-0">
         {% block users %}
         {% include "account/controlpanel/user-list.html" %}
@@ -103,14 +115,6 @@
     </div>
     {% endif %}
 
-    <div class="row service-container">
-      <div class="col-12 ps-0">
-        {% block services %}
-        {% include "account/controlpanel/service-list.html" %}
-        {% endblock %}
-      </div>
-    </div>
-
     {% if permissions.read_org_billing %}
     <div class="row order-history-container">
       <div class="col-12 ps-0 pe-0">
@@ -137,6 +141,7 @@
       </div>
     </div>
     {% endif %}
+
     {% endblock %}
   </div>
   <div class="col-xs-12 col-md-4">

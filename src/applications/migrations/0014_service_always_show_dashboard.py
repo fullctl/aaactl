@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('applications', '0013_service_description'),
+        ("applications", "0013_service_description"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='service',
-            name='always_show_dashboard',
-            field=models.BooleanField(default=True, help_text='Always show the dashboard for this service, even if the user has no permissions'),
+            model_name="service",
+            name="always_show_dashboard",
+            field=models.BooleanField(
+                default=True,
+                help_text="Always show the dashboard for this service, even if the user has no permissions",
+            ),
         ),
     ]

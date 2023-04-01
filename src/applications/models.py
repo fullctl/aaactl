@@ -62,7 +62,7 @@ class Service(HandleRefModel):
         default=True,
         help_text=_(
             "Always show the dashboard for this service, even if the user has no permissions"
-        )
+        ),
     )
 
     class Meta:

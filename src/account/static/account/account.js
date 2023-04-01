@@ -2,7 +2,20 @@
 
 window.account = {}
 
-account.api_client = new twentyc.rest.Client("/api/account")
+account.api_client = new twentyc.rest.Client("/api/account");
+
+$().ready(function() {
+  if (!aaactl_user_info.has_org_setup) {
+    $('#createOrgModal').modal('show');
+  } else if (!aaactl_user_info.has_asn) {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const editParameter = urlSearchParams.get("edit");
+    if (!editParameter || !editParameter == "linked-auth-pdb") {
+      account.prompt_link_to_pdb();
+      window.location = '?edit=linked-authentication';
+    }
+  }
+});
 
 account.ControlPanel = twentyc.cls.define(
   "ControlPanel",
@@ -607,15 +620,29 @@ account.ServiceApplications = twentyc.cls.define(
       this.rest_api_list = new twentyc.rest.List(this.element);
 
       this.rest_api_list.formatters.row = (row, data) => {
-        let redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
-        let img= row.find("img.logo")
-        row.find("a.redirect").attr("href", redirect_url);
+        const redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
+        const img =  row.find("img.logo")
+
+        row.attr("href", redirect_url);
         if(!data.logo) {
           img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
         } else {
           img.attr("src", data.logo);
         }
       };
+
+      // order services
+      $(this.rest_api_list).on("load:after", () => {
+        const service_list_order = ["ixctl", "peerctl", "aclctl", "prefixctl", "devicectl", "pdbctl"];
+        const service_list = {};
+        this.rest_api_list.list_body.find(".row").each(function() {
+          service_list[$(this).data("apiobject").slug] = $(this);
+        })
+
+        service_list_order.reverse().forEach((value, index) => {
+          this.rest_api_list.list_body.prepend(service_list[value]);
+        });
+      })
 
       this.rest_api_list.load();
 
@@ -929,4 +956,49 @@ account.PendingUsers = twentyc.cls.define(
       this.rest_api_list.load();
     }
 })
+
+
+account.expand_user_info = () => {
+  $('#userInfoCollapse').addClass('show');
+  $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
+  $('#userInformation').get(0).scrollIntoView();
+}
+
+account.prompt_link_to_pdb = () => {
+  $('#linkedAuthCollapse').addClass('show');
+  $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
+  $('#linkedAuthCollapse').get(0).scrollIntoView();
+  $('#linkedAuthCollapse .peeringdb')[0].animate(
+    [
+      {"background": "var(--background)"},
+      {"background": "transparent"}
+    ],
+    {
+      duration: 750,
+      iterations: 2
+    }
+  );
+}
+
+/**
+ * Expand account edit if account is the edit parameter in the URL
+ *
+ * @method account.handleEditUrlParameter
+ */
+account.handleEditUrlParameter = () => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const editParameter = urlSearchParams.get("edit");
+  if (editParameter) {
+    if (editParameter == "account") {
+      account.expand_user_info();
+    } else if (editParameter == "linked-auth-pdb") {
+      account.prompt_link_to_pdb();
+    }
+  }
+}
+
+$(document).ready(() => {
+  account.handleEditUrlParameter();
+});
+
 })();

@@ -50,6 +50,21 @@ class Service(HandleRefModel):
         ),
     )
 
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_(
+            "Service description - will be shown in the service tiles on the dashboard"
+        ),
+    )
+
+    always_show_dashboard = models.BooleanField(
+        default=True,
+        help_text=_(
+            "Always show the dashboard for this service, even if the user has no permissions"
+        ),
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")

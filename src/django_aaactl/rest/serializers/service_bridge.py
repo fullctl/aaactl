@@ -3,6 +3,7 @@ from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
 from rest_framework import serializers
 
+import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
@@ -89,6 +90,15 @@ class User(ModelSerializer):
             AccountSerializers.org(instance=org.org, context={"user": obj}).data
             for org in obj.org_user_set.all()
         ]
+
+
+@register
+class Impersonation(ModelSerializer):
+    ref_tag = "impersonation"
+
+    class Meta:
+        model = account_models.Impersonation
+        fields = ["id", "superuser", "user"]
 
 
 @register

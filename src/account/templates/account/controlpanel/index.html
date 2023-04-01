@@ -44,6 +44,9 @@
       {% include "account/controlpanel/edit-organization-modal.html" %}
       </div>
     </div>
+
+    
+
     <div class="row">
       <div class="col ps-0 mt-4 mb-4">
         {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
@@ -67,76 +70,123 @@
         {% endif %}
       </div>
     </div>
-    {% if permissions.read_org_user %}
-    <div class="row user-container">
-      <div class="col-12 ps-0">
-        {% block users %}
-        {% include "account/controlpanel/user-list.html" %}
-        {% include "account/controlpanel/pending-user-list.html" %}
-        {% if permissions.create_org_user and request.selected_org.user != request.user %}
-          <div class="text-center">
-            <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#inviteModal">
-              + Invite Users to Your Organization
-            </button>
-          </div>
-          {% include "account/controlpanel/invite-modal.html" %}
-        {% endif %}
-        {% endblock %}
-      </div>
-    </div>
-    {% endif %}
-    {% if permissions.read_org_org_key %}
-    <div class="row key-container">
-      <div class="col-12 ps-0">
-        {% block org_keys %}
-        {% include "account/controlpanel/org-apikey-list.html" %}
-        {% if permissions.create_org_org_key %}
-          <div class="text-center">
-            <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#orgApiKeyModal">
-              {% trans "+ Create API Key" %}
-            </button>
-          </div>
-          {% include "account/controlpanel/org-apikey-modal.html" %}
-        {% endif %}
-        {% endblock %}
-      </div>
-    </div>
-    {% endif %}
 
-    <div class="row service-container">
-      <div class="col-12 ps-0">
-        {% block services %}
-        {% include "account/controlpanel/service-list.html" %}
-        {% endblock %}
-      </div>
-    </div>
+    <div class="accordion dashboard-cards">
 
-    {% if permissions.read_org_billing %}
-    <div class="row order-history-container">
-      <div class="col-12 ps-0 pe-0">
-        <h5>Order History</h5>
-        <div
-          class="order-history"
-          data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
-          data-api-action="orders">
-          <div class="templates" style="display:none">
-            <table>
-              <tr data-template="row">
-                <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
-                <td scope="col" data-field="processed" class="light-grey"></td>
-                <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
-                <td scope="col" data-field="order_id" class="small-links"></td>
-              </tr>
-            </table>
-          </div>
-          <table class="table table-sm table-inline small-table-row">
-            <tbody id="orderHistoryListBody" class="list-body">
-            </tbody>
-          </table>
+      <!-- SERVICES -->
+
+      <div class="accordion-item">
+          {% block services %}
+          {% include "account/controlpanel/service-list.html" %}
+          {% endblock %}
+      </div>
+
+      <!-- USERS -->
+
+      {% if permissions.read_org_user %}
+      <div class="accordion-item">
+        <h5 class="accordion-header" id="heading-users">
+          <button 
+            class="accordion-button fs-5 collapsed" 
+            type="button" 
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse-users" 
+            aria-expanded="false" 
+            aria-controls="collapse-users">
+            {% trans "Users" %}
+          </button>
+        </h5>
+        <div id="collapse-users" class="accordion-collapse collapse" aria-labelledby="heading-users">
+          {% block users %}
+          {% include "account/controlpanel/user-list.html" %}
+          {% include "account/controlpanel/pending-user-list.html" %}
+          {% if permissions.create_org_user and request.selected_org.user != request.user %}
+            <div class="text-center">
+              <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#inviteModal">
+                + Invite Users to Your Organization
+              </button>
+            </div>
+            {% include "account/controlpanel/invite-modal.html" %}
+          {% endif %}
+          {% endblock %}
         </div>
       </div>
+      {% endif %}
+
+      <!-- API KEYS -->
+
+      {% if permissions.read_org_org_key %}
+      <div class="accordion-item">
+        <h5 class="accordion-header" id="heading-api-keys">
+          <button 
+            class="accordion-button fs-5 collapsed" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#collapse-api-keys" 
+            aria-expanded="false" 
+            aria-controls="collapse-api-keys">
+            {% trans "API Keys" %}
+          </button>
+        </h5>
+        <div id="collapse-api-keys" class="accordion-collapse collapse" aria-labelledby="heading-api-keys">
+          <div class="row key-container">
+            {% block org_keys %}
+            {% include "account/controlpanel/org-apikey-list.html" %}
+            {% if permissions.create_org_org_key %}
+              <div class="text-center">
+                <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#orgApiKeyModal">
+                  {% trans "+ Create API Key" %}
+                </button>
+              </div>
+              {% include "account/controlpanel/org-apikey-modal.html" %}
+            {% endif %}
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if permissions.read_org_billing %}
+      <div class="accordion-item">
+        <h5 class="accordion-header" id="heading-order-history">
+          <button 
+            class="accordion-button fs-5 collapsed" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#collapse-order-history" 
+            aria-expanded="false" 
+            aria-controls="collapse-order-history">
+            {% trans "Order History" %}
+          </button>
+        </h5>
+        <div id="collapse-order-history" class="accordion-collapse collapse" aria-labelledby="heading-order-history">
+          <div class="row order-history-container">
+            <div
+              class="order-history"
+              data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+              data-api-action="orders">
+              <div class="templates" style="display:none">
+                <table>
+                  <tr data-template="row">
+                    <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
+                    <td scope="col" data-field="processed" class="light-grey"></td>
+                    <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
+                    <td scope="col" data-field="order_id" class="small-links"></td>
+                  </tr>
+                </table>
+              </div>
+              <table class="table table-sm table-inline small-table-row">
+                <tbody id="orderHistoryListBody" class="list-body">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
-    {% endif %}
+
     {% endblock %}
   </div>
   <div class="col-xs-12 col-md-4">

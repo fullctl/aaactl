@@ -196,6 +196,10 @@ button.close[data-bs-dismiss="modal"] {
   background-color: transparent !important;
 }
 
+.dashboard-cards {
+  background-color: var(--box-bg);
+  border-radius: 4px;
+}
 .user-info {
   background-color: var(--box-bg);
 }

@@ -449,11 +449,6 @@ table.table-sm {
 }
 
 
-.order-history {
-  border-top: 1px solid var(--light-gray);
-  border-bottom: 1px solid var(--light-gray);
-}
-
 .mt-large {
   margin-top: 4rem;
 }
@@ -702,4 +697,18 @@ div.permissions .delete-override {
 
 div.permissions.override .delete-override {
   display: inline;
+}
+
+
+.dashboard-cards .accordion-item > div {
+  background-color: var(--clr-bg-900);
+  padding: 10px 0px;
+}
+
+.dashboard-cards .accordion-item {
+  border: none;
+}
+
+.dashboard-cards {
+  margin: 0px 0px 0px -15px !important;
 }

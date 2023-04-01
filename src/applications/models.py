@@ -58,6 +58,13 @@ class Service(HandleRefModel):
         ),
     )
 
+    always_show_dashboard = models.BooleanField(
+        default=True,
+        help_text=_(
+            "Always show the dashboard for this service, even if the user has no permissions"
+        )
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")

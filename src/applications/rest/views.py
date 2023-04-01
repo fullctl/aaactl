@@ -25,7 +25,7 @@ class Services(viewsets.ViewSet):
             if service.org_id and org_id != service.org_id:
                 continue
 
-            if request.perms.check(
+            if service.always_show_dashboard or request.perms.check(
                 service.Grainy.namespace(service) + f".{org_id}",
                 "r",
                 ignore_grant_all=True,

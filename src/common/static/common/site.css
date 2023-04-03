@@ -520,9 +520,8 @@ table.table-sm {
 }
 
 .ub-pending{
-  background-color: var(--lighter-gray);
-  opacity: 0.4;
-  color: var(--dark-gray);
+  background-color: var(--modal-bg);
+  color: var(--foreground);
 }
 
 .ub-admin {
@@ -544,7 +543,7 @@ table.table-sm {
 }
 
 .item-group {
-  background-color: var(--clr-bg-900);
+  background-color: var(--background);
   color: var(--foreground);
   font-size: 20px;
   height: 28px;
@@ -701,7 +700,7 @@ div.permissions.override .delete-override {
 
 
 .dashboard-cards .accordion-item > div {
-  background-color: var(--clr-bg-900);
+  background-color: var(--background);
   padding: 10px 0px;
 }
 

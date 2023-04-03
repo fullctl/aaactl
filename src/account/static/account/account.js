@@ -11,8 +11,7 @@ $().ready(function() {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const editParameter = urlSearchParams.get("edit");
     if (!editParameter || !editParameter == "linked-auth-pdb") {
-      account.prompt_link_to_pdb();
-      window.location = '?edit=linked-authentication';
+      window.location = '?edit=linked-auth-pdb';
     }
   }
 });
@@ -975,7 +974,7 @@ account.prompt_link_to_pdb = () => {
     ],
     {
       duration: 750,
-      iterations: 2
+      iterations: 3
     }
   );
 }

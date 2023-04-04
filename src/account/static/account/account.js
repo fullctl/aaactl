@@ -5,15 +5,19 @@ window.account = {}
 account.api_client = new twentyc.rest.Client("/api/account");
 
 $().ready(function() {
-  if (!aaactl_user_info.has_org_setup) {
-    $('#createOrgModal').modal('show');
-  } else if (!aaactl_user_info.has_asn) {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const editParameter = urlSearchParams.get("edit");
-    if (!editParameter || !editParameter == "linked-auth-pdb") {
-      window.location = '?edit=linked-auth-pdb';
-    }
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.has("edit")) {
+    return
   }
+
+  if (!aaactl_user_info.has_org_setup) {
+    url.searchParams.set("edit", "new-org");
+  } else if (!aaactl_user_info.has_asn) {
+    url.searchParams.set("edit", "linked-auth-pdb");
+  }
+
+  history.replaceState({}, null, url);
 });
 
 account.ControlPanel = twentyc.cls.define(
@@ -992,6 +996,8 @@ account.handleEditUrlParameter = () => {
       account.expand_user_info();
     } else if (editParameter == "linked-auth-pdb") {
       account.prompt_link_to_pdb();
+    } else if (editParameter == "new-org") {
+      $('#createOrgModal').modal('show');
     }
   }
 }

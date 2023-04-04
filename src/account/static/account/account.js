@@ -8,11 +8,9 @@ $().ready(function() {
   if (!aaactl_user_info.has_org_setup) {
     $('#createOrgModal').modal('show');
   } else if (!aaactl_user_info.has_asn) {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const editParameter = urlSearchParams.get("edit");
-    if (!editParameter || !editParameter == "linked-auth-pdb") {
-      window.location = '?edit=linked-auth-pdb';
-    }
+    const url = new URL(window.location.href);
+    url.searchParams.set("edit", "linked-auth-pdb");
+    history.replaceState({}, null, url);
   }
 });
 

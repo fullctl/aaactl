@@ -34,6 +34,7 @@ class Service(ModelSerializer):
             "products",
             "org_can_trial",
             "org_has_access",
+            "always_show_dashboard",
         ]
 
     def get_products(self, obj):

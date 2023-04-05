@@ -17,7 +17,6 @@ from django_grainy.models import (
     UserPermission,
 )
 from django_grainy.util import Permissions
-from fullctl.django.util import host_url
 
 from account.tasks import UpdatePermissions  # noqa F401
 from common.email import email_noreply
@@ -515,7 +514,7 @@ class EmailConfirmation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(),
+            settings.AAACTL_HOST,
             reverse("account:auth-confirm-email", args=(self.secret,)),
         )
 
@@ -588,7 +587,7 @@ class PasswordReset(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(),
+            settings.AAACTL_HOST,
             reverse("account:auth-reset-password", args=(self.secret,)),
         )
 
@@ -863,7 +862,7 @@ class Invitation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(), reverse("account:accept-invite", args=(self.secret,))
+            settings.AAACTL_HOST, reverse("account:accept-invite", args=(self.secret,))
         )
 
     def __str__(self):
@@ -884,7 +883,7 @@ class Invitation(HandleRefModel):
                     "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": host_url(),
+                    "host": settings.AAACTL_HOST,
                 },
             ).content.decode("utf-8"),
         )

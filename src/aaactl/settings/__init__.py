@@ -239,7 +239,9 @@ settings_manager.set_default_append()
 settings_manager.set_from_env("AAACTL_HOST")
 
 if "AAACTL_HOST" not in globals():
-    raise ValueError("AAACTL_HOST needs to specified in .env as it is used to construct urls used for email confirmations and invites")
+    raise ValueError(
+        "AAACTL_HOST needs to specified in .env as it is used to construct urls used for email confirmations and invites"
+    )
 
 # misc aaactl settings
 # email to notify new sign-ups to

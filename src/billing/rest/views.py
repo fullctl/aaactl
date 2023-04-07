@@ -144,8 +144,6 @@ class Organization(viewsets.ViewSet):
         service_id = request.data.get("service_id")
         service = application_models.Service.objects.get(id=service_id)
 
-        raise Exception("stop")
-
         if not service.trial_product_id:
             return Response({"service_id": ["This service has no trial"]}, status=400)
 

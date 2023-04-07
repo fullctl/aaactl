@@ -514,7 +514,7 @@ class EmailConfirmation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.AAACTL_HOST,
+            settings.AAACTL_URL,
             reverse("account:auth-confirm-email", args=(self.secret,)),
         )
 
@@ -587,7 +587,7 @@ class PasswordReset(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.AAACTL_HOST,
+            settings.AAACTL_URL,
             reverse("account:auth-reset-password", args=(self.secret,)),
         )
 
@@ -862,7 +862,7 @@ class Invitation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            settings.AAACTL_HOST, reverse("account:accept-invite", args=(self.secret,))
+            settings.AAACTL_URL, reverse("account:accept-invite", args=(self.secret,))
         )
 
     def __str__(self):
@@ -883,7 +883,8 @@ class Invitation(HandleRefModel):
                     "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": settings.AAACTL_HOST,
+                    "host": settings.AAACTL_URL
+    ,
                 },
             ).content.decode("utf-8"),
         )

@@ -236,11 +236,11 @@ REST_FRAMEWORK = {
 
 settings_manager.set_default_append()
 
-settings_manager.set_from_env("AAACTL_HOST")
+settings_manager.set_from_env("AAACTL_URL")
 
-if "AAACTL_HOST" not in globals():
+if "AAACTL_URL" not in globals():
     raise ValueError(
-        "AAACTL_HOST needs to specified in .env as it is used to construct urls used for email confirmations and invites"
+        "AAACTL_URL needs to specified in .env as it is used to construct urls used for email confirmations and invites"
     )
 
 # misc aaactl settings

@@ -52,6 +52,7 @@ class Service(AaactlDataViewSet):
     valid_filters = [
         ("group", "group__iexact"),
         ("name", "name__iexact"),
+        ("slug", "slug__iexact"),
     ]
     autocomplete = "name"
     allow_unfiltered = True

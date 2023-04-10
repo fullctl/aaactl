@@ -231,7 +231,6 @@ REST_FRAMEWORK = {
         "invite": "5/minute",
         "resend_email": "5/minute",
         "password_reset": "5/minute",
-        "contact_message": "5/minute",
     },
 }
 
@@ -260,3 +259,5 @@ settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DE
 
 # support settings
 settings_manager.set_support()
+
+settings_manager.set_option("AAACTL_URL", "")

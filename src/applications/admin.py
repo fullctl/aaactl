@@ -12,7 +12,15 @@ class ServiceAPIEndpointInline(admin.TabularInline):
 
 @admin.register(Service)
 class ServiceAdmin(BaseAdmin):
-    list_display = ("name", "id", "slug", "status", "created", "always_show_dashboard", "cross_promote")
+    list_display = (
+        "name",
+        "id",
+        "slug",
+        "status",
+        "created",
+        "always_show_dashboard",
+        "cross_promote",
+    )
     search_fields = ("name",)
     readonly_fields = ("products_that_grant_access",)
     inlines = (ServiceAPIEndpointInline,)

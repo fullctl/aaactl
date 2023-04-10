@@ -69,7 +69,7 @@ class Service(HandleRefModel):
         default=False,
         help_text=_(
             "If true will show the 'Start trial' alert for this service in other services"
-        )
+        ),
     )
 
     class Meta:

@@ -1,0 +1,5 @@
+We have received a {{ message.type }} message from {{ message.name }} <{{ message.email }}>
+
+{% for field, value in message.message.items %}
+{{ field }}: {{ value }}
+{% endfor %}

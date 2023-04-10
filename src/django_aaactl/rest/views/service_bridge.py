@@ -30,6 +30,11 @@ class AaactlDataViewSet(DataViewSet):
     def destroy(self, request, *args, **kwargs):
         return self._destroy(request, *args, **kwargs)
 
+    @grainy_endpoint("service_bridge")
+    def create(self, request, *args, **kwargs):
+        print("REQUEST", request.data)
+        return self._create(request, *args, **kwargs)
+
 
 @route
 class Heartbeat(SystemViewSet):
@@ -121,3 +126,17 @@ class Impersonation(AaactlDataViewSet):
 
     queryset = account_models.Impersonation.objects.all()
     serializer_class = Serializers.impersonation
+
+@route
+class Contact(AaactlDataViewSet):
+    path_prefix = "/data"
+    allowed_http_methods = ["GET", "POST"]
+    valid_filters = [
+        ("name", "name__iexact"),
+        ("email", "email__iexact"),
+    ]
+    allow_unfiltered = False
+    autocomplete = "name"
+
+    queryset = account_models.ContactMessage.objects.all()
+    serializer_class = Serializers.contact_message

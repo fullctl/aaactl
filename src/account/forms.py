@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
 
-from account.models import Organization
+from account.models import Organization, ContactMessage
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service
@@ -206,3 +206,9 @@ class CreateOrgAPIKey(forms.Form):
 class CreateAPIKey(forms.Form):
     name = forms.CharField(label=_("Name / Description"))
     readonly = forms.BooleanField(label=_("Read only"), required=False)
+
+
+class ContactMessage(forms.Form):
+    name = forms.CharField(label=_("Name"))
+    email = forms.EmailField(label=_("Email address"))
+    message = forms.JSONField(label=_("Message"))

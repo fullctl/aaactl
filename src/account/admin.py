@@ -22,6 +22,7 @@ from account.impersonate import (
 from account.models import (
     APIKey,
     APIKeyPermission,
+    ContactMessage,
     EmailConfirmation,
     InternalAPIKey,
     InternalAPIKeyPermission,
@@ -289,3 +290,10 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
         stop_impersonation(request)
 
         self.message_user(request, f"No longer impersonating {user}", messages.SUCCESS)
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "service", "type", "created", "updated", "status")
+    search_fields = ("name", "email", "user__username", "user__first_name", "user__last_name", "user__email", "service__slug")#
+    list_filter = ("status", "type", "service")

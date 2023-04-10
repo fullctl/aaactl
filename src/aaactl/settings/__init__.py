@@ -231,6 +231,7 @@ REST_FRAMEWORK = {
         "invite": "5/minute",
         "resend_email": "5/minute",
         "password_reset": "5/minute",
+        "contact_message": "5/minute",
     },
 }
 

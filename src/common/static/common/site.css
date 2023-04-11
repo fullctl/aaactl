@@ -104,8 +104,7 @@ input[type="checkbox"].validation-error-indicator ~label {
 }
 
 .header img.logo {
-  position: absolute;
-  z-index: 10;
+  max-height: 4rem;
 }
 
 .header h1 {

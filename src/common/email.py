@@ -7,6 +7,7 @@ logger = logging.getLogger("django")
 
 # TODO move to fullctl.django.mail
 
+
 def email_noreply(address, subject, message, **kwargs):
     """
     Sends email to user from noreply address
@@ -26,6 +27,7 @@ def email_contact_us(replyto, subject, message, **kwargs):
         reply_to=[replyto],
         **kwargs,
     )
+
 
 def email(sender, addresses, subject, message, **kwargs):
     for address in addresses:

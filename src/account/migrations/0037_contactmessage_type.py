@@ -4,15 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('account', '0036_contactmessage'),
+        ("account", "0036_contactmessage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contactmessage',
-            name='type',
-            field=models.CharField(choices=[('general', 'General'), ('support', 'Support'), ('feature-request', 'Feature Request')], default='general', max_length=255),
+            model_name="contactmessage",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("general", "General"),
+                    ("support", "Support"),
+                    ("feature-request", "Feature Request"),
+                ],
+                default="general",
+                max_length=255,
+            ),
         ),
     ]

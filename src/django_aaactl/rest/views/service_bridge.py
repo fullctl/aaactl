@@ -128,6 +128,7 @@ class Impersonation(AaactlDataViewSet):
     queryset = account_models.Impersonation.objects.all()
     serializer_class = Serializers.impersonation
 
+
 @route
 class Contact(AaactlDataViewSet):
     path_prefix = "/data"

@@ -138,7 +138,6 @@ class OrgnaizationProduct(ModelSerializer):
 
 @register
 class ContactMessage(ModelSerializer):
-    
     service_slug = serializers.SerializerMethodField()
 
     class Meta:
@@ -153,7 +152,7 @@ class ContactMessage(ModelSerializer):
             "service",
             "service_slug",
         ]
-    
+
     def get_service_slug(self, obj):
         if not obj.service_id:
             return None

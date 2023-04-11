@@ -295,5 +295,13 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
     list_display = ("name", "email", "service", "type", "created", "updated", "status")
-    search_fields = ("name", "email", "user__username", "user__first_name", "user__last_name", "user__email", "service__slug")#
+    search_fields = (
+        "name",
+        "email",
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "user__email",
+        "service__slug",
+    )  #
     list_filter = ("status", "type", "service")

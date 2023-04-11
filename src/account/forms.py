@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
 
-from account.models import Organization, ContactMessage
+from account.models import ContactMessage, Organization
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service

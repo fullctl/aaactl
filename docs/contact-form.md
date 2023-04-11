@@ -55,7 +55,7 @@ In order to post to the backend
                 const jsonString = JSON.stringify(data);
 
                 $.ajax({
-                    url: AAACTL_URL + '/account/contact/',
+                    url: AAACTL_URL + '/api/account/contact/',
                     type: 'POST',
                     contentType: 'application/json',
                     data: jsonString,

@@ -607,3 +607,17 @@ class OrganizationAPIKeyPermissions(PermissionSetterMixin):
     @property
     def permission_holder(self):
         return self.validated_data[self.rel_fld]
+
+
+@register
+class Contact(FormValidationMixin, serializers.ModelSerializer):
+    class Meta:
+        model = models.ContactMessage
+        fields = ["name", "email", "message"]
+
+    form = forms.Contact
+
+    def save(self):
+        data = self.validated_data
+        data.pop("form_data", None)
+        return super().save()

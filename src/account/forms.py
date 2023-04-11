@@ -208,7 +208,11 @@ class CreateAPIKey(forms.Form):
     readonly = forms.BooleanField(label=_("Read only"), required=False)
 
 
-class ContactMessage(forms.Form):
+class Contact(forms.ModelForm):
     name = forms.CharField(label=_("Name"))
     email = forms.EmailField(label=_("Email address"))
     message = forms.JSONField(label=_("Message"))
+
+    class Meta:
+        model = ContactMessage
+        fields = ["name", "email", "message"]

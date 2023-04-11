@@ -166,9 +166,7 @@ input[type="checkbox"].validation-error-indicator ~label {
 }
 
 .header img.logo {
-  max-height: 4.5rem;
-  padding-bottom: var(--size-200);
-  padding-top: var(--size-200);
+  max-height: 4rem;
 }
 
 

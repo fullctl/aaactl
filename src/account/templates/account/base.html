@@ -35,6 +35,7 @@
   aaactl_user_info.has_org_setup = "{{ has_org_setup }}" == "True";
 </script>
 
+<script src="{% static "common/aaactl.js" %}"></script>
 <script src="{% static "account/account.js" %}"></script>
 <script src="{% static "billing/billing.js" %}"></script>
 
@@ -64,8 +65,12 @@ twentyc.rest.config.csrf = "{{ csrf_token }}"
 {% endif %}
 
 <div class="container-fluid header-outer">
-  <div class="container header">
-  {% include "account/header.html" %}
+  <div class="container header d-flex align-items-center">
+    <div class="row">
+      {% block header_outer %}
+        {% include "account/header.html" %}
+      {% endblock header_outer %}
+    </div>
   </div>
 </div>
 

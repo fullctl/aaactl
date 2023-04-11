@@ -1,0 +1,28 @@
+{% load static i18n %}
+{% block header %}
+  <div
+    class="app-switcher col-auto"
+    data-element="app_switcher"
+    data-api-base="{% url "applications_api:service_application-list" %}"
+  >
+    <div class="selected d-flex align-items-center">
+      <img class="app-logo" src="{% static "whitelabel_fullctl/fullctl-logo-light.svg" %}" alt="{{ service_tag }}">
+      <span class="icon {{ request.app_id }} icon-caret-y ms-4"></span>
+      <div class="others list-body" style="display:none">
+      </div>
+      <div class="templates" style="display:none">
+        <a data-template="row">
+
+          <img class="app-logo" alt="" data-logo-url="{% static "common/logos/svc_slug-dark.svg" %}">
+
+          <span class="icon-arrow | icon icon-lg"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+<script>
+  $(document).ready(function() {
+    new aaactl.Header();
+  });
+</script>
+{% endblock %}

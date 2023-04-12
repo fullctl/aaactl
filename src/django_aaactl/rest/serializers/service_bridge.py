@@ -144,6 +144,7 @@ class ContactMessage(ModelSerializer):
         model = account_models.ContactMessage
         fields = [
             "id",
+            "user",
             "name",
             "email",
             "message",

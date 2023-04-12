@@ -1,9 +1,9 @@
 # Snippet to use aaactl's contact form
 
 This are very basic snippet on how to wire up the aaactl contact backend at a site that is not
-service bridge enabled, but still wants to facility user support message posting through aaactl's contact backend.
+service bridge enabled, but still wants to facilitate support contact message posting through aaactl's contact backend.
 
-The requesting host needs to be white-listed through the `CONTACT_ALLOWED_ORIGINS` setting.
+The requesting host needs to be white-listed through the `CONTACT_ALLOWED_ORIGINS` setting in aaactl.
 
 ```sh
 expose CONTACT_ALLOWED_ORIGINS=https://example.com,https://otherexample.com
@@ -45,6 +45,8 @@ In order to post to the backend
             $('form').on('submit', function(event) {
                 event.preventDefault();
 
+                const AAACTL_URL = "https://account.fullctl.io"
+        
                 const formData = new FormData(event.target);
 
                 const data = {

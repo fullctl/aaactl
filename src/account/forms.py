@@ -1,5 +1,6 @@
 import re
 
+import fullctl.django.enum as enum
 from captcha.fields import ReCaptchaField
 from django import forms
 from django.contrib.auth import get_user_model
@@ -10,8 +11,6 @@ from account.models import ContactMessage, Organization
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service
-
-import fullctl.django.enum as enum
 
 
 class Login(forms.Form):

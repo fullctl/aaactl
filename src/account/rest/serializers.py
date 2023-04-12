@@ -613,7 +613,7 @@ class OrganizationAPIKeyPermissions(PermissionSetterMixin):
 class Contact(FormValidationMixin, serializers.ModelSerializer):
     class Meta:
         model = models.ContactMessage
-        fields = ["name", "email", "message"]
+        fields = ["name", "type", "email", "message"]
 
     form = forms.Contact
 

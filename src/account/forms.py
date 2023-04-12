@@ -11,6 +11,8 @@ from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service
 
+import fullctl.django.enum as enum
+
 
 class Login(forms.Form):
     username = forms.CharField()
@@ -212,6 +214,7 @@ class Contact(forms.ModelForm):
     name = forms.CharField(label=_("Name"))
     email = forms.EmailField(label=_("Email address"))
     message = forms.JSONField(label=_("Message"))
+    type = forms.ChoiceField(choices=enum.CONTACT_MESSAGE_TYPE, required=False)
 
     class Meta:
         model = ContactMessage

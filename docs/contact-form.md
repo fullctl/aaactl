@@ -25,7 +25,7 @@ In order to post to the backend
     "name": "John",
     "message": {
         // the `messsage` sub fields are all arbitrary, and you can construct
-        // it to git the needs of your type of request
+        // it however you want, to include any additional information in your form
         "content": "my message",
         "orgnaziation": "20C"
     },

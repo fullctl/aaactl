@@ -304,7 +304,7 @@ class ContactMessageAdmin(admin.ModelAdmin):
         "user__email",
         "service__slug",
     )  #
-    list_filter = ("status", "type", "service")
+    list_filter = ("type", "service")
 
     # Override the following methods to make the view read-only
     def has_add_permission(self, request):

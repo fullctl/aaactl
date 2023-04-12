@@ -11,7 +11,7 @@ expose CONTACT_ALLOWED_ORIGINS=https://example.com,https://otherexample.com
 
 In order to post to the backend
 
-- an `ajax` request should be dispatched to `{AAACTL_URL}/account/contact/` with a `POST` method
+- an `ajax` request should be dispatched to `{AAACTL_URL}/api/account/contact/` with a `POST` method
 - the content type should be `application/json`
 - the content should be a json string with
     - `name` field (username or personal name)

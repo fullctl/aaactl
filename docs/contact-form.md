@@ -16,6 +16,7 @@ In order to post to the backend
 - the content should be a json string with
     - `name` field (username or personal name)
     - `email` field
+    - `type` field (can be `general`, `feature-request`, `support` or `demo-request`) - will default to `general` if not specified
     - `message` field (a `dict` containing any additional info to post)
 
 ```json

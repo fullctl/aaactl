@@ -34,6 +34,8 @@ class Service(ModelSerializer):
             "products",
             "org_can_trial",
             "org_has_access",
+            "always_show_dashboard",
+            "cross_promote",
         ]
 
     def get_products(self, obj):
@@ -134,3 +136,32 @@ class OrgnaizationProduct(ModelSerializer):
 
     def get_product_data(self, org_product):
         return org_product.product.data
+
+
+@register
+class ContactMessage(ModelSerializer):
+    service_slug = serializers.SerializerMethodField()
+
+    class Meta:
+        model = account_models.ContactMessage
+        fields = [
+            "id",
+            "user",
+            "name",
+            "email",
+            "message",
+            "type",
+            "created",
+            "service",
+            "service_slug",
+        ]
+
+    def get_service_slug(self, obj):
+        if not obj.service_id:
+            return None
+        return obj.service.slug
+
+    def save(self):
+        instance = super().save()
+        instance.notify()
+        return instance

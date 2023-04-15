@@ -14,7 +14,11 @@ jobs:
       # poetry run pre-commit run --all-files
       - name: Run linters
         run: |
-            poetry run pre-commit run --all-files
+             poetry run isort .
+             poetry run black --check src/
+
+             # github cache issues
+             # poetry run pre-commit run --all-files
 
   test:
     needs: linting

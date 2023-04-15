@@ -1,10 +1,14 @@
+import fullctl.django.rest.throttle as throttle
 import reversion
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
+from django.views.decorators.csrf import csrf_exempt
 from django_grainy.helpers import str_flags
 from django_grainy.util import get_permissions
 from fullctl.django.auditlog import auditlog
+from fullctl.django.decorators import origin_allowed
 from fullctl.django.rest.core import BadRequest
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -538,3 +542,29 @@ class PasswordReset(viewsets.ViewSet):
         if self.action in ["start"]:
             self.throttle_scope = "password_reset"
         return super().get_throttles()
+
+
+@route
+class Contact(viewsets.ViewSet):
+    ref_tag = "contact"
+    serializer_class = Serializers.contact_message
+    queryset = models.ContactMessage.objects.all()
+    permission_classes = [AllowAny]
+    throttle_classes = [throttle.ContactMessage]
+
+    @csrf_exempt
+    def create(self, request):
+        @origin_allowed(settings.CONTACT_ALLOWED_ORIGINS)
+        def _create(request):
+            serializer = Serializers.contact_message(
+                data=request.data, many=False, context={"user": request.user}
+            )
+
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=400)
+
+            contact = serializer.save()
+            contact.notify()
+            return Response(serializer.data)
+
+        return _create(request)

@@ -259,3 +259,14 @@ settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DE
 
 # support settings
 settings_manager.set_support()
+
+settings_manager.set_option("AAACTL_URL", "")
+settings_manager.set_option("SERVICE_KEY", "")
+
+# origins that are allowed to POST to the anonymous contact backend
+# using cross server requests
+#
+# fullctl services do NOT need to be on this list to use their
+# feature request and support contact forms, as those use the service bridge
+
+settings_manager.set_option("CONTACT_ALLOWED_ORIGINS", settings.exposed_list())

@@ -18,7 +18,6 @@ from django_grainy.models import (
 )
 from django_grainy.util import Permissions
 from fullctl.django.enum import CONTACT_MESSAGE_TYPE
-from fullctl.django.util import host_url
 
 from account.tasks import UpdatePermissions  # noqa F401
 from common.email import email_contact_us, email_noreply
@@ -885,8 +884,7 @@ class Invitation(HandleRefModel):
                     "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": settings.AAACTL_URL
-    ,
+                    "host": settings.AAACTL_URL,
                 },
             ).content.decode("utf-8"),
         )

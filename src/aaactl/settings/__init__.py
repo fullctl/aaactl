@@ -267,7 +267,6 @@ settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DE
 # support settings
 settings_manager.set_support()
 
-settings_manager.set_option("AAACTL_URL", "")
 settings_manager.set_option("SERVICE_KEY", "")
 
 # origins that are allowed to POST to the anonymous contact backend

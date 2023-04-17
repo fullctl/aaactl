@@ -40,6 +40,19 @@ aaactl.Header = twentyc.cls.define(
         }
       };
 
+      // order app switcher elements
+      $(this.app_switcher).on("load:after", () => {
+        const service_list_order = ["ixctl", "peerctl", "devicectl", "prefixctl", "pdbctl", "aclctl"];
+        const service_list = {};
+        this.app_switcher.list_body.find(".list-item").each(function() {
+          service_list[$(this).data("apiobject").slug] = $(this);
+        })
+
+        service_list_order.reverse().forEach((value, index) => {
+          this.app_switcher.list_body.prepend(service_list[value]);
+        });
+      });
+
       this.app_switcher.load();
     },
   }

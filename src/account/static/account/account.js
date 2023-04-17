@@ -644,7 +644,7 @@ account.ServiceApplications = twentyc.cls.define(
 
       // order services
       $(this.rest_api_list).on("load:after", () => {
-        const service_list_order = ["ixctl", "peerctl", "devicectl", "prefixctl", "pdbctl", "aclctl"];
+        const service_list_order = ["ixctl", "peerctl", "devicectl", "prefixctl", "pdbctl", "aclctl", "aaactl"];
         const service_list = {};
         this.rest_api_list.list_body.find(".row").each(function() {
           service_list[$(this).data("apiobject").slug] = $(this);

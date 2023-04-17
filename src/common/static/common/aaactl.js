@@ -14,8 +14,8 @@ aaactl.Header = twentyc.cls.define(
       const others = this.elements.app_switcher.find('.others')
       const selected = this.elements.app_switcher.find('.selected')
       selected.click(() => {
-        others.show();
-        selected.addClass('app_bg muted');
+        others.toggle();
+        selected.toggleClass('app_bg muted');
       });
       $(document.body).click(function(e) {
         if (

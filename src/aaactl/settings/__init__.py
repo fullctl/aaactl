@@ -236,6 +236,13 @@ REST_FRAMEWORK = {
 
 settings_manager.set_default_append()
 
+settings_manager.set_from_env("AAACTL_URL")
+
+if "AAACTL_URL" not in globals():
+    raise ValueError(
+        "AAACTL_URL needs to specified in .env as it is used to construct urls used for email confirmations and invites"
+    )
+
 # misc aaactl settings
 # email to notify new sign-ups to
 settings_manager.set_option("SIGNUP_NOTIFICATION_EMAIL", SERVER_EMAIL)
@@ -259,3 +266,13 @@ settings.print_debug(f"loaded settings for version {PACKAGE_VERSION} (DEBUG: {DE
 
 # support settings
 settings_manager.set_support()
+
+settings_manager.set_option("SERVICE_KEY", "")
+
+# origins that are allowed to POST to the anonymous contact backend
+# using cross server requests
+#
+# fullctl services do NOT need to be on this list to use their
+# feature request and support contact forms, as those use the service bridge
+
+settings_manager.set_option("CONTACT_ALLOWED_ORIGINS", settings.exposed_list())

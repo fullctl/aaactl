@@ -6,6 +6,8 @@ EMAIL_NOREPLY = "noreply@localhost"
 DEBUG = True
 SERVICE_KEY = "dead:beef"
 SECURE_SSL_REDIRECT = False
+AUTO_USER_TO_ORG = None
+AAACTL_URL = "http://localhost"
 
 LOGGING = {
     "version": 1,

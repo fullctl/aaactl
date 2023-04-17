@@ -65,6 +65,13 @@ class Service(HandleRefModel):
         ),
     )
 
+    cross_promote = models.BooleanField(
+        default=False,
+        help_text=_(
+            "If true will show the 'Start trial' alert for this service in other services"
+        ),
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")

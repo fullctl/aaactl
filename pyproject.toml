@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aaactl"
 repository = "https://github.com/fullctl/aaactl"
-version = "1.1.0"
+version = "1.2.0-rc.1"
 description = "authentication, authorization, and accounting for fullctl"
 authors = ["20C <code@20c.com>"]
 license = "Apache-2.0"
@@ -41,10 +41,7 @@ crispy-bootstrap5 = "^0.6"
 
 [tool.poetry.dev-dependencies]
 # testing
-codecov = ">=2"
-# lock for pytest compatibility
-# ERROR coverage.exceptions.DataError: Couldn't use data file
-coverage = "==6.4"
+coverage = ">=6.4"
 pytest = ">=6"
 pytest-django = ">=3.8"
 pytest-cov = "*"

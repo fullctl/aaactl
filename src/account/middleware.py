@@ -1,10 +1,21 @@
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from django_grainy.util import Permissions
+from social_core.exceptions import AuthFailed
+from social_django.middleware import SocialAuthExceptionMiddleware
 
 from account.impersonate import is_impersonating
 from account.models import Organization
 from account.session import set_selected_org
+
+
+class OrgGone(KeyError):
+    """
+    Raised when the org set in the user's request session is no longer available
+    to the user.
+    """
+
+    pass
 
 
 class RequestAugmentation:
@@ -36,7 +47,9 @@ class RequestAugmentation:
         try:
             request.session["selected_org"]
             org = Organization.objects.get(id=request.session["selected_org"])
-        except Organization.DoesNotExist:
+            if not org.org_user_set.filter(user=request.user).exists():
+                raise OrgGone()
+        except (Organization.DoesNotExist, OrgGone):
             org = Organization.default_org(request.user)
             set_selected_org(request, org)
         except KeyError:
@@ -90,3 +103,18 @@ class Impersonation:
 
             # finalize impersonation by setting the request user
             request.user = user
+
+
+class OAuthLoginError(SocialAuthExceptionMiddleware):
+
+    """
+    Graceful handling of some OAuth login errors (instead of scary 500 internal error page)
+
+    - PeeringDB user is not verified
+    """
+
+    def get_redirect_uri(self, request, exception):
+        if isinstance(exception, AuthFailed):
+            if "PeeringDB user is not verified" in str(exception):
+                return request.build_absolute_uri("/")
+        return super().get_redirect_uri(request, exception)

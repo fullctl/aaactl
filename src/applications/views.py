@@ -19,6 +19,7 @@ def status(request):
                 "status": "failure",
                 "details": str(exc),
             }
+            all_good = False
             continue
 
         try:

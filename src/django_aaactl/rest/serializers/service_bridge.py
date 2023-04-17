@@ -3,6 +3,7 @@ from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
 from rest_framework import serializers
 
+import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
@@ -33,6 +34,8 @@ class Service(ModelSerializer):
             "products",
             "org_can_trial",
             "org_has_access",
+            "always_show_dashboard",
+            "cross_promote",
         ]
 
     def get_products(self, obj):
@@ -92,6 +95,15 @@ class User(ModelSerializer):
 
 
 @register
+class Impersonation(ModelSerializer):
+    ref_tag = "impersonation"
+
+    class Meta:
+        model = account_models.Impersonation
+        fields = ["id", "superuser", "user"]
+
+
+@register
 class Product(ModelSerializer):
     class Meta:
         model = billing_models.Product
@@ -124,3 +136,32 @@ class OrgnaizationProduct(ModelSerializer):
 
     def get_product_data(self, org_product):
         return org_product.product.data
+
+
+@register
+class ContactMessage(ModelSerializer):
+    service_slug = serializers.SerializerMethodField()
+
+    class Meta:
+        model = account_models.ContactMessage
+        fields = [
+            "id",
+            "user",
+            "name",
+            "email",
+            "message",
+            "type",
+            "created",
+            "service",
+            "service_slug",
+        ]
+
+    def get_service_slug(self, obj):
+        if not obj.service_id:
+            return None
+        return obj.service.slug
+
+    def save(self):
+        instance = super().save()
+        instance.notify()
+        return instance

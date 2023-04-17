@@ -24,10 +24,17 @@ def permissions(request):
                     namespace.format(org_id=instance.id), op, ignore_grant_all=True
                 )
 
+    context["has_asn"] = request.perms.check("verified.asn.?", "r")
+
     return {"permissions": context}
 
 
 def info(request):
+    user_has_org_setup = False
+    if request.user.is_authenticated:
+        user_has_org_setup = request.user.org_user_set.filter(
+            org__user__isnull=True
+        ).exists()
     return {
         "billing_env": settings.BILLING_ENV,
         "release_env": settings.RELEASE_ENV,
@@ -36,4 +43,5 @@ def info(request):
         "google_analytics_id": settings.GOOGLE_ANALYTICS_ID,
         "cloudflare_analytics_id": settings.CLOUDFLARE_ANALYTICS_ID,
         "enable_email_confirmation": settings.ENABLE_EMAIL_CONFIRMATION,
+        "has_org_setup": user_has_org_setup,
     }

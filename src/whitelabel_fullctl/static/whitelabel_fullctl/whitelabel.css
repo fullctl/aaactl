@@ -128,7 +128,7 @@ h1, h2, h3, h4, h5 {
 }
 
 .available-apps  {
-  background-color: var(--th-bg);
+  background-color: transparent;
   border-color: var(--theme-secondary-border-color);
   box-shadow: none;
 }
@@ -187,10 +187,19 @@ button.close[data-bs-dismiss="modal"] {
   background-color: transparent !important;
 }
 
+.oauth-backend img {
+  display: inline-block;
+  max-height: 40px;
+}
+
 #changePwdPopover {
   background-color: transparent !important;
 }
 
+.dashboard-cards {
+  background-color: var(--box-bg);
+  border-radius: 4px;
+}
 .user-info {
   background-color: var(--box-bg);
 }
@@ -219,6 +228,10 @@ button.close[data-bs-dismiss="modal"] {
 
 .personal-key-container .pkb {
   background: transparent;
+}
+
+.personal-key-container .pkb + .d-flex.me-1 {
+  margin-right: 0 !important;
 }
 
 .footer {

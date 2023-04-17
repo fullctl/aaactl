@@ -5,6 +5,7 @@ Superuser user impersonation
 from django.contrib.auth import get_user_model
 
 from account.models import Impersonation
+from account.session import set_selected_org
 
 
 def is_impersonating(request):
@@ -79,3 +80,8 @@ def stop_impersonation(request):
         pass
 
     request.impersonating = None
+
+    # reset the selected organization to the user's default
+    # org now that the impersonation has stopped
+
+    set_selected_org(request, org=None)

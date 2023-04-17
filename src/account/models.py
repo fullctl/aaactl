@@ -17,10 +17,10 @@ from django_grainy.models import (
     UserPermission,
 )
 from django_grainy.util import Permissions
-from fullctl.django.util import host_url
+from fullctl.django.enum import CONTACT_MESSAGE_TYPE
 
 from account.tasks import UpdatePermissions  # noqa F401
-from common.email import email_noreply
+from common.email import email_contact_us, email_noreply
 from common.models import HandleRefModel
 
 # Create your models here.
@@ -515,7 +515,7 @@ class EmailConfirmation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(),
+            settings.AAACTL_URL,
             reverse("account:auth-confirm-email", args=(self.secret,)),
         )
 
@@ -588,7 +588,7 @@ class PasswordReset(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(),
+            settings.AAACTL_URL,
             reverse("account:auth-reset-password", args=(self.secret,)),
         )
 
@@ -863,7 +863,7 @@ class Invitation(HandleRefModel):
     @property
     def url(self):
         return "{}{}".format(
-            host_url(), reverse("account:accept-invite", args=(self.secret,))
+            settings.AAACTL_URL, reverse("account:accept-invite", args=(self.secret,))
         )
 
     def __str__(self):
@@ -884,7 +884,7 @@ class Invitation(HandleRefModel):
                     "invite": self,
                     "inviting_person": inviting_person,
                     "org": self.org,
-                    "host": host_url(),
+                    "host": settings.AAACTL_URL,
                 },
             ).content.decode("utf-8"),
         )
@@ -908,3 +908,54 @@ class Impersonation(models.Model):
         db_table = "account_impersonation"
         verbose_name = _("Impersonation")
         verbose_name_plural = _("Impersonations")
+
+
+class ContactMessage(HandleRefModel):
+
+    """
+    A message sent to us from a user or anonymous user
+    """
+
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, null=True, blank=True
+    )
+    email = models.EmailField(null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    type = models.CharField(
+        max_length=255, choices=CONTACT_MESSAGE_TYPE, default="general"
+    )
+    message = models.JSONField()
+    service = models.ForeignKey(
+        "applications.Service",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="contact_message_set",
+    )
+
+    class Meta:
+        db_table = "account_contact_message"
+        verbose_name = _("Contact message")
+        verbose_name_plural = _("Contact messages")
+
+    class HandleRef:
+        tag = "contact_message"
+
+    def __str__(self):
+        return f"{self.name} - {self.email} - {self.created}"
+
+    def notify(self):
+        """
+        Sends a notification to the CONTACT_US_EMAIL address
+        specified in settings
+        """
+
+        email_contact_us(
+            self.email,
+            _("Contact message from {}").format(self.name),
+            render(
+                None,
+                "account/email/contact-message.txt",
+                {"message": self},
+            ).content.decode("utf-8"),
+        )

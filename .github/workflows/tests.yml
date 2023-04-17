@@ -14,7 +14,11 @@ jobs:
       # poetry run pre-commit run --all-files
       - name: Run linters
         run: |
-            poetry run pre-commit run --all-files
+             poetry run isort .
+             poetry run black --check src/
+
+             # github cache issues
+             # poetry run pre-commit run --all-files
 
   test:
     needs: linting
@@ -32,7 +36,7 @@ jobs:
         run: Ctl/dev/run.sh run_tests
       # upload coverage stats
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           file: src/coverage.xml
           fail_ci_if_error: true

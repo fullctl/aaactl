@@ -40,7 +40,7 @@ class Bridge(client.Bridge):
 
     def sync_user(self):
         path = self._endpoint(
-            "sync_user", default="service-bridge/aaactl-sync/user/{user_id}/"
+            "sync_user", default="service-bridge/aaactl-sync/user/{user_id}"
         )
         data = {
             "username": self.user.username,
@@ -62,7 +62,7 @@ class Bridge(client.Bridge):
                 pass
 
     def sync_org(self):
-        path = self._endpoint("sync_org", default="service-bridge/aaactl-sync/org/")
+        path = self._endpoint("sync_org", default="service-bridge/aaactl-sync/org")
         data = {
             "name": self.org_instance.name,
             "remote_id": self.org_instance.id,
@@ -74,7 +74,7 @@ class Bridge(client.Bridge):
 
     def sync_org_user(self):
         path = self._endpoint(
-            "sync_org_user", default="service-bridge/aaactl-sync/org_user/{user_id}/"
+            "sync_org_user", default="service-bridge/aaactl-sync/org_user/{user_id}"
         )
 
         data = {
@@ -83,7 +83,15 @@ class Bridge(client.Bridge):
             "orgs": [org.id for org in Organization.get_for_user(self.user)],
         }
 
-        self.put(path, data=data)
+        try:
+            self.put(path, data=data)
+        except client.ServiceBridgeError as exc:
+            if exc.status == 404:
+                # user does not exist at service yet and creation
+                # should happen through authentication process
+                #
+                # but we also dont want to error here
+                pass
 
     def _endpoint(self, name, default=None):
         endpoint = self.service.api_endpoint_set.filter(name=name).first()

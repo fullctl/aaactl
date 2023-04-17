@@ -22,6 +22,7 @@ from account.impersonate import (
 from account.models import (
     APIKey,
     APIKeyPermission,
+    ContactMessage,
     EmailConfirmation,
     InternalAPIKey,
     InternalAPIKeyPermission,
@@ -136,7 +137,11 @@ class OrganizationRoleInline(admin.TabularInline):
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user")
     search_fields = ("org_user_set__last_name", "name")
-    inlines = (OrganizationUserInline, OrganizationRoleInline)
+
+    def get_inlines(self, request, obj=None):
+        if obj is not None:
+            return [OrganizationUserInline, OrganizationRoleInline]
+        return [OrganizationUserInline]
 
     @reversion.create_revision()
     def save_formset(self, request, form, formset, change):
@@ -285,3 +290,25 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
         stop_impersonation(request)
 
         self.message_user(request, f"No longer impersonating {user}", messages.SUCCESS)
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "service", "type", "created", "updated", "status")
+    search_fields = (
+        "name",
+        "email",
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "user__email",
+        "service__slug",
+    )  #
+    list_filter = ("type", "service")
+
+    # Override the following methods to make the view read-only
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

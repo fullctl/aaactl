@@ -29,6 +29,12 @@ aaactl.Header = twentyc.cls.define(
       this.app_switcher = new twentyc.rest.List(this.elements.app_switcher);
 
       this.app_switcher.formatters.row = (row, data) => {
+        // hide if service is aaactl (current service)
+        if (data.slug == "aaactl") {
+          row.hide();
+          return;
+        }
+
         const redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
         const img =  row.find("img.app-logo")
 

@@ -623,11 +623,6 @@ account.ServiceApplications = twentyc.cls.define(
       this.rest_api_list = new twentyc.rest.List(this.element);
 
       this.rest_api_list.formatters.row = (row, data) => {
-        // hide if service is aaactl (current service)
-        if (data.slug == "aaactl") {
-          row.hide();
-          return;
-        }
 
         const redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
         const img =  row.find("img.logo")

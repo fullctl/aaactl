@@ -628,7 +628,9 @@ account.ServiceApplications = twentyc.cls.define(
 
         row.attr("href", redirect_url);
         if(!data.logo) {
-          img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+          img.each(function() {
+            $(this).attr("src", $(this).data("logo-url").replace("svc_slug", data.slug));
+          })
         } else {
           img.attr("src", data.logo);
         }

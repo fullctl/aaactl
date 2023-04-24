@@ -5,6 +5,7 @@ from account.rest.authentication import (
     APIKey,
     APIKeyAuthentication,
     InternalAPIKey,
+    OrganizationAPIKey,
     Permissions,
 )
 
@@ -19,7 +20,11 @@ class APIKeyAuthenticator(Authenticator):
         if isinstance(permission_holder, APIKey):
             request.user = permission_holder.user
 
-        if isinstance(permission_holder, User):
+        elif isinstance(permission_holder, OrganizationAPIKey):
+            request.user = permission_holder
+            request.perms = Permissions(permission_holder)
+
+        elif isinstance(permission_holder, User):
             request.user = permission_holder
 
         # internal api keys can be used to grab permission definitions
@@ -27,7 +32,7 @@ class APIKeyAuthenticator(Authenticator):
         #
         # user is identified via id through the `Grainy` http header
 
-        if isinstance(permission_holder, InternalAPIKey):
+        elif isinstance(permission_holder, InternalAPIKey):
             userid = request.headers.get("Grainy")
             if userid:
                 user = get_user_model().objects.get(id=userid)

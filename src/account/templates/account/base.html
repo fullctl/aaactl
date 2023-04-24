@@ -65,12 +65,10 @@ twentyc.rest.config.csrf = "{{ csrf_token }}"
 {% endif %}
 
 <header class="container-fluid header-outer">
-  <div class="container header d-flex align-items-center">
-    <div class="row">
-      {% block header_outer %}
-        {% include "account/header.html" %}
-      {% endblock header_outer %}
-    </div>
+  <div class="row header m-0">
+    {% block header_outer %}
+      {% include "account/header.html" %}
+    {% endblock header_outer %}
   </div>
 </header>
 

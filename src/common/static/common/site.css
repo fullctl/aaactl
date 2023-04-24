@@ -152,10 +152,7 @@ input[type="checkbox"].validation-error-indicator ~label {
 
 .header-outer {
   background: var(--header-bg);
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
+  height: 5rem;
 }
 
 .header {
@@ -169,7 +166,7 @@ input[type="checkbox"].validation-error-indicator ~label {
 }
 
 .header img.logo {
-  max-height: 3.5rem;
+  max-height: 4rem;
 }
 
 

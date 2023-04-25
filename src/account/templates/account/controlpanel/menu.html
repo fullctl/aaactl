@@ -2,27 +2,20 @@
 <div>
   <div class="accordion user-info" id="accordion">
     <div class="accordion-item">
-      <div class="pt-3 pb-3 ps-4 pe-4" id="userInformation">
-        <div class="row">
-          <div class="col-8">
-            <h5 class="d-inline text-dark">
-              {{ request.user.get_full_name }}
-            </h5>
+      <div class="accordion-header">
+
+        <button class="accordion-button collapsed mb-4" type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#userInfoCollapse"
+          aria-expanded="true"
+          aria-controls="userInfoCollapse"
+        >
+          <div>
+            <h5 class="mb-0">{{ request.user.get_full_name }}</h5>
+            <p class="mb-0">{{ request.user.email }}</p>
           </div>
-          <div class="col-4 d-flex justify-content-end">
-            <button
-              class="btn btn-link edit-collapse d-flex align-items-center"
-              data-bs-toggle="collapse"
-              data-bs-target="#userInfoCollapse"
-              aria-expanded="true"
-              aria-controls="userInfoCollapse"
-            >
-              <span class="icon icon-edit"></span>
-              <span>Edit</span>
-            </button>
-          </div>
-        </div>
-        <p>{{ request.user.email }}</p>
+        </button>
+
       </div>
       <div id="userInfoCollapse" class="collapse" aria-labelledby="userInformation" data-parent="#accordion">
         <div class="accordion-body">
@@ -65,7 +58,7 @@
     <div class="accordion-item">
       <h5 class="accordion-header" id="headingSix">
         <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-          Invites <span id="count-invites"></span>
+          {% trans "Invites" %} <span id="count-invites"></span>
         </button>
       </h5>
       <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix">

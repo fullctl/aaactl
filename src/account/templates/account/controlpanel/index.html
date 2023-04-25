@@ -1,6 +1,9 @@
 {% extends "account/base.html" %}
 {% load i18n static %}
 
+{% block header_outer %}
+  {% include "account/header-switcher.html" %}
+{% endblock %}
 
 {% block content %}
 <div class="row controlpanel">

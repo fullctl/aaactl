@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail.message import EmailMultiAlternatives
 
 logger = logging.getLogger("django")
 
@@ -24,13 +24,20 @@ def email_contact_us(replyto, subject, message, **kwargs):
         [settings.CONTACT_US_EMAIL],
         subject,
         message,
-        reply_to=[replyto],
+        reply_to=replyto,
         **kwargs,
     )
 
 
-def email(sender, addresses, subject, message, **kwargs):
+def email(sender, addresses, subject, message, reply_to=None, **kwargs):
+    if reply_to:
+        headers = {"Reply-To": reply_to}
+    else:
+        headers = {}
+
     for address in addresses:
+        # TODO: this is deprecated and can be removed
+        # dev instances use console backend anyhow
         if settings.DEBUG_EMAIL:
             logger.info("FROM: " + sender)
             logger.info("TO: " + address)
@@ -40,4 +47,7 @@ def email(sender, addresses, subject, message, **kwargs):
             logger.info("--------------")
             continue
 
-        send_mail(f"{subject}", f"{message}", sender, [address], **kwargs)
+        mail = EmailMultiAlternatives(
+            subject, message, sender, [address], headers=headers
+        )
+        mail.send(fail_silently=kwargs.get("fail_silently", False))

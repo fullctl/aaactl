@@ -915,6 +915,9 @@ account.PendingUsers = twentyc.cls.define(
           email: data.email,
           service: "",
         }
+
+        // wire resend invite button
+
         var a = row.find('.resend-invite');
         if ( a.length ){
           var endpoint = `org/${data.slug}/invite`;
@@ -947,6 +950,7 @@ account.PendingUsers = twentyc.cls.define(
 
           });
         }
+
       })
 
       // Modal

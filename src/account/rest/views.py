@@ -524,7 +524,6 @@ class Organization(viewsets.ViewSet):
         Invite will be deleted for `email` passed in request.data
         """
         email = request.data.get("email")
-        print("Deleting invites for", email)
         invites = models.Invitation.objects.filter(email=email, org=org)
         response_data = Serializers.invite(invites, many=True).data
         invites.delete()

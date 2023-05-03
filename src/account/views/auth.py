@@ -15,6 +15,7 @@ from oauth2_provider.oauth2_backends import get_oauthlib_core
 import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
 from account.session import set_selected_org
+from applications.models import Service
 
 # Create your views here.
 
@@ -73,7 +74,14 @@ def login(request):
 def logout(request):
     fn_logout(request)
 
-    return redirect(reverse("account:auth-login"))
+    response = redirect(reverse("account:auth-login"))
+
+    # loop through all services and unset session cookies
+    for svc in Service.objects.all():
+        # invlaidate coookies with name {service_slug}sid on response
+        response.delete_cookie(f"{svc.slug}sid")
+
+    return response
 
 
 def register(request):

@@ -1,3 +1,4 @@
+{% load i18n %}
 <div
   class="pending-user-listing"
   data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
@@ -14,7 +15,17 @@
           href="javascript:void(0)"
           data-bs-container="body"
           data-bs-toggle="popover"
-          data-bs-placement="top">Re-Send Invitation</a>
+          data-bs-placement="top" title="{% trans "Re-send invitation" %}"><span class="icon icon-refresh"></span></a>
+        <a tabindex="1" 
+          class="cancel-invite" 
+          title="{% trans "Cancel invitation" %}" 
+          data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+          data-api-action="invite"
+          data-api-method="DELETE"
+          data-api-callback="remove"
+          data-confirm="{% trans "Cancel invitation?" %}">
+          <span class="icon icon-delete"></span>
+        </a>
         {% endif %}
       </td>
     </tr>

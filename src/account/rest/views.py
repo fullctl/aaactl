@@ -489,17 +489,45 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.invite(invitations, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST", "DELETE"])
     @set_org
     @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invite(self, request, pk, org, auditlog=None):
+        """
+        Will either create or resend an invite, or delete an invite based on email
+        passed in request.data
+        """
+
+        if request.method == "POST":
+            return self._create_or_resend_invite(request, org)
+        elif request.method == "DELETE":
+            return self._delete_invite(request, org)
+
+    def _create_or_resend_invite(self, request, org):
+        """
+        Will create an invite if one does not exist, or resend an invite if one does exist.
+
+        Invite will be created for `email` passed in request.data
+        """
         context = {"user": request.user, "org": org}
         serializer = Serializers.invite(data=request.data, many=False, context=context)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         invite = serializer.save()
         return Response(Serializers.invite(invite, many=False).data)
+
+    def _delete_invite(self, request, org):
+        """
+        Deletes an invitation.
+
+        Invite will be deleted for `email` passed in request.data
+        """
+        email = request.data.get("email")
+        invites = models.Invitation.objects.filter(email=email, org=org)
+        response_data = Serializers.invite(invites, many=True).data
+        invites.delete()
+        return Response(response_data)
 
     def get_throttles(self):
         if self.action in ["invite"]:

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
+from oauth2_provider.models import AccessToken
 from rest_framework.response import Response
 
 import account.models as account_models
@@ -113,6 +114,28 @@ class User(AaactlDataViewSet):
 
     queryset = get_user_model().objects.all()
     serializer_class = Serializers.user
+
+
+@route
+class OauthAccessToken(AaactlDataViewSet):
+
+    """
+    Used to check if a given access token is still valid
+    """
+
+    path_prefix = "/data"
+    allowed_http_methods = ["GET"]
+    valid_filters = [
+        ("token", "token__iexact"),
+    ]
+
+    # do not allow unfiltered access to this endpoint
+    # so the request needs to provide both the token
+    # and an api key with appropriate service bridge permissions
+    allow_unfiltered = False
+
+    queryset = AccessToken.objects.all()
+    serializer_class = Serializers.oauth_access_token
 
 
 @route

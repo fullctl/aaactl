@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
+from oauth2_provider.models import AccessToken
 from rest_framework import serializers
 
 import account.models as account_models
@@ -165,3 +166,17 @@ class ContactMessage(ModelSerializer):
         instance = super().save()
         instance.notify()
         return instance
+
+
+@register
+class OauthAccessToken(ModelSerializer):
+    expired = serializers.SerializerMethodField()
+
+    ref_tag = "oauth_access_token"
+
+    class Meta:
+        model = AccessToken
+        fields = ["expires", "expired"]
+
+    def get_expired(self, obj):
+        return obj.is_expired()

@@ -1,10 +1,12 @@
 import fullctl.django.models.concrete.tasks as task_models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.shortcuts import render
 from django.utils.translation import gettext as _
+from oauth2_provider.models import AccessToken
 from reversion.signals import post_revision_commit
 
 from account.models import (
@@ -185,3 +187,9 @@ def sync_roles(**kwargs):
 
 
 post_revision_commit.connect(sync_roles)
+
+
+@receiver(user_logged_out)
+def delete_user_access_tokens(sender, user, request, **kwargs):
+    # Find and delete all access tokens associated with the user
+    AccessToken.objects.filter(user=user).delete()

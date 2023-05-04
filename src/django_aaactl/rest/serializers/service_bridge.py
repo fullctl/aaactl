@@ -7,6 +7,7 @@ import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
+from oauth2_provider.models import AccessToken
 
 Serializers, register = serializer_registry()
 
@@ -165,3 +166,16 @@ class ContactMessage(ModelSerializer):
         instance = super().save()
         instance.notify()
         return instance
+
+@register
+class OauthAccessToken(ModelSerializer):
+    expired = serializers.SerializerMethodField()
+
+    ref_tag = "oauth_access_token"
+
+    class Meta:
+        model = AccessToken
+        fields = ["expires", "expired"]
+
+    def get_expired(self, obj):
+        return obj.is_expired()

@@ -8,7 +8,7 @@ import applications.models as application_models
 import billing.models as billing_models
 from common.rest.decorators import grainy_endpoint
 from django_aaactl.rest.serializers.service_bridge import Serializers
-
+from oauth2_provider.models import AccessToken
 
 class AaactlDataViewSet(DataViewSet):
 
@@ -113,6 +113,28 @@ class User(AaactlDataViewSet):
 
     queryset = get_user_model().objects.all()
     serializer_class = Serializers.user
+
+
+@route
+class OauthAccessToken(AaactlDataViewSet):
+
+    """
+    Used to check if a given access token is still valid
+    """
+
+    path_prefix = "/data"
+    allowed_http_methods = ["GET"]
+    valid_filters = [
+        ("token", "token__iexact"),
+    ]
+
+    # do not allow unfiltered access to this endpoint
+    # so the request needs to provide both the token
+    # and an api key with appropriate service bridge permissions
+    allow_unfiltered = False
+
+    queryset = AccessToken.objects.all()
+    serializer_class = Serializers.oauth_access_token
 
 
 @route

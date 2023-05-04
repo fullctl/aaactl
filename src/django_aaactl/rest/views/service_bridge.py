@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
+from oauth2_provider.models import AccessToken
 from rest_framework.response import Response
 
 import account.models as account_models
@@ -8,7 +9,7 @@ import applications.models as application_models
 import billing.models as billing_models
 from common.rest.decorators import grainy_endpoint
 from django_aaactl.rest.serializers.service_bridge import Serializers
-from oauth2_provider.models import AccessToken
+
 
 class AaactlDataViewSet(DataViewSet):
 

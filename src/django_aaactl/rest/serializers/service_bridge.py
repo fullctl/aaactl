@@ -1,13 +1,13 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
+from oauth2_provider.models import AccessToken
 from rest_framework import serializers
 
 import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
 from account.rest.serializers import Serializers as AccountSerializers
-from oauth2_provider.models import AccessToken
 
 Serializers, register = serializer_registry()
 
@@ -166,6 +166,7 @@ class ContactMessage(ModelSerializer):
         instance = super().save()
         instance.notify()
         return instance
+
 
 @register
 class OauthAccessToken(ModelSerializer):

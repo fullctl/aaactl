@@ -159,8 +159,12 @@ input[type="checkbox"].validation-error-indicator ~label {
 }
 
 .header {
-  color: var(--white);
-  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+.header > .row {
+  flex-grow: 1;
 }
 
 .header a h1 {

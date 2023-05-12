@@ -181,6 +181,10 @@ input[type="checkbox"].validation-error-indicator ~label {
   min-height: 3rem;
 }
 
+.header .logo-container {
+  display: inline-block;
+}
+
 .header h1 {
   margin: 0px;
   font-size: 1.5rem;

@@ -44,7 +44,7 @@ vim templates/account/header.html
 ```
 
 ```html
-{% extends "account/controlpanel/header.html" %}
+{% extends "account/header.html" %}
 {% load static i18n %}
 {% block header %}
 <div class="row">
@@ -52,6 +52,22 @@ vim templates/account/header.html
       <a href="/"><img src="{% static "whitelabel/logo.png" %}" class="logo"></a>
   </div>
 </div>
+{% endblock %}
+```
+
+#### Add secondary logo to app_switcher header
+```
+cp logo.png static/account/logo.png
+vim templates/account/header-switcher.html
+```
+
+```html
+{% extends "account/header-switcher.html" %}
+{% load static i18n %}
+{% block secondary_logo %}
+  <div class="col-auto ms-auto">
+      <a href="/"><img src="{% static "whitelabel/logo.png" %}" class="app-logo"></a>
+  </div>
 {% endblock %}
 ```
 

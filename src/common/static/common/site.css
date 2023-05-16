@@ -161,6 +161,7 @@ input[type="checkbox"].validation-error-indicator ~label {
 .header {
   display: flex;
   width: 100%;
+  position: relative;
 }
 
 .header > .row {

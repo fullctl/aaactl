@@ -109,16 +109,8 @@ class Organization(HandleRefModel):
         except OrganizationUser.DoesNotExist:
             pass
 
-        if not cls.objects.filter(slug=user.username).exists():
-            slug = user.username
-            slug = slug.replace(".", "_").replace("@", "AT")
-        else:
-            slug = generate_org_slug()
-
-        org, created = cls.objects.get_or_create(user=user, slug=slug)
-
-        if created:
-            org.add_user(user, "crud")
+        org = cls.objects.create(user=user, name=user.username)
+        org.add_user(user, "crud")
 
         return org
 
@@ -169,6 +161,10 @@ class Organization(HandleRefModel):
         if self.user_id:
             return _("Your Personal Organization")
         return self.name
+
+    @property
+    def is_personal(self):
+        return self.user_id is not None
 
     def __str__(self):
         return self.label

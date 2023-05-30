@@ -182,7 +182,8 @@ class EditOrganization(CreateOrganization):
 
         if org.user_id:
             self.fields["name"].widget.attrs["readonly"] = True
-            self.initial["name"] = _("Your Personal Organization")
+            self.fields["slug"].widget.attrs["readonly"] = True
+            self.initial["name"] = org.user.username + " (Personal)"
 
 
 class EditOrganizationPasswordProtected(PasswordProtectedForm, EditOrganization):

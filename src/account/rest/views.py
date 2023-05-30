@@ -256,6 +256,14 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("org.{org.id}.manage", explicit=False)
     def update(self, request, pk, org, auditlog=None):
         user = request.user
+
+        # personal organizations cannot be edited
+        if org.is_personal:
+            return Response(
+                {"non_field_errors": [_("Personal organizations cannot be changed.")]},
+                status=403,
+            )
+
         if user.has_usable_password():
             serializer = Serializers.orgeditpwdprotected(
                 instance=org,

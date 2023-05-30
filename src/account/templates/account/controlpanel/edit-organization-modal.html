@@ -19,9 +19,19 @@
         <div data-api-submit="yes">
         {{ edit_org_form|crispy }}
         </div>
+        {% if request.selected_org.user %}
+        <div class="center">
+          <div class="alert alert-info">
+            {% blocktrans %}
+            Personal organizations cannot be edited.
+            {% endblocktrans %}
+          </div>
+        </div>
+        {% else %}
         <div class="right">
           <button type="button" class="btn btn-manage submit">{% trans "Save" %}</button>
         </div>
+        {% endif %}
         </form>
       </div>
     </div>

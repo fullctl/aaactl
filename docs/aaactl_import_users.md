@@ -1,13 +1,13 @@
-# aaactl_user_import Command Usage Documentation
+# aaactl_import_users Command Usage Documentation
 
-The `aaactl_user_import` command is a utility command that allows you to import users from a CSV file into the system. 
+The `aaactl_import_users` command is a utility command that allows you to import users from a CSV file into the system. 
 
 ## Command Syntax
 
 The command takes one argument, which is the path to the CSV file that contains the user data.
 
 ```sh
-python manage.py aaactl_user_import <csv_file>
+python manage.py aaactl_import_users <csv_file>
 ```
 
 Where `<csv_file>` is the path to the CSV file.
@@ -36,7 +36,7 @@ bclark,bclark@example.com,Bob Clark,11122,Third Organization
 The `--commit` flag needs to be passed for the command to actually run for real. If this flag is not passed, the command will run in pretend mode, showing what would happen without actually making any changes.
 
 ```sh
-python manage.py aaactl_user_import <csv_file> --commit
+python manage.py aaactl_import_users <csv_file> --commit
 ```
 
 ## Notes

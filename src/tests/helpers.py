@@ -36,6 +36,7 @@ def strip_api_fields(data):
             set_assert_field_exists("org", v)
             set_assert_field_exists("billing_contact", v)
             set_assert_field_exists("group", v)
+            set_assert_field_exists("user", v)
             set_assert_field_exists("id", v)
             strip_api_fields(v)
         if isinstance(v, list):

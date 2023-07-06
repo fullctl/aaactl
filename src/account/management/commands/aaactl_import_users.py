@@ -25,10 +25,26 @@ class Command(CommandInterface):
         parser.add_argument("csv_file", type=str, help="The CSV file to import.")
 
     def run(self, *args, **kwargs):
+        # settings we want to temporarily override while this command runs
+
+        SIGNUP_NOTIFICATION_EMAIL = settings.SIGNUP_NOTIFICATION_EMAIL
+        AUTO_USER_TO_ORG = settings.AUTO_USER_TO_ORG
+        ENABLE_EMAIL_CONFIRMATION = settings.ENABLE_EMAIL_CONFIRMATION
+
         settings.SIGNUP_NOTIFICATION_EMAIL = False
         settings.AUTO_USER_TO_ORG = False
         settings.ENABLE_EMAIL_CONFIRMATION = False
 
+        try:
+            self.process_rows(*args, **kwargs)
+        finally:
+            # restore settings
+
+            settings.SIGNUP_NOTIFICATION_EMAIL = SIGNUP_NOTIFICATION_EMAIL
+            settings.AUTO_USER_TO_ORG = AUTO_USER_TO_ORG
+            settings.ENABLE_EMAIL_CONFIRMATION = ENABLE_EMAIL_CONFIRMATION
+
+    def process_rows(self, *args, **kwargs):
         self.csv_file = csv_file = kwargs["csv_file"]
         # Check if Admin role exists
         role = Role.objects.filter(name="Admin").first()

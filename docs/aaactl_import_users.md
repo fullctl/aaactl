@@ -20,12 +20,12 @@ The CSV file should contain the following fields:
 - email
 - name
 - asn
-- org name
+- org_name
 
 Here is an example of the CSV file format:
 
 ```csv
-username,email,name,asn,org name
+username,email,name,asn,org_name
 jdoe,jdoe@example.com,John Doe,12345,Example Organization
 asmith,asmith@example.com,Alice Smith,67890,Another Organization
 bclark,bclark@example.com,Bob Clark,11122,Third Organization

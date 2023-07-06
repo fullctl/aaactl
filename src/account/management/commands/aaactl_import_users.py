@@ -56,7 +56,7 @@ class Command(CommandInterface):
         with open(csv_file) as file:
             reader = csv.DictReader(file)
             # Check if all expected fields are in the CSV file
-            expected_fields = ["username", "email", "name", "asn", "org name"]
+            expected_fields = ["username", "email", "name", "asn", "org_name"]
             if not all(field in reader.fieldnames for field in expected_fields):
                 raise ValueError(
                     f"CSV file does not contain all the expected fields. {expected_fields}"
@@ -73,7 +73,7 @@ class Command(CommandInterface):
             row["email"],
             row["name"],
             row["asn"],
-            row["org name"],
+            row["org_name"],
         )
         # Split name into first and last name
         first_name, last_name = self.split_name(name)

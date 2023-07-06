@@ -14,7 +14,7 @@ User = get_user_model()
 def test_aaactl_import_users():
     # Create a temporary CSV file for testing
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as file:
-        file.write("username,email,name,asn,org name\n")
+        file.write("username,email,name,asn,org_name\n")
         file.write("testuser,testuser@test.com,Test User,123,Test Org\n")
         csv_file = file.name
 
@@ -57,7 +57,7 @@ def test_aaactl_import_users():
 def test_aaactl_import_users_missing_fields(caplog):
     # Create a temporary CSV file with missing fields
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as file:
-        file.write("username,email,name,org name\n")  # 'asn' field is missing
+        file.write("username,email,name,org_name\n")  # 'asn' field is missing
         file.write("testuser,testuser@test.com,Test User,Test Org\n")
         csv_file = file.name
 
@@ -78,7 +78,7 @@ def test_aaactl_import_users_duplicate_user():
 
     # Create a temporary CSV file with a user that already exists
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as file:
-        file.write("username,email,name,asn,org name\n")
+        file.write("username,email,name,asn,org_name\n")
         file.write("testuser,testuser@test.com,Test User,123,Test Org\n")
         csv_file = file.name
 
@@ -105,7 +105,7 @@ def test_aaactl_import_users_existing_org_and_asn_permission():
 
     # Create a temporary CSV file with a new user
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as file:
-        file.write("username,email,name,asn,org name\n")
+        file.write("username,email,name,asn,org_name\n")
         file.write("newuser,newuser@test.com,New User,123,Existing Org\n")
         csv_file = file.name
 
@@ -126,7 +126,7 @@ def test_aaactl_import_users_existing_org_no_asn_permission():
 
     # Create a temporary CSV file with a new user and ASN
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as file:
-        file.write("username,email,name,asn,org name\n")
+        file.write("username,email,name,asn,org_name\n")
         file.write("newuser,newuser@test.com,New User,123,Existing Org\n")
         csv_file = file.name
 

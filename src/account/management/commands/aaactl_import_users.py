@@ -143,14 +143,16 @@ class Command(CommandInterface):
         if not asn_permission.exists():
             return False
 
-        org = (
+        org_user = (
             asn_permission.first()
             .user.org_user_set.filter(org__user__isnull=True)
             .first()
-            .org
         )
 
-        return org
+        if not org_user:
+            return False
+
+        return org_user.org
 
     def grant_asn_permission(self, org, asn, admin_role):
         """

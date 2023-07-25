@@ -36,7 +36,7 @@ django-oauth-toolkit = "*"
 # open-id support social auth
 python-jose = "^3.3"
 
-stripe = "^2.55.2"
+stripe = "^5.5.0"
 crispy-bootstrap5 = "^0.6"
 
 [tool.poetry.dev-dependencies]

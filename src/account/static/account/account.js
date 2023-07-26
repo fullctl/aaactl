@@ -958,6 +958,7 @@ account.PendingUsers = twentyc.cls.define(
       if ( this.elements.invitation_form.length ){
         this.rest_invite_form = new twentyc.rest.Form(this.elements.invitation_form);
         $(this.rest_invite_form).on("api-write:success", function() {
+          this.rest_invite_form.reset();
           $('#inviteModal').modal('toggle');
           this.rest_api_list.load();
         }.bind(this));

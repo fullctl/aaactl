@@ -149,7 +149,9 @@
 {% endif %}
 
 <div data-api-submit="yes">
-{{ form_agreements|crispy }}
+  {{ form_agreements.agreement_tos.errors }}
+  {{ form_agreements.agreement_tos }}
+  <label for="{{ form_agreements.agreement_tos.id_for_label }}">I agree to the <a href="{{ terms_of_service_url}}" target="_blank">Terms of Service</a>*</label>
 </div>
 
 <div class="right">

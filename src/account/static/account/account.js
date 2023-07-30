@@ -27,8 +27,11 @@ account.ControlPanel = twentyc.cls.define(
       this.elements = {};
       this.forms = {};
 
-      this.loadDropDown();
-      this.styleDropDown();
+      if ($('.org-select').length > 0) {
+        this.loadDropDown();
+        this.styleDropDown();
+      }
+
 
       this.createOrganization();
       this.editOrganization();
@@ -56,7 +59,9 @@ account.ControlPanel = twentyc.cls.define(
         console.log(response.content);
       }.bind(this));
 
-      this.personal_invites = new account.PersonalInvites();
+      if($('.personal-keys').length > 0) {
+        this.personal_invites = new account.PersonalInvites();
+      }
 
     },
 
@@ -158,6 +163,10 @@ account.ControlPanel = twentyc.cls.define(
 
     createOrganization: function(){
       this.initializeForm('create-organization', '/');
+      if ( !this.forms['create_organization'] ){
+        return
+      }
+
       this.forms['create_organization'].post_success = function(response){
         var slug = response.content.data[0].slug;
         document.location.href = `/?org=${slug}`
@@ -166,6 +175,10 @@ account.ControlPanel = twentyc.cls.define(
 
     editOrganization: function(){
       this.initializeForm('edit-organization');
+      if (!this.forms['edit_organization']) {
+        return
+      }
+
       $(this.forms['edit_organization']).on("api-write:success", function() {
         document.location.href = '/';
       });
@@ -196,7 +209,12 @@ account.ControlPanel = twentyc.cls.define(
 
     initializeForm: function(form_class){
       var form_name = form_class.replace('-','_');
-      this.elements[form_name] = $(`form.${form_class}`);
+      const form = $(`form.${form_class}`);
+      if (form.length == 0) {
+        return
+      }
+
+      this.elements[form_name] = form;
       this.forms[form_name] = new twentyc.rest.Form(this.elements[form_name]);
     },
 
@@ -970,12 +988,24 @@ account.PendingUsers = twentyc.cls.define(
 
 
 account.expand_user_info = () => {
+  // only run if the user info section is present
+  // TODO: don't load this file at places where this doesn't exist
+  if ($('#userInfoCollapse').length == 0) {
+    return
+  }
+
   $('#userInfoCollapse').addClass('show');
   $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
   $('#userInformation').get(0).scrollIntoView();
 }
 
 account.prompt_link_to_pdb = () => {
+  // only run if the linked auth section is present
+  // TODO: don't load this file at places where this doesn't exist
+  if ($('#linkedAuthCollapse').length == 0) {
+    return
+  }
+
   $('#linkedAuthCollapse').addClass('show');
   $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
   $('#linkedAuthCollapse').get(0).scrollIntoView();

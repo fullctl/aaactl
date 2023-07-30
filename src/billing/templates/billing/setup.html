@@ -176,6 +176,7 @@
 {% endblock%}
 
 {% block javascript %}
+{{ block.super }}
 <script>
 $(document).ready(function() {
   var billing_setup = new billing.BillingSetup();

@@ -90,6 +90,7 @@ class OrganizationProduct(AaactlDataViewSet):
     allowed_http_methods = ["GET"]
     valid_filters = [
         ("component", "product__component__name__iexact"),
+        ("component_object_id", "subscription_product__component_object_id"),
         ("name", "product__name__iexact"),
         ("org", "org__slug"),
     ]

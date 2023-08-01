@@ -116,6 +116,7 @@ class OrgnaizationProduct(ModelSerializer):
     name = serializers.SerializerMethodField()
     component = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
+    component_object_id = serializers.SerializerMethodField()
 
     class Meta:
         model = billing_models.OrganizationProduct
@@ -124,13 +125,21 @@ class OrgnaizationProduct(ModelSerializer):
             "product",
             "name",
             "component",
+            "component_object_id",
             "expires",
             "subscription",
+            "subscription_product",
             "product_data",
         ]
 
     def get_component(self, org_product):
         return org_product.product.component.name.lower()
+
+    def get_component_object_id(self, org_product):
+        try:
+            return org_product.subscription_product.component_object_id
+        except billing_models.SubscriptionProduct.DoesNotExist:
+            return None
 
     def get_name(self, org_product):
         return org_product.product.name

@@ -46,10 +46,14 @@ def handle_subscription_product_save(sender, **kwargs):
     the necessary OrganizationProduct instances
     """
 
+    if not kwargs.get("created"):
+        return
+
     sub_product = kwargs.get("instance")
 
     OrganizationProduct.objects.get_or_create(
         subscription=sub_product.subscription,
+        subscription_product=sub_product,
         product=sub_product.product,
         org=sub_product.subscription.org,
     )
@@ -66,6 +70,7 @@ def handle_subscription_product_delete(sender, **kwargs):
 
     qset = OrganizationProduct.objects.filter(
         subscription=sub_product.subscription,
+        subscription_product=sub_product,
         product=sub_product.product,
     )
 

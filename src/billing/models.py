@@ -7,15 +7,18 @@ import reversion
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
 from fullctl.django.models.concrete import AuditLog
+from fullctl.django.fields.service_bridge import ReferencedObjectField
 
 import account.models
 import applications.models
+from applications.service_bridge import get_client_bridge, get_client_bridge_cls
 import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
@@ -79,6 +82,13 @@ class Product(HandleRefModel):
         help_text=_("Product belongs to component"),
     )
 
+    component_billable_entity = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("Links the product to specific entity type in the component (.e.g, InternetExchange for ixctl). Free-form field at this point. Ask developers if you are unsure."),
+    )
+
     # example: actively monitored prefixes
     description = models.CharField(
         max_length=255,
@@ -139,13 +149,14 @@ class Product(HandleRefModel):
         db_table = "billing_product"
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
+        ordering = ["name"]
 
     @property
     def is_recurring_product(self):
         return hasattr(self, "recurring_product") and bool(self.recurring_product.id)
 
     def __str__(self):
-        return f"{self.name}({self.id}) {self.description}"
+        return f"{self.name}: {self.description}"
 
     def create_transactions(self, user):
         order_number = "ORDER_" + unique_order_id()
@@ -232,6 +243,14 @@ class Product(HandleRefModel):
             org=org, product=self, notes=notes, expires=expires
         )
 
+    def clean(self):
+        try:
+            if self.component_billable_entity:
+                get_client_bridge_cls(self.component.slug, self.component_billable_entity)
+        except AttributeError as e:
+            raise ValidationError(
+                f"Invalid component-billable-entity for {self.component.slug}: {e}"
+            )
 
 @reversion.register()
 class ProductPermissionGrant(HandleRefModel):
@@ -541,6 +560,10 @@ class Subscription(HandleRefModel):
             else:
                 self.end_subscription_cycle()
 
+        # delete any subscription products that end at the end of the cycle
+        for subprod in self.subscription_product_set.filter(ends_next_cycle=True):
+            subprod.delete()
+
         if not self.subscription_cycle_start:
             self.subscription_cycle_start = start
             self.save()
@@ -579,6 +602,11 @@ class SubscriptionProduct(HandleRefModel):
         help_text=_("Any extra data for the subscription item"),
     )
 
+    ends_next_cycle = models.BooleanField(default=False, help_text=_("If true, this subscription product will end and be removed at the end of the current subscription cycle"))
+
+    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
+    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+
     class HandleRef:
         tag = "subscription_product"
 
@@ -586,6 +614,37 @@ class SubscriptionProduct(HandleRefModel):
         db_table = "billing_subscription_product"
         verbose_name = _("Subscription Product")
         verbose_name_plural = _("Subscription Products")
+
+    @property
+    def component(self):
+        return self.product.component
+
+    @property
+    def component_object_handle(self):
+        if self.component_object_id and self.product.component_billable_entity:
+            return ".".join([self.product.component.slug, self.product.component_billable_entity, str(self.component_object_id)])
+
+    @property
+    def component_object(self):
+
+        if hasattr(self, "_component_object"):
+            return self._component_object
+
+        if not self.product.component:
+            return None
+        
+        if not self.component_object_id:
+            return None
+
+        if not self.product.component_billable_entity:
+            return None
+
+        bridge = get_client_bridge(
+            self.product.component.slug, self.product.component_billable_entity
+        )
+
+        self._component_object = bridge.first(id=self.component_object_id, org_slug=self.subscription.org.slug)
+        return self._component_object
 
     @property
     def subscription_cycle_cost(self):
@@ -619,6 +678,30 @@ class SubscriptionProduct(HandleRefModel):
 
     def __str__(self):
         return f"{self.subscription} - {self.product.name}"
+
+    def clean(self):
+        if self.component_object_id:
+            obj = self.component_object
+
+            if not obj:
+                raise ValidationError(
+                    _(f"{self.component_object_handle} does not exist")
+                )
+
+            org = account.models.Organization.objects.filter(id=obj.org_id).first()
+
+            if not org:
+                raise ValidationError(
+                    _(f"{self.component_object_handle} organization does not exist (reach out to devops)")
+                )
+
+            if org != self.subscription.org:
+                raise ValidationError(
+                    _(f"{self.component_object_handle}: {obj.name}'s organization `{org.name} ({org.slug})` does not match subscription organization `{self.subscription.org.name} ({self.subscription.org.slug})`")
+                )
+
+            org_name = org.name if org else "Unknown Organization"
+            self.component_object_name = f"{self.component_object.name} ({org_name})"
 
 
 @reversion.register()
@@ -917,6 +1000,15 @@ class OrganizationProduct(HandleRefModel):
         on_delete=models.CASCADE,
         related_name="organizations",
         help_text=_("Organizations that have access to this product"),
+    )
+
+    subscription_product = models.OneToOneField(
+        SubscriptionProduct,
+        on_delete=models.CASCADE,
+        related_name="organization_product",
+        null=True,
+        blank=True,
+        help_text=_("Product access is granted through this subscription product"),
     )
 
     subscription = models.ForeignKey(

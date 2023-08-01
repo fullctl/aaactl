@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib import admin
+from django.urls import path
 from django.utils.translation import gettext as _
 from fullctl.django.admin import BaseAdmin
-
+from applications.service_bridge import get_client_bridge, get_client_bridge_cls
+from django.http import JsonResponse
 import billing.product_handlers
 from billing.models import (
     BillingContact,
@@ -26,7 +28,9 @@ from billing.models import (
 )
 
 # Register your models here.
-
+class ChoiceFieldNoValidation(forms.ChoiceField):
+    def validate(self, value):
+        pass
 
 class ProductForm(forms.ModelForm):
     pass
@@ -56,6 +60,7 @@ class ProductAdmin(BaseAdmin):
         "name",
         "group",
         "component",
+        "component_billable_entity",
         "description",
         "price",
         "recurring_product",
@@ -83,9 +88,22 @@ class ProductModifieradmin(BaseAdmin):
 
 @admin.register(OrganizationProduct)
 class OrganizationProduct(BaseAdmin):
-    list_display = ("org", "product", "subscription", "created", "updated", "expires")
+    list_display = ("org", "product", "subscription", "subscription_product", "component", "component_object", "created", "updated", "expires")
     search_fields = ("product__name", "org__name", "org__slug")
+    readonly_fields = ("component_object", "component")
+    list_filter = ("product__component__slug",)
 
+    def component_object(self, obj):
+        try:
+            return obj.subscription_product.component_object_name
+        except AttributeError:
+            return None
+
+    def component(self, obj):
+        try:
+            return obj.product.component.slug
+        except AttributeError:
+            return None
 
 class SubscriptionProductModifierInline(admin.TabularInline):
     model = SubscriptionProductModifier
@@ -98,10 +116,19 @@ class SubscriptionCycleInline(admin.TabularInline):
     fields = ("start", "end")
     extra = 0
 
+class SubscriptionProductForm(forms.ModelForm):
+    component_object_id = ChoiceFieldNoValidation(choices=[])
+
+    class Meta:
+        model = SubscriptionProduct
+        fields = "__all__"
+
 
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
-    fields = ("product",)
+    form = SubscriptionProductForm
+    fields = ("product","component", "component_object_id", "component_object_name", "ends_next_cycle")
+    readonly_fields =("component", "component_object_name")
     extra = 0
 
     def has_change_permission(self, request, obj=None):
@@ -113,6 +140,7 @@ class SubscriptionProductInline(admin.TabularInline):
         return False
 
 
+
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
     list_display = ("group", "org", "subscription_cycle", "subscription_cycle_start")
@@ -122,6 +150,33 @@ class SubscriptionAdmin(BaseAdmin):
         SubscriptionCycleInline,
     )
 
+
+    class Media:
+        js = ('billing/admin.js',)  # Include the JavaScript file in Django admin
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('component-entities/', self.admin_site.admin_view(self.load_component_objects), name='ajax_load_component_objects'),
+        ]
+        return my_urls + urls
+
+    def load_component_objects(self, request):
+        """
+        This view returns a list of component objects for a given product.
+        """
+        product_id = request.GET.get('product_id')
+        org_id = request.GET.get('org_id')
+        product = Product.objects.get(id=product_id)
+
+        bridge = get_client_bridge(product.component.slug, product.component_billable_entity)
+
+        objects = [
+            { "id": obj.id, "name": obj.name} for obj in 
+            bridge.objects(org=org_id)
+        ]
+
+        return JsonResponse(objects, safe=False)
 
 class SubscriptionCycleProductInline(admin.TabularInline):
     model = SubscriptionCycleProduct

@@ -2,7 +2,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from fullctl.django import auditlog
 
-from billing.models import OrganizationProduct, SubscriptionProduct
+from billing.models import OrganizationProduct, OrganizationProductHistory, SubscriptionProduct
 
 
 @receiver(post_save, sender=OrganizationProduct)
@@ -24,6 +24,7 @@ def handle_orgproduct_save(sender, **kwargs):
             log.set("org", org_product.org)
             log.log("product_added_to_org", log_object=org_product.product)
 
+        org_product.add_to_history()
 
 @receiver(post_delete, sender=OrganizationProduct)
 def handle_orgproduct_delete(sender, **kwargs):

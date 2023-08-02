@@ -12,6 +12,7 @@ from billing.models import (
     OrderHistory,
     OrderHistoryItem,
     OrganizationProduct,
+    OrganizationProductHistory,
     PaymentCharge,
     PaymentMethod,
     Product,
@@ -104,6 +105,12 @@ class OrganizationProduct(BaseAdmin):
             return obj.product.component.slug
         except AttributeError:
             return None
+
+@admin.register(OrganizationProductHistory)
+class OrganizationProductHistoryAdmin(BaseAdmin):
+    list_display = ("org", "product", "component_object_id", "component_object_name", "created", "updated")
+    search_fields = ("product__name", "org__name", "org__slug")
+    list_filter = ("product__component__slug",)
 
 class SubscriptionProductModifierInline(admin.TabularInline):
     model = SubscriptionProductModifier

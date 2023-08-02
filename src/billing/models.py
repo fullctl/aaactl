@@ -197,21 +197,37 @@ class Product(HandleRefModel):
         )
         return payment
 
-    def can_add_to_org(self, org):
+    def can_add_to_org(self, org, component_object_id=None):
         """
         Checks whether or not this product can be added to the supplied org.
         """
 
-        org_product = org.products.filter(product=self)
+
+        if self.component_billable_entity and not component_object_id:
+            
+            # product requires a component_object_id but none was supplied
+
+            return False
+
+        if not self.component_billable_entity and component_object_id:
+
+            # product does not require a component_object_id but one was supplied
+
+            return False
+
+        org_product = org.products.filter(
+            product=self,
+            subscription_product__component_object_id=component_object_id
+        )
 
         if org_product.exists():
             return False
 
         most_recent = (
-            AuditLog.objects.filter(
-                org_id=org.id,
-                action="product_added_to_org",
-                object_id=self.id,
+            OrganizationProductHistory.objects.filter(
+                org=org,
+                product=self,
+                component_object_id=component_object_id
             )
             .order_by("-created")
             .first()
@@ -1049,6 +1065,68 @@ class OrganizationProduct(HandleRefModel):
 
         return timezone.now() >= self.expires
 
+    @property
+    def component_object_id(self):
+        try:
+            return self.subscription_product.component_object_id
+        except SubscriptionProduct.DoesNotExist:
+            return None
+    
+    @property
+    def component_object_name(self):
+        try:
+            return self.subscription_product.component_object_name
+        except SubscriptionProduct.DoesNotExist:
+            return None
+
+    def add_to_history(self):
+        OrganizationProductHistory.objects.create(
+            org=self.org,
+            product=self.product,
+            notes=self.notes,
+            component_object_id=self.component_object_id,
+            component_object_name=self.component_object_name,
+        )
+
+class OrganizationProductHistory(HandleRefModel):
+
+    """
+    Describes a history of organization product access
+    """
+
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.CASCADE,
+        related_name="product_history",
+        help_text=_("Products the organization has access to"),
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="organization_history",
+        help_text=_("Organizations that have access to this product"),
+    )
+
+    notes = models.TextField(
+        help_text=_(
+            "Custom notes for why produt access was granted. Useful when access is granted manually"
+        ),
+        null=True,
+        blank=True,
+    )
+
+    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
+    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+
+    class HandleRef:
+        tag = "org_product_history"
+
+    class Meta:
+        db_table = "billing_org_product_history"
+        verbose_name = _("Organization Product Access History")
+        verbose_name_plural = _("Organization Product Access History")
+        
 
 def unique_id(Model, field):
     i = 0

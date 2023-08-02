@@ -68,6 +68,48 @@ class Service(ModelSerializer):
 
         return False
 
+@register
+class OrganizationCanTrialForObject(serializers.Serializer):
+
+    org_slug = serializers.CharField()
+    service_slug = serializers.CharField()
+    object_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+    can_trial = serializers.SerializerMethodField()
+
+    ref_tag = "organization_can_trial_for_object"
+
+    class Meta:
+        fields = ["org_slug", "service_slug", "object_id", "can_trial"]
+
+    def validate_org_slug(self, value):
+        org = account_models.Organization.objects.get(slug=value)
+        self.context.update(org=org)
+        return value
+
+    def validate_service_slug(self, value):
+        service = application_models.Service.objects.get(slug=value)
+        self.context.update(service=service)
+        return value
+
+    def validate(self, validated_data):
+        service = self.context.get("service")
+        try:
+            trial_product = service.trial_product
+        except application_models.Service.trial_product.RelatedObjectDoesNotExist:
+            raise serializers.ValidationError("Service does not have a trial product")
+
+        self.context.update(trial_product=trial_product)
+
+        return validated_data
+
+    def get_can_trial(self, obj):
+        org = self.context.get("org")
+        trial_product = self.context.get("trial_product")
+        if not org or not trial_product:
+            return False
+
+        return trial_product.can_add_to_org(org, component_object_id=obj['object_id'])
+        
 
 @register
 class User(ModelSerializer):

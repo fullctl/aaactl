@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
+from fullctl.django.rest.core import BadRequest
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
 from oauth2_provider.models import AccessToken
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 import account.models as account_models
 import applications.models as application_models
@@ -67,6 +69,21 @@ class Service(AaactlDataViewSet):
             context.update(org=org)
 
         return context
+    
+    @action(
+        detail=False,
+        methods=["GET"],
+        serializer_class=Serializers.organization_can_trial_for_object,
+    )
+    def trial_available(self, request, *args, **kwargs):
+        serializer = Serializers.organization_can_trial_for_object(
+            data=request.GET,
+        )
+
+        if not serializer.is_valid():
+            return BadRequest(serializer.errors)
+
+        return Response(serializer.data)
 
 
 @route

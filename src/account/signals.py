@@ -119,19 +119,19 @@ def auto_user_to_org(sender, **kwargs):
 
 @receiver(post_delete, sender=ManagedPermissionRoleAutoGrant)
 def delete_auto_grant(sender, **kwargs):
-    UpdatePermissions.create_task()
+    UpdatePermissions.create_task_silent_limit()
 
 
 @receiver(post_save, sender=OrganizationManagedPermission)
 def set_org_manage_permission(sender, **kwargs):
     instance = kwargs.get("instance")
-    ManagedPermission.apply_roles_org(instance.org)
+    UpdatePermissions.create_task_silent_limit(target_org=instance.org.id)
 
 
 @receiver(post_delete, sender=OrganizationManagedPermission)
 def delete_org_manage_permission(sender, **kwargs):
     instance = kwargs.get("instance")
-    ManagedPermission.apply_roles_org(instance.org)
+    UpdatePermissions.create_task_silent_limit(target_org=instance.org.id)
 
 
 @receiver(pre_delete, sender=OrganizationUser)
@@ -183,7 +183,7 @@ def sync_roles(**kwargs):
             update_all_permissions = True
 
     if update_all_permissions:
-        UpdatePermissions.create_task()
+        UpdatePermissions.create_task_silent_limit()
 
 
 post_revision_commit.connect(sync_roles)

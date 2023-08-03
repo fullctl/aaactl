@@ -2,7 +2,15 @@
 {% load static i18n crispy_forms_tags %}
 {% block controlpanel %}
 <h4>Billing Setup</h4>
-
+<p>
+  {% blocktrans %}
+    Entering your billing information does not automatically charge your credit
+    card. Charges are applied when FullCtl Administration turns on your paid
+    service subscription. Once your subscription is turned on you will be charged
+    monthly. Your current subscriptions and monthly costs appear at the bottom of
+    the Services list on the Account Dashboard page.
+  {% endblocktrans %}
+</p>
 <form
   class="billing-setup"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
@@ -41,7 +49,7 @@
   <div>
     <div>
       <h4>
-        Use saved payment method
+        {% trans "Use saved payment method" %}
         <small>or</small>
         <button class="btn btn-sm btn-secondary toggle-create-payopt" type="button" id="btn-create-payopt">Create new payment method</button>
       </h4>
@@ -70,10 +78,10 @@
     <h5>{% trans "Billing Contact" %}</h5>
 
     <div class="row">
-      <div class="col-6">
+      <div class="col-6 input-container">
       {{ form.holder|as_crispy_field }}
       </div>
-      <div class="col-6">
+      <div class="col-6 input-container">
       {{ form.email|as_crispy_field }}
       </div>
     </div>
@@ -81,28 +89,28 @@
     <h5>{% trans "Billing Address" %}</h5>
 
     <div class="row">
-      <div class="col-12">
+      <div class="col-12 input-container">
       {{ form.country|as_crispy_field }}
       </div>
     </div>
 
     <div class="row">
-      <div class="col-4">
+      <div class="col-4 input-container">
       {{ form.city|as_crispy_field }}
       </div>
-      <div class="col-4">
+      <div class="col-4 input-container">
       {{ form.state|as_crispy_field }}
       </div>
-      <div class="col-4">
+      <div class="col-4 input-container">
       {{ form.postal_code|as_crispy_field }}
       </div>
     </div>
 
     <div class="row">
-      <div class="col-12">
+      <div class="col-12 input-container">
       {{ form.address1|as_crispy_field }}
       </div>
-      <div class="col-12">
+      <div class="col-12 input-container">
       {{ form.address2|as_crispy_field }}
       </div>
     </div>
@@ -141,7 +149,9 @@
 {% endif %}
 
 <div data-api-submit="yes">
-{{ form_agreements|crispy }}
+  {{ form_agreements.agreement_tos.errors }}
+  {{ form_agreements.agreement_tos }}
+  <label for="{{ form_agreements.agreement_tos.id_for_label }}">I agree to the <a href="{{ terms_of_service_url}}" target="_blank">Terms of Service</a>*</label>
 </div>
 
 <div class="right">
@@ -166,6 +176,7 @@
 {% endblock%}
 
 {% block javascript %}
+{{ block.super }}
 <script>
 $(document).ready(function() {
   var billing_setup = new billing.BillingSetup();

@@ -1,5 +1,6 @@
 from fullctl.django.models import Task
 from fullctl.django.tasks import register
+from fullctl.django.tasks.qualifiers import ConcurrencyLimit
 
 import account.models
 
@@ -15,7 +16,9 @@ class UpdatePermissions(Task):
         tag = "task_update_permissions"
 
     class TaskMeta:
-        limit = 1
+        qualifiers = [
+            ConcurrencyLimit(1),
+        ]
 
     @property
     def generate_limit_id(self):

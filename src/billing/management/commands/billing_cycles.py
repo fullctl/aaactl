@@ -17,17 +17,31 @@ class Command(CommandInterface):
         for org_prod in qset:
             self.log_info(f"Expiring {org_prod.product} for {org_prod.org}")
             if org_prod.product.expiry_replacement_product_id:
-                replace = org_prod.product.expiry_replacement_product
+                replacement_product = org_prod.product.expiry_replacement_product
             else:
-                replace = None
+                replacement_product = None
 
             org_prod.delete()
 
-            if replace and replace.can_add_to_org(org_prod.org):
+            if replacement_product and replacement_product.can_add_to_org(org_prod.org):
                 self.log_info(
-                    f"Replacing expired product with {replace} for {org_prod.org}"
+                    f"Replacing expired product with {replacement_product} for {org_prod.org}"
                 )
-                replace.add_to_org(org_prod.org)
+                replacement_product.add_to_org(org_prod.org)
+
+    def progress_subscription_product_expiry(self, subscription):
+        qset = subscription.subscription_product_set.filter(
+            expires__lt=timezone.now()
+        )
+        for subscription_product in qset:
+            self.log_info(f"Expiring {subscription_product.product} from subscription {subscription}")
+            if subscription_product.product.expiry_replacement_product_id:
+                replacement_product = subscription_product.product.expiry_replacement_product
+                if replacement_product and replacement_product.can_add_to_org(subscription.org):
+                    self.log_info(
+                        f"Replacing expired product with {replacement_product} in subscription {subscription}"
+                    )
+                    replacement_product.add_to_org(subscription.org)
 
     def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
@@ -70,6 +84,8 @@ class Command(CommandInterface):
                     with reversion.create_revision():
                         if subscription_cycle_charge:
                             subscription_cycle_charge.payment_charge.sync_status()
+
+
 
     def collect(self, subscription_product, subscription_cycle):
         org = subscription_cycle.subscription.org

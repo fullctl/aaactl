@@ -86,6 +86,7 @@ class Product(HandleRefModel):
         max_length=255,
         null=True,
         blank=True,
+        verbose_name=_("Billed object"),
         help_text=_("Links the product to specific entity type in the component (.e.g, InternetExchange for ixctl). Free-form field at this point. Ask developers if you are unsure."),
     )
 
@@ -132,6 +133,17 @@ class Product(HandleRefModel):
         on_delete=models.SET_NULL,
         help_text=_(
             "On products that can expire, replace the expired product with this product"
+        ),
+    )
+
+    trial_product = models.ForeignKey(
+        "billing.Product",
+        null=True,
+        blank=True,
+        related_name="trial_of",
+        on_delete=models.SET_NULL,
+        help_text=_(
+            "This product's trial version",
         ),
     )
 
@@ -217,11 +229,19 @@ class Product(HandleRefModel):
 
         org_product = org.products.filter(
             product=self,
-            subscription_product__component_object_id=component_object_id
+            component_object_id=component_object_id
         )
 
         if org_product.exists():
             return False
+
+        # if product is trial of another product and org as the `real` product
+        # then we can't add the trial product
+
+        for trial_product in self.trial_of.all():
+            for org_product in org.products.filter(product=trial_product):
+                if org_product.component_object_id == component_object_id:
+                    return False
 
         most_recent = (
             OrganizationProductHistory.objects.filter(
@@ -246,8 +266,21 @@ class Product(HandleRefModel):
 
         return tdiff > self.renewable
 
-    def add_to_org(self, org, notes=None):
-        if org.products.filter(product=self).exists():
+    def add_to_org(self, org, notes=None, component_object_id=None):
+
+        """
+        Attempts to add this product to the supplied org.
+
+        Raises OrgProductAlreadyExists if the product already exists on the org with
+        the same component_object_id.
+        """
+
+        qset = org.products.filter(
+            product=self, 
+            component_object_id=component_object_id
+        )
+
+        if qset.exists():
             raise OrgProductAlreadyExists(f"{org.slug} - {self}")
 
         if self.expiry_period:
@@ -255,9 +288,35 @@ class Product(HandleRefModel):
         else:
             expires = None
 
-        OrganizationProduct.objects.create(
-            org=org, product=self, notes=notes, expires=expires
+        # non recurring products can be added standalone
+        if not self.is_recurring_product:
+            print("adding non recurring product")
+            OrganizationProduct.objects.create(
+                org=org, product=self, notes=notes, expires=expires, component_object_id=component_object_id
+            )
+
+        print("adding recurring product")
+
+        # recurring products should be added to subscription
+        # if no subscription exists, create one
+        subscription = org.subscription_set.filter(group=self.group).first()
+        if not subscription:
+            print("creating subscription")
+            subscription = Subscription.create(
+                group=self.group, 
+                org=org,
+                subscription_cycle_start=timezone.now(),
+                data={"created-through": str(self), "notes": notes},
+            )
+        subscription_product = SubscriptionProduct(
+            subscription=subscription, 
+            product=self,
+            component_object_id=component_object_id,
+            data={"notes": notes},
         )
+        subscription_product.full_clean()
+        subscription_product.save()
+
 
     def clean(self):
         try:
@@ -618,6 +677,12 @@ class SubscriptionProduct(HandleRefModel):
         help_text=_("Any extra data for the subscription item"),
     )
 
+    expires = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_("If set, this subscription product will end and be removed at the given time"),
+    )
+
     ends_next_cycle = models.BooleanField(default=False, help_text=_("If true, this subscription product will end and be removed at the end of the current subscription cycle"))
 
     component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
@@ -692,8 +757,22 @@ class SubscriptionProduct(HandleRefModel):
         except SubscriptionCycleProduct.DoesNotExist:
             return 0
 
+    @property
+    def description(self):
+        return f"{self.component_object_name} - {self.product.description}"
+
     def __str__(self):
-        return f"{self.subscription} - {self.product.name}"
+        return f"{self.subscription} - {self.description}"
+
+
+    def update_expires(self):
+        """
+        Will update the expire date of the subscription product based on the product's
+        expiry date.
+        """
+        if not self.expires and self.product.expiry_period:
+            self.expires = timezone.now() + datetime.timedelta(days=self.product.expiry_period)
+            self.save()
 
     def clean(self):
         if self.component_object_id:
@@ -793,6 +872,16 @@ class SubscriptionCycle(HandleRefModel):
         if usage is not None:
             subscription_cycle_product.usage = usage
         subscription_cycle_product.save()
+
+    def add_subscription_product(self, subscription_product):
+        """
+        Add a subscription product to this subscription_cycle
+        """
+
+        SubscriptionCycleProduct.objects.get_or_create(
+            subscription_cycle=self,
+            subscription_product=subscription_product,
+        )
 
     def charge(self):
         """
@@ -1036,6 +1125,9 @@ class OrganizationProduct(HandleRefModel):
         help_text=_("Product access is granted through this subscription"),
     )
 
+    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
+    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+
     expires = models.DateTimeField(
         help_text=_("Product access expires at this date"),
         null=True,
@@ -1064,20 +1156,6 @@ class OrganizationProduct(HandleRefModel):
             return False
 
         return timezone.now() >= self.expires
-
-    @property
-    def component_object_id(self):
-        try:
-            return self.subscription_product.component_object_id
-        except SubscriptionProduct.DoesNotExist:
-            return None
-    
-    @property
-    def component_object_name(self):
-        try:
-            return self.subscription_product.component_object_name
-        except SubscriptionProduct.DoesNotExist:
-            return None
 
     def add_to_history(self):
         OrganizationProductHistory.objects.create(

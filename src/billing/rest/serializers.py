@@ -132,7 +132,7 @@ class Subscription(serializers.ModelSerializer):
             return []
         return [
             {
-                "description": subscription_product.product.description,
+                "description": subscription_product.description,
                 "type": subscription_product.product.recurring_product.type_description,
                 "usage": subscription_product.subscription_cycle_usage,
                 "cost": subscription_product.subscription_cycle_cost,

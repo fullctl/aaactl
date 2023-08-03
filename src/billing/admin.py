@@ -64,10 +64,12 @@ class ProductAdmin(BaseAdmin):
         "component_billable_entity",
         "description",
         "price",
-        "recurring_product",
+        "is_recurring_product",
+        "recurring_price",
+        "trial_product",
     )
-    search_fields = ("name", "component", "group")
-    readonly_fields = BaseAdmin.readonly_fields + ("recurring_product",)
+    search_fields = ("name", "component", "group",)
+    readonly_fields = BaseAdmin.readonly_fields + ("is_recurring_product", "recurring_price")
     inlines = (
         ProductModifierInline,
         RecurringProductInline,
@@ -75,10 +77,14 @@ class ProductAdmin(BaseAdmin):
     )
     form = ProductForm
 
-    def recurring_product(self, obj):
+    def is_recurring_product(self, obj):
         if obj.is_recurring_product:
-            return _("Yes")
-        return _("No")
+            return True
+        return False
+
+    def recurring_price(self, obj):
+        if obj.is_recurring_product:
+            return obj.recurring_product.price
 
 
 @admin.register(ProductModifier)
@@ -96,7 +102,7 @@ class OrganizationProduct(BaseAdmin):
 
     def component_object(self, obj):
         try:
-            return obj.subscription_product.component_object_name
+            return f"{obj.component_object_name} ({obj.component_object_id})"
         except AttributeError:
             return None
 
@@ -134,7 +140,7 @@ class SubscriptionProductForm(forms.ModelForm):
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
     form = SubscriptionProductForm
-    fields = ("product","component", "component_object_id", "component_object_name", "ends_next_cycle")
+    fields = ("product","component", "component_object_id", "component_object_name", "expires")
     readonly_fields =("component", "component_object_name")
     extra = 0
 
@@ -146,7 +152,21 @@ class SubscriptionProductInline(admin.TabularInline):
         # and add a new one to make a change
         return False
 
+class SubscriptionAdminForm(forms.ModelForm):
+    """
+    Custom form for SubscriptionAdmin to filter payment_method field
+    """
+    class Meta:
+        model = Subscription
+        fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        org = self.instance.org if self.instance.pk else None
+        if org:
+            self.fields['payment_method'].queryset = PaymentMethod.objects.filter(billing_contact__org=org)
+        else:
+            self.fields['payment_method'].queryset = PaymentMethod.objects.none()
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
@@ -156,7 +176,7 @@ class SubscriptionAdmin(BaseAdmin):
         SubscriptionProductInline,
         SubscriptionCycleInline,
     )
-
+    form = SubscriptionAdminForm
 
     class Media:
         js = ('billing/admin.js',)  # Include the JavaScript file in Django admin
@@ -165,6 +185,8 @@ class SubscriptionAdmin(BaseAdmin):
         urls = super().get_urls()
         my_urls = [
             path('component-entities/', self.admin_site.admin_view(self.load_component_objects), name='ajax_load_component_objects'),
+            path('payment-methods/', self.admin_site.admin_view(self.load_payment_methods), name='ajax_load_payment_methods'),
+
         ]
         return my_urls + urls
 
@@ -183,7 +205,26 @@ class SubscriptionAdmin(BaseAdmin):
             bridge.objects(org=org_id)
         ]
 
+        # prepend an empty option (null)
+
+        objects.insert(0, {"id": None, "name": "---------"})
+
         return JsonResponse(objects, safe=False)
+
+    def load_payment_methods(self, request):
+        """
+        This view returns a list of payment methods for a given org.
+        """
+        org_id = request.GET.get('org_id')
+        payment_methods = PaymentMethod.objects.filter(billing_contact__org_id=org_id)
+
+        methods = [
+            {"id": method.id, "name": method.name} for method in payment_methods
+        ]
+        # prepend an empty option (null)
+
+        methods.insert(0, {"id": None, "name": "---------"})
+        return JsonResponse(methods, safe=False)
 
 class SubscriptionCycleProductInline(admin.TabularInline):
     model = SubscriptionCycleProduct

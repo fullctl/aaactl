@@ -52,12 +52,24 @@ def handle_subscription_product_save(sender, **kwargs):
 
     sub_product = kwargs.get("instance")
 
+    component_object_id = sub_product.component_object_id
+    component_object_name = sub_product.component_object_name
+    sub_product.update_expires()
+
     OrganizationProduct.objects.get_or_create(
         subscription=sub_product.subscription,
         subscription_product=sub_product,
         product=sub_product.product,
         org=sub_product.subscription.org,
+        component_object_id=component_object_id,
+        component_object_name=component_object_name,
+        expires=sub_product.expires,
     )
+
+    if sub_product.subscription.subscription_cycle:
+        sub_product.subscription.subscription_cycle.add_subscription_product(sub_product)
+
+
 
 
 @receiver(post_delete, sender=SubscriptionProduct)

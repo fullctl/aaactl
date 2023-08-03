@@ -142,18 +142,21 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def start_trial(self, request, pk, org, auditlog=None):
         service_id = request.data.get("service_id")
+        component_object_id = request.data.get("component_object_id")
         service = application_models.Service.objects.get(id=service_id)
+
+        print("Attempting to start trial", service_id, component_object_id)
 
         if not service.trial_product_id:
             return Response({"service_id": ["This service has no trial"]}, status=400)
 
-        if not service.trial_product.can_add_to_org(org):
+        if not service.trial_product.can_add_to_org(org, component_object_id=component_object_id):
             return Response(
                 {"non_field_errors": ["Trial could not be started at this time"]},
                 status=400,
             )
 
-        org_product = service.trial_product.add_to_org(org)
+        org_product = service.trial_product.add_to_org(org, component_object_id=component_object_id, notes="Trial started through service bridge")
 
         serializer = Serializers.org_product(org_product)
         return Response(serializer.data)

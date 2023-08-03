@@ -57,6 +57,7 @@ class PaymentMethod(serializers.ModelSerializer):
         fields = [
             "billing_contact",
             "custom_name",
+            "name",
             "holder",
             "country",
             "city",

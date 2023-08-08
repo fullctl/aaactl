@@ -327,8 +327,8 @@ class BillingContactAdmin(BaseAdmin):
 
 @admin.register(Ledger)
 class LedgerAdmin(BaseAdmin):
-    list_display = ("id", "org", "content_type", "order_number", "invoice_number", "description", "amount", "currency")
-    readonly_fields = ("description", "amount", "currency", "order_number", "invoice_number")
+    list_display = ("id", "org", "content_type", "order_number", "invoice_number", "description", "amount", "currency", "txn_id", "created")
+    readonly_fields = ("description", "amount", "currency", "order_number", "invoice_number", "txn_id")
     search_fields = ("org__name", "org__slug", "order_number", "invoice_number")
 
     def org(self, obj):
@@ -339,6 +339,9 @@ class LedgerAdmin(BaseAdmin):
 
     def description(self, obj):
         return getattr(obj.content_object, "description", None)
+
+    def txn_id(self, obj):
+        return getattr(obj.content_object, "payment_processor_txn_id", None)
 
     def amount(self, obj):
         return obj.content_object.amount

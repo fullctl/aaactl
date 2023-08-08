@@ -25,6 +25,15 @@
     </tbody>
   </table>
 </div>
+{% if order_history.payment_charge.data.receipt_url %}
+<div class="row">
+  <div class="col-4">
+    <a href="{{ order_history.payment_charge.data.receipt_url }}">Download Receipt</a>
+  </div>
+  <div class="col">
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block menu %}

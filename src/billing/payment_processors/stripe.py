@@ -113,6 +113,8 @@ class Stripe(PaymentProcessor):
         payment_charge.status = "pending"
 
         payment_charge.data["stripe_charge"] = charge["id"]
+        payment_charge.data["processor_txn_id"] = charge["id"]
+        payment_charge.data["receipt_url"] = charge["receipt_url"]
         payment_charge.save()
 
     def _sync_charge(self, payment_charge, status=None):

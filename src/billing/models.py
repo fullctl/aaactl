@@ -1318,7 +1318,7 @@ class OrderHistory(HandleRefModel):
                 OrderHistoryItem.objects.create(
                     order=order,
                     subscription_cycle_product=subscription_cycle_product,
-                    description=subscription_cycle_product.subscription_product.product.description,
+                    description=subscription_cycle_product.subscription_product.description,
                     price=subscription_cycle_product.price,
                 )
 
@@ -1552,7 +1552,6 @@ class PaymentCharge(HandleRefModel):
 
     @reversion.create_revision()
     def sync_status(self, commit=True):
-        print("SYNC STATUS", self.status)
         if self.status == "pending":
             if commit:
                 self.payment_method.processor_instance.sync_charge(self)
@@ -1585,7 +1584,7 @@ class PaymentCharge(HandleRefModel):
             payment_method=charge.payment_method,
             invoice_number=invoice_number,
             order_number=self.order_number,
-            #payment_processor_txn_id=None
+            payment_processor_txn_id=self.data.get("processor_txn_id")
         )
         return payment
 

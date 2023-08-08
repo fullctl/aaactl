@@ -9,6 +9,7 @@ import billing.product_handlers
 from billing.models import (
     BillingContact,
     CustomerData,
+    Ledger,
     OrderHistory,
     OrderHistoryItem,
     OrganizationProduct,
@@ -322,3 +323,25 @@ class ProductGroupAdmin(BaseAdmin):
 class BillingContactAdmin(BaseAdmin):
     list_display = ("id", "org", "name", "email", "created")
     search_fields = ("org__name", "name", "email")
+
+
+@admin.register(Ledger)
+class LedgerAdmin(BaseAdmin):
+    list_display = ("id", "org", "content_type", "order_number", "invoice_number", "description", "amount", "currency")
+    readonly_fields = ("description", "amount", "currency", "order_number", "invoice_number")
+    search_fields = ("org__name", "org__slug", "order_number", "invoice_number")
+
+    def org(self, obj):
+        return obj.content_object.org
+
+    def ref_tag(self, obj):
+        return obj.content_object.HandleRef.tag
+
+    def description(self, obj):
+        return getattr(obj.content_object, "description", None)
+
+    def amount(self, obj):
+        return obj.content_object.amount
+    
+    def currency(self, obj):
+        return obj.content_object.currency

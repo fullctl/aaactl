@@ -75,15 +75,12 @@ class Command(CommandInterface):
                         f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
                     )
 
-                    if not self.commit:
-                        continue
-
                     with reversion.create_revision():
-                        subscription_cycle_charge = subscription_cycle.charge()
+                        subscription_cycle_charge = subscription_cycle.charge(commit=self.commit)
 
                     with reversion.create_revision():
                         if subscription_cycle_charge:
-                            subscription_cycle_charge.payment_charge.sync_status()
+                            subscription_cycle_charge.payment_charge.sync_status(commit=self.commit)
 
 
 

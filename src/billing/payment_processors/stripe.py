@@ -105,7 +105,7 @@ class Stripe(PaymentProcessor):
             customer=self.customer,
             source=self.source,
             amount=int(payment_charge.price * 100),
-            description=payment_charge.description,
+            description=payment_charge.details,
             api_key=self.api_key,
             currency=self.default_currency,
         )

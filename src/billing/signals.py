@@ -2,7 +2,17 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from fullctl.django import auditlog
 
-from billing.models import OrganizationProduct, OrganizationProductHistory, SubscriptionProduct
+from billing.models import (
+    OrganizationProduct, 
+    OrganizationProductHistory, 
+    SubscriptionProduct,
+    Invoice,
+    Order,
+    Payment,
+    Deposit,
+    Withdrawal,
+    Ledger,
+)
 
 
 @receiver(post_save, sender=OrganizationProduct)
@@ -89,3 +99,18 @@ def handle_subscription_product_delete(sender, **kwargs):
 
     for org_product in qset:
         org_product.delete()
+
+
+for TransactionModel in [Invoice, Order, Payment, Deposit, Withdrawal]:
+    @receiver(post_save, sender=TransactionModel)
+    def handle_billing_object_save(sender, **kwargs):
+        created = kwargs.get("created")
+        if not created:
+            return
+        txn = kwargs.get("instance")
+        Ledger.objects.create(
+            content_object=txn,
+            invoice_number=getattr(txn, "invoice_number", None),
+            order_number=getattr(txn, "order_number", None),
+            org=txn.org,
+        )

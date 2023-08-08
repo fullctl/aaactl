@@ -170,17 +170,17 @@ class Product(HandleRefModel):
     def __str__(self):
         return f"{self.name}: {self.description}"
 
-    def create_transactions(self, user):
+    def create_transactions(self, org):
         order_number = "ORDER_" + unique_order_id()
-        self._create_order(user, order_number)
+        self._create_order(org, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
-        self._create_invoice(user, invoice_number)
-        self._create_payment(user, invoice_number)
+        self._create_invoice(org, invoice_number)
+        self._create_payment(org, invoice_number)
 
-    def _create_order(self, user, order_number):
+    def _create_order(self, org, order_number):
         order = Order.objects.create(
-            user=user,
+            OrgProductAlreadyExists=org,
             amount=self.price,
             product=self,
             description=self.description,
@@ -188,10 +188,10 @@ class Product(HandleRefModel):
         )
         return order
 
-    def _create_invoice(self, user, invoice_number):
+    def _create_invoice(self, org, invoice_number):
         invoice = Invoice.objects.create(
             # Not sure how we want to access this
-            user=user,
+            org=org,
             amount=self.price,
             product=self,
             description=self.description,
@@ -199,9 +199,9 @@ class Product(HandleRefModel):
         )
         return invoice
 
-    def _create_payment(self, user, invoice_number):
+    def _create_payment(self, org, invoice_number):
         payment = Payment.objects.create(
-            user=user,
+            org=org,
             amount=self.price,
             # billing_contact=None,
             # payment_method=None,
@@ -883,7 +883,7 @@ class SubscriptionCycle(HandleRefModel):
             subscription_product=subscription_product,
         )
 
-    def charge(self):
+    def charge(self, commit=True):
         """
         Charge the cost of the subscription_cycle to the customer's payment method
         """
@@ -908,52 +908,67 @@ class SubscriptionCycle(HandleRefModel):
             price=self.price,
             description=self.subscription.charge_description,
         )
-        self.subscription.payment_method.processor_instance.charge(payment_charge)
 
-        return SubscriptionCycleCharge.objects.create(
+        subscription_cycle_charge = SubscriptionCycleCharge.objects.create(
             subscription_cycle=self, payment_charge=payment_charge, status="pending"
         )
 
-    def create_transactions(self, user):
+        order_number = self.create_orders()
+        self.create_invoice(order_number)
+
+        if commit:
+            self.subscription.payment_method.processor_instance.charge(payment_charge)
+
+
+        return subscription_cycle_charge
+
+    def create_invoice(self, order_number):
+        org = self.subscription.org
+        invoice_number = "INVOICE_" + unique_invoice_id()
+        self._create_invoices(org, invoice_number, order_number)
+        return invoice_number
+
+    def create_orders(self):
+        org = self.subscription.org
         order_number = "ORDER_" + unique_order_id()
-        self._create_orders(user, order_number)
+        self._create_orders(org, order_number)
+        return order_number
+
+    def create_transactions(self, org):
+        # DEPRECATED
+        order_number = "ORDER_" + unique_order_id()
+        self._create_orders(org, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
-        self._create_invoices(user, invoice_number)
-        self._create_payment(user, invoice_number)
+        self._create_invoices(org, invoice_number)
+        self._create_payment(org, invoice_number)
 
-    def _create_orders(self, user, order_number):
-        for subscription_product in self.subscription.subscription_product_set.all():
+    def _create_orders(self, org, order_number):
+        for cycle_product in self.subscription_cycle_product_set.all():
             Order.objects.create(
-                user=user,
-                amount=self.price,
+                org=org,
+                amount=cycle_product.price,
                 subscription=self.subscription,
-                product=subscription_product.product,
-                description=self.subscription.charge_description,
+                subscription_cycle_product=cycle_product,
+                product=cycle_product.subscription_product.product,
+                description=cycle_product.subscription_product.description,
                 order_number=order_number,
             )
 
-    def _create_invoices(self, user, invoice_number):
-        for subscription_product in self.subscription.subscription_product_set.all():
+    def _create_invoices(self, org, invoice_number, order_number):
+        for cycle_product in self.subscription_cycle_product_set.all():
             Invoice.objects.create(
-                # Not sure how we want to access this
-                user=user,
-                amount=self.price,
+                org=org,
+                amount=cycle_product.price,
                 subscription=self.subscription,
-                product=subscription_product.product,
-                description=self.subscription.charge_description,
+                subscription_cycle_product=cycle_product,
+                product=cycle_product.subscription_product.product,
+                description=cycle_product.subscription_product.description,
                 invoice_number=invoice_number,
+                order_number=order_number,
             )
 
-    def _create_payment(self, user, invoice_number):
-        payment = Payment.objects.create(
-            user=user,
-            amount=self.price,
-            billing_contact=self.subscription.payment_method.billing_contact,
-            payment_method=self.subscription.payment_method,
-            invoice_number=invoice_number,
-        )
-        return payment
+
 
 
 @reversion.register()
@@ -981,6 +996,10 @@ class SubscriptionCycleCharge(HandleRefModel):
 
     class HandleRef:
         tag = "subscription_cycle_charge"
+
+    @property
+    def invoice_number(self):
+        return self.subscription_cycle.subscription_cycle_product_set.first().invoice_number
 
 
 @reversion.register()
@@ -1033,6 +1052,10 @@ class SubscriptionCycleProduct(HandleRefModel):
                 price = mod.apply(price, recurring_product.price)
 
         return price
+
+    @property
+    def invoice_number(self):
+        return self.invoice_set.first().invoice_number
 
     def __str__(self):
         return f"{self.subscription_product}"
@@ -1480,6 +1503,43 @@ class PaymentCharge(HandleRefModel):
     class HandleRef:
         tag = "payment_charge"
 
+    @property
+    def details(self):
+        """
+        Will attempt to generate charge details from the related
+        subscription or one time purchase.
+        """
+
+        details = [self.description, ""]
+
+        for invoice_line in self.invoice_lines:
+            details.append(f"{invoice_line.description} - {invoice_line.currency}{invoice_line.amount}")
+
+        return "\n".join(details)
+    
+    @property
+    def org(self):
+        return self.payment_method.billing_contact.org
+
+    @property
+    def invoice_number(self):
+        if self.subscription_cycle_charge:
+            return self.subscription_cycle_charge.invoice_number
+    
+    @property
+    def order_number(self):
+        try:
+            return Invoice.objects.filter(invoice_number=self.invoice_number).first().order_number
+        except AttributeError:
+            return None
+    
+    @property
+    def invoice_lines(self):
+        invoice_number = self.invoice_number
+        if not invoice_number:
+            return []
+        return Invoice.objects.filter(invoice_number=invoice_number)
+
     def __str__(self):
         return f"{self.payment_method.name} Charge {self.id}"
 
@@ -1491,22 +1551,52 @@ class PaymentCharge(HandleRefModel):
         OrderHistory.create_from_payment_charge(self)
 
     @reversion.create_revision()
-    def sync_status(self):
+    def sync_status(self, commit=True):
+        print("SYNC STATUS", self.status)
         if self.status == "pending":
-            self.payment_method.processor_instance.sync_charge(self)
-            if self.status == "ok":
+            if commit:
+                self.payment_method.processor_instance.sync_charge(self)
+            if self.status == "ok" or not commit:
                 self.capture()
+        
+        if self.status == "ok":
+            self.create_payment_transaction()
 
         return self.status
 
 
-class Transaction(HandleRefModel):
-    user = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.CASCADE,
-        related_name="%(class)s_transaction_set",
-    )
+    @reversion.create_revision()
+    def create_payment_transaction(self):
 
+        try:
+            return self.payment_transaction
+        except Payment.DoesNotExist:
+            pass
+
+        charge = self
+        org = self.org
+        invoice_number = self.invoice_number
+
+        payment = Payment.objects.create(
+            org=org,
+            charge_object=self,
+            amount=charge.price,
+            billing_contact=charge.payment_method.billing_contact,
+            payment_method=charge.payment_method,
+            invoice_number=invoice_number,
+            order_number=self.order_number,
+            #payment_processor_txn_id=None
+        )
+        return payment
+
+
+class Transaction(HandleRefModel):
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="%(class)s_transaction_set",
+        null=True,
+    )
     # Should this be auto_now_add ? Or is default=now better.
     created = models.DateTimeField(
         help_text=_("When transaction was created."), default=timezone.now
@@ -1524,7 +1614,7 @@ class Transaction(HandleRefModel):
 class MoneyTransaction(Transaction):
     billing_contact = models.ForeignKey(
         "billing.BillingContact",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="%(class)s_money_transaction_set",
         null=True,
     )
@@ -1545,15 +1635,20 @@ class MoneyTransaction(Transaction):
 @reversion.register()
 class Order(Transaction):
     product = models.ForeignKey(
-        "billing.Product", on_delete=models.CASCADE, related_name="order_set", null=True
+        "billing.Product", on_delete=models.PROTECT, related_name="order_set", null=True
     )
     subscription = models.ForeignKey(
         "billing.Subscription",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="order_set",
         null=True,
     )
-
+    subscription_cycle_product = models.ForeignKey(
+        "billing.SubscriptionCycleProduct",
+        on_delete=models.PROTECT,
+        related_name="order_set",
+        null=True,
+    )
     description = models.TextField(blank=True)
     order_number = models.CharField(blank=True, max_length=255)
 
@@ -1562,25 +1657,32 @@ class Order(Transaction):
 
     class Meta:
         db_table = "billing_order"
-        verbose_name = _("Order")
-        verbose_name_plural = _("Orders")
+        verbose_name = _("Order Line")
+        verbose_name_plural = _("Order Lines")
 
 
 @reversion.register()
 class Invoice(Transaction):
     product = models.ForeignKey(
         "billing.Product",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="invoice_set",
         null=True,
     )
     subscription = models.ForeignKey(
         "billing.Subscription",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
+        related_name="invoice_set",
+        null=True,
+    )
+    subscription_cycle_product = models.ForeignKey(
+        "billing.SubscriptionCycleProduct",
+        on_delete=models.PROTECT,
         related_name="invoice_set",
         null=True,
     )
     description = models.TextField(blank=True)
+    order_number = models.CharField(blank=True, max_length=255)
     invoice_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
@@ -1588,13 +1690,20 @@ class Invoice(Transaction):
 
     class Meta:
         db_table = "billing_invoice"
-        verbose_name = _("Invoice")
-        verbose_name_plural = _("Invoices")
+        verbose_name = _("Invoice Line")
+        verbose_name_plural = _("Invoice Lines")
 
 
 @reversion.register()
 class Payment(MoneyTransaction):
     invoice_number = models.CharField(blank=True, max_length=255)
+    order_number = models.CharField(blank=True, max_length=255)
+    charge_object = models.OneToOneField(
+        PaymentCharge, 
+        null=True, 
+        on_delete=models.PROTECT,
+        related_name="payment_transaction"
+    )
 
     class HandleRef:
         tag = "payment"
@@ -1603,7 +1712,6 @@ class Payment(MoneyTransaction):
         db_table = "billing_payment"
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
-
 
 @reversion.register()
 class Deposit(MoneyTransaction):
@@ -1628,15 +1736,25 @@ class Withdrawal(MoneyTransaction):
 
 
 @reversion.register()
-class Ledger(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+class Ledger(HandleRefModel):
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="ledger",
+        null=True,
+    )
+    
+    content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
-
+    
+    invoice_number = models.CharField(blank=True, null=True, max_length=255)
+    order_number = models.CharField(blank=True, null=True, max_length=255)
+    
     class HandleRef:
         tag = "ledger"
 
     class Meta:
         db_table = "billing_ledgers"
         verbose_name = _("Ledger")
-        verbose_name_plural = _("Ledgers")
+        verbose_name_plural = _("Ledger")

@@ -137,6 +137,14 @@ class SubscriptionProductForm(forms.ModelForm):
         model = SubscriptionProduct
         fields = "__all__"
 
+    def clean_component_object_id(self):
+        component_object_id = self.cleaned_data.get("component_object_id")
+        if component_object_id:
+            component_object_id = int(component_object_id)
+        else:
+            component_object_id = None
+        return component_object_id
+
 
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct

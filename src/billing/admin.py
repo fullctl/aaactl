@@ -172,10 +172,12 @@ class SubscriptionAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         org = self.instance.org if self.instance.pk else None
-        if org:
+        if org and self.instance.pk:
             self.fields['payment_method'].queryset = PaymentMethod.objects.filter(billing_contact__org=org)
-        else:
+        elif self.instance.pk:
             self.fields['payment_method'].queryset = PaymentMethod.objects.none()
+        else:
+            self.fields['payment_method'].queryset = PaymentMethod.objects.all()
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):

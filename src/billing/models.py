@@ -1678,7 +1678,7 @@ class PaymentCharge(HandleRefModel):
                     "payment_method": self.payment_method,
                     "billing_contact": self.payment_method.billing_contact,
                     "org": self.org,
-                    "suoport_email": settings.SUPPORT_EMAIL,
+                    "support_email": settings.SUPPORT_EMAIL,
                 }
             ).content.decode("utf-8"),
         )

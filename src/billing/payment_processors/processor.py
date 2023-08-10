@@ -8,6 +8,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from fullctl.django.util import host_url
 
+
+import structlog
+
 MAP = {}
 
 
@@ -70,6 +73,7 @@ class PaymentProcessor:
 
     def __init__(self, payment_method, **kwargs):
         self.payment_method = payment_method
+        self.log = structlog.get_logger("django")
 
     def save(self):
         self.payment_method.save()

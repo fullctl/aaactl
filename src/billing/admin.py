@@ -1,7 +1,10 @@
+from typing import Optional
 from django import forms
 from django.contrib import admin
-from django.urls import path
+from django.http.request import HttpRequest
+from django.urls import path, reverse
 from django.utils.translation import gettext as _
+from django.utils.html import format_html
 from fullctl.django.admin import BaseAdmin
 from applications.service_bridge import get_client_bridge, get_client_bridge_cls
 from django.http import JsonResponse
@@ -127,8 +130,45 @@ class SubscriptionProductModifierInline(admin.TabularInline):
 
 class SubscriptionCycleInline(admin.TabularInline):
     model = SubscriptionCycle
-    fields = ("start", "end")
+    fields = ("start", "end", "status", "charge_status_link")
+    readonly_fields = ("charge_status_link",)
     extra = 0
+
+    def charge_status_link(self, obj):
+        """
+        This method returns a link to the admin page of the PaymentCharge object associated with the SubscriptionCycle.
+        The link text is the charge status.
+        """
+        # Get the charge status
+        charge_status = obj.charge_status
+
+        # If there is no charge, return None
+        if not charge_status:
+            return None
+
+        # Get the charge object
+        charge = obj.subscription_cycle_charge_set.order_by("-created").first()
+
+        # If there is no charge, return None
+        if not charge:
+            return None
+
+        # Create the link to the admin page of the PaymentCharge object
+        url = reverse("admin:billing_paymentcharge_change", args=[charge.payment_charge.id])
+
+        # Return the link with the charge status as the link text
+        return format_html('<a href="{}">{}</a>', url, charge_status)
+
+    # Set short description and allow HTML
+    charge_status_link.short_description = 'Charge Status'
+    charge_status_link.allow_tags = True
+
+    #def has_change_permission(self, request, obj=None):
+    #    return not obj.ended if obj else False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class SubscriptionProductForm(forms.ModelForm):
     component_object_id = ChoiceFieldNoValidation(choices=[])
@@ -172,6 +212,7 @@ class SubscriptionAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         org = self.instance.org if self.instance.pk else None
+        print("ORG", self.instance.pk, org)
         if org and self.instance.pk:
             self.fields['payment_method'].queryset = PaymentMethod.objects.filter(billing_contact__org=org)
         elif self.instance.pk:
@@ -249,7 +290,7 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
-    list_display = ("subscription", "start", "end", "charged", "organization_name")
+    list_display = ("subscription", "start", "end", "status", "charge_status", "organization_name")
     search_fields = (
         "subscription__product__name",
         "subscription__org__name",
@@ -312,7 +353,13 @@ class PaymentChargeAdmin(BaseAdmin):
         "created",
         "updated",
     )
-    search_fields = ("payment_method__billing_contact__name",)
+    search_fields = (
+        "payment_method__billing_contact__email",
+        "payment_method__billing_contact__name",
+        "payment_method__billing_contact__org__name",
+        "payment_method__billing_contact__org__slug",
+    )
+    list_filter = ("status", )
 
     def billing_contact(self, obj):
         return obj.payment_method.billing_contact

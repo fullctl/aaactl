@@ -59,8 +59,9 @@ class Command(CommandInterface):
                 self.collect(subscription_product, subscription.subscription_cycle)
 
             for subscription_cycle in subscription.subscription_cycle_set.filter(
-                status="ok"
+                status__in=["open", "failed"]
             ):
+
                 if not subscription_cycle.ended and subscription.charge_type == "end":
                     continue
                 if not subscription.payment_method_id:
@@ -70,7 +71,15 @@ class Command(CommandInterface):
                         f"-- no payment method set, unable to charge subscription cycle for org {subscription.org}"
                     )
                     break
+
+
                 if not subscription_cycle.charged:
+                    
+                    if subscription_cycle.status == "failed":
+                        # we are retrying a failed subscription cycle charge
+
+                        self.log_info("-- retrying failed subscription cycle charge")
+                    
                     self.log_info(
                         f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
                     )

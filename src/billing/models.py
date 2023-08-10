@@ -11,7 +11,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.shortcuts import render
 from django_countries.fields import CountryField
+from django.conf import settings
 from django_grainy.decorators import grainy_model
 from fullctl.django.models.concrete import AuditLog
 from fullctl.django.fields.service_bridge import ReferencedObjectField
@@ -24,6 +26,7 @@ import billing.payment_processors
 import billing.product_handlers
 from billing.exceptions import OrgProductAlreadyExists
 from common.models import HandleRefModel
+from common.email import email
 
 # Create your models here.
 
@@ -759,7 +762,9 @@ class SubscriptionProduct(HandleRefModel):
 
     @property
     def description(self):
-        return f"{self.component_object_name} - {self.product.description}"
+        if self.component_object_name:
+            return f"{self.component_object_name} - {self.product.description}"
+        return self.product.description
 
     def __str__(self):
         return f"{self.subscription} - {self.description}"
@@ -813,6 +818,12 @@ class SubscriptionCycle(HandleRefModel):
         Subscription, on_delete=models.CASCADE, related_name="subscription_cycle_set"
     )
 
+    status = models.CharField(max_length=32, choices=(
+        ("open", "Open"),
+        ("paid", "Paid"),
+        ("failed", "Payment failure"),
+    ), default="open")
+
     start = models.DateField()
     end = models.DateField()
 
@@ -841,6 +852,9 @@ class SubscriptionCycle(HandleRefModel):
         Has this subscription_cycle ended?
         """
 
+        if not self.end:
+            return False
+
         return self.end < datetime.date.today()
 
     @property
@@ -852,6 +866,27 @@ class SubscriptionCycle(HandleRefModel):
         return self.subscription_cycle_charge_set.filter(
             payment_charge__status="ok"
         ).exists()
+
+    @property
+    def charge_status(self):
+        """
+        The status of the subscription_cycle charge
+        """
+
+        charge = self.subscription_cycle_charge_set.order_by("-created").first()
+
+        if not charge:
+            if self.ended:
+                return "Overdue"
+            return None
+        
+        status = charge.payment_charge.status
+
+        if status == "ok":
+            return "paid"
+        
+        return status
+
 
     def __str__(self):
         return f"{self.subscription} {self.start} - {self.end}"
@@ -891,7 +926,7 @@ class SubscriptionCycle(HandleRefModel):
         if self.charged:
             raise OSError("Cycle was already charged successfully")
 
-        self.status = "expired"
+        self.status = "paid"
         self.save()
 
         if not self.price:
@@ -919,6 +954,11 @@ class SubscriptionCycle(HandleRefModel):
         if commit:
             self.subscription.payment_method.processor_instance.charge(payment_charge)
 
+        payment_charge.refresh_from_db()
+        if payment_charge.status == "failed":
+            self.status = "failed"
+            payment_charge.notify_failure()
+            self.save()
 
         return subscription_cycle_charge
 
@@ -1038,8 +1078,11 @@ class SubscriptionCycleProduct(HandleRefModel):
         """
         price of the product in the subscription subscription_cycle
         """
-
-        recurring_product = self.subscription_product.product.recurring_product
+        try:
+            recurring_product = self.subscription_product.product.recurring_product
+        except RecurringProduct.DoesNotExist:
+            return 0
+        
         if recurring_product.type == "metered":
             price = float(self.usage) * float(recurring_product.price)
         else:
@@ -1430,6 +1473,15 @@ class BillingContact(HandleRefModel):
     def __str__(self):
         return self.name
 
+    def notify(self, subject, message):
+        if self.email:
+            email(
+                settings.SUPPORT_EMAIL,
+                [self.email],
+                subject,
+                message,
+            )
+
 
 @reversion.register()
 class PaymentMethod(HandleRefModel):
@@ -1494,6 +1546,17 @@ class PaymentCharge(HandleRefModel):
     )
     description = models.CharField(max_length=255, null=True, blank=True)
     data = models.JSONField(default=dict, blank=True, help_text=_("Any extra data"))
+    failure_notified = models.DateTimeField(null=True, blank=True, help_text=_("When billing contact was notified of failure"))
+
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ("pending", _("Pending")),
+            ("ok", _("Ok")),
+            ("failed", _("Failed")),
+        ],
+        default="pending",
+    )
 
     class Meta:
         db_table = "billing_charge"
@@ -1512,8 +1575,12 @@ class PaymentCharge(HandleRefModel):
 
         details = [self.description, ""]
 
+        if self.subscription_cycle_charge:
+            cycle = self.subscription_cycle_charge.subscription_cycle
+            details += [f"Period {cycle.start} - {cycle.end}", ""]
+
         for invoice_line in self.invoice_lines:
-            details.append(f"{invoice_line.description} - {invoice_line.currency}{invoice_line.amount}")
+            details.append(f"{invoice_line.description} - {invoice_line.currency} {invoice_line.amount}")
 
         return "\n".join(details)
     
@@ -1584,10 +1651,39 @@ class PaymentCharge(HandleRefModel):
             payment_method=charge.payment_method,
             invoice_number=invoice_number,
             order_number=self.order_number,
-            payment_processor_txn_id=self.data.get("processor_txn_id")
+            payment_processor_txn_id=self.data.get("processor_txn_id","")
         )
         return payment
 
+
+    @reversion.create_revision()
+    def notify_failure(self):
+        """
+        Notify billing contact of failure
+        """
+
+        if self.status == "ok":
+            return
+
+        if self.failure_notified:
+            return
+
+        self.failure_notified = timezone.now()
+
+        self.payment_method.billing_contact.notify(
+            "Payment Failure",
+            render(
+                None, "billing/email/payment-failure.txt", {
+                    "payment_charge": self,
+                    "payment_method": self.payment_method,
+                    "billing_contact": self.payment_method.billing_contact,
+                    "org": self.org,
+                    "suoport_email": settings.SUPPORT_EMAIL,
+                }
+            ).content.decode("utf-8"),
+        )
+    
+        self.save()
 
 class Transaction(HandleRefModel):
     org = models.ForeignKey(

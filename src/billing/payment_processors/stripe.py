@@ -6,7 +6,6 @@ from django.utils.translation import gettext as _
 
 from billing.payment_processors.processor import PaymentProcessor
 
-
 class Stripe(PaymentProcessor):
     id = "stripe"
     name = _("Stripe")
@@ -101,14 +100,24 @@ class Stripe(PaymentProcessor):
         if not self.source:
             raise ValueError("Payment method not setup.")
 
-        charge = stripe.Charge.create(
-            customer=self.customer,
-            source=self.source,
-            amount=int(payment_charge.price * 100),
-            description=payment_charge.details,
-            api_key=self.api_key,
-            currency=self.default_currency,
-        )
+        try:
+            charge = stripe.Charge.create(
+                customer=self.customer,
+                source=self.source,
+                amount=int(payment_charge.price * 100),
+                description=payment_charge.details,
+                api_key=self.api_key,
+                currency=self.default_currency,
+            )
+            self.log.info("stripe charge", status="ok", payment_charge=payment_charge)
+        except Exception as e:
+            # failed to charge on the stripe end, log the error
+            # and mark the charge as failed
+            payment_charge.status = "failed"
+            payment_charge.data["processor_failure"] = str(e)
+            payment_charge.save()
+            self.log.error("stripe charge", status="failed", payment_charge=payment_charge, error=e)
+            return
 
         payment_charge.status = "pending"
 

@@ -178,12 +178,12 @@ class Product(HandleRefModel):
         self._create_order(org, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
-        self._create_invoice(org, invoice_number)
+        self._create_invoice(org, invoice_number, order_number)
         self._create_payment(org, invoice_number)
 
     def _create_order(self, org, order_number):
         order = Order.objects.create(
-            OrgProductAlreadyExists=org,
+            org=org,
             amount=self.price,
             product=self,
             description=self.description,
@@ -191,7 +191,7 @@ class Product(HandleRefModel):
         )
         return order
 
-    def _create_invoice(self, org, invoice_number):
+    def _create_invoice(self, org, invoice_number, order_number):
         invoice = Invoice.objects.create(
             # Not sure how we want to access this
             org=org,
@@ -199,6 +199,7 @@ class Product(HandleRefModel):
             product=self,
             description=self.description,
             invoice_number=invoice_number,
+            order_number=order_number,
         )
         return invoice
 
@@ -980,8 +981,7 @@ class SubscriptionCycle(HandleRefModel):
         self._create_orders(org, order_number)
 
         invoice_number = "INVOICE_" + unique_invoice_id()
-        self._create_invoices(org, invoice_number)
-        self._create_payment(org, invoice_number)
+        self._create_invoices(org, invoice_number, order_number)
 
     def _create_orders(self, org, order_number):
         for cycle_product in self.subscription_cycle_product_set.all():
@@ -1670,17 +1670,30 @@ class PaymentCharge(HandleRefModel):
 
         self.failure_notified = timezone.now()
 
+        notification = render(
+            None, "billing/email/payment-failure.txt", {
+                "payment_charge": self,
+                "payment_method": self.payment_method,
+                "billing_contact": self.payment_method.billing_contact,
+                "org": self.org,
+                "support_email": settings.SUPPORT_EMAIL,
+            }
+        ).content.decode("utf-8"),
+
+        # notification to the customer
+
         self.payment_method.billing_contact.notify(
             "Payment Failure",
-            render(
-                None, "billing/email/payment-failure.txt", {
-                    "payment_charge": self,
-                    "payment_method": self.payment_method,
-                    "billing_contact": self.payment_method.billing_contact,
-                    "org": self.org,
-                    "support_email": settings.SUPPORT_EMAIL,
-                }
-            ).content.decode("utf-8"),
+            notification,
+        )
+
+        # notification to staff
+
+        email(
+            settings.SUPPORT_EMAIL,
+            #TODO: send to billing specific email?
+            [settings.SUPPORT_EMAIL],
+            f"Payment Failure for {self.org.name}",
         )
     
         self.save()

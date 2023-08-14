@@ -348,7 +348,7 @@ def charge_objects(billing_objects, mocker):
 
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
 
@@ -387,14 +387,14 @@ def charge_objects(billing_objects, mocker):
 
 def create_transaction_data(billing_objects):
     return {
-        "user": billing_objects.user,
+        "org": billing_objects.org,
         "amount": 1200.99,
     }
 
 
 def create_money_transaction_data(billing_objects):
     return {
-        "user": billing_objects.user,
+        "org": billing_objects.org,
         "amount": 1200.99,
         "billing_contact": billing_objects.billing_contact,
         "payment_method": billing_objects.payment_method,
@@ -463,9 +463,4 @@ def withdrawal(billing_objects):
 
 @pytest.fixture
 def ledger(withdrawal, order, invoice):
-    import billing.models
-
-    withdrawal = billing.models.Ledger(content_object=withdrawal).save()
-    order = billing.models.Ledger(content_object=order).save()
-    invoice = billing.models.Ledger(content_object=invoice).save()
     return [withdrawal, order, invoice]

@@ -695,18 +695,23 @@ account.Services = twentyc.cls.define(
               $('<tr>').append([
                 ihf.formattedDescription(),
                 ihf.formattedUsageType(),
-                ihf.formattedUsageAmount(),,
+                ihf.formattedUsageAmount(),
                 ihf.formattedLink().hide(),
+                ihf.formatted_expiration_date(),
                 ihf.formattedCost()
               ])
             )
           total_cost += parseFloat(item.cost);
         });
-        item_heading.children().append(
-          $('<span>').addClass('float-right').append([
-             $('<span>').text('Total Monthly Cost: ').addClass('lighter-grey'),
-             $('<span>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white')
-          ])
+        item_heading.children().addClass('px-0').append(
+          $('<div>').addClass('container-fluid').append(
+            $('<div>').addClass("row align-items-center").append([
+             $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
+             $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
+             $('<div>').addClass('col'),
+             $('<div>').text(data.subscription_cycle.start).addClass('ms-auto col-auto pe-0')
+            ])
+          )
         );
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
@@ -722,6 +727,7 @@ account.Services = twentyc.cls.define(
 
       this.rest_api_list.load();
     },
+
     itemHtmlFormatter: function(item) {
       this.description = item.description;
       this.type = item.type;
@@ -729,10 +735,12 @@ account.Services = twentyc.cls.define(
       this.cost = item.cost;
       this.unit_name_plural = item.unit_name_plural;
       this.unit_name = item.unit_name;
+      this.expiration_date = item.expiration_date;
 
       this.formattedDescription = () => {
         return $('<td>').text(this.description).addClass('dark-grey table-text-bold')
       }
+
       this.formattedUsageType = () => {
         if(this.type == "Fixed Price") {
           return $('<td>');
@@ -743,6 +751,7 @@ account.Services = twentyc.cls.define(
           ])
         }
       }
+
       this.editedUsageType = () => {
         if ( this.type == 'Metered Usage') {
           return 'metered'
@@ -774,6 +783,12 @@ account.Services = twentyc.cls.define(
       this.formattedLink = () => {
         return $('<td>').addClass('small-links').append(
           $('<a>').attr('href','/').text('Details')
+        )
+      }
+
+      this.formatted_expiration_date = () => {
+        return $('<td>').addClass('light-grey').text(
+          this.expiration_date ? 'Expires at ' + window.fullctl.formatters.datetime(this.expiration_date) : ''
         )
       }
 

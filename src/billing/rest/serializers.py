@@ -140,6 +140,7 @@ class Subscription(serializers.ModelSerializer):
                 "name": subscription_product.product.name,
                 "unit_name": subscription_product.product.recurring_product.unit,
                 "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
+                "expiration_date": subscription_product.expires,
             }
             for subscription_product in subscription.subscription_product_set.all()
         ]

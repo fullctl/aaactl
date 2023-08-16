@@ -49,6 +49,18 @@ class RecurringProduct(serializers.ModelSerializer):
 
 
 @register
+class Invoice(serializers.ModelSerializer):
+    class Meta:
+        model = models.Invoice
+        fields = [
+            "org",
+            "invoice_number",
+            "price",
+            "currency",
+        ]
+
+
+@register
 class PaymentMethod(serializers.ModelSerializer):
     country = serializers.CharField()
 

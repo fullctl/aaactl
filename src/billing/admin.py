@@ -1,22 +1,29 @@
 from typing import Optional
+
 from django import forms
 from django.contrib import admin
+from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.urls import path, reverse
-from django.utils.translation import gettext as _
 from django.utils.html import format_html
+from django.utils.translation import gettext as _
 from fullctl.django.admin import BaseAdmin
-from applications.service_bridge import get_client_bridge, get_client_bridge_cls
-from django.http import JsonResponse
+
 import billing.product_handlers
+from applications.service_bridge import get_client_bridge, get_client_bridge_cls
 from billing.models import (
     BillingContact,
     CustomerData,
+    Invoice,
+    InvoiceLine,
     Ledger,
+    Order,
     OrderHistory,
     OrderHistoryItem,
+    OrderLine,
     OrganizationProduct,
     OrganizationProductHistory,
+    Payment,
     PaymentCharge,
     PaymentMethod,
     Product,
@@ -32,10 +39,12 @@ from billing.models import (
     SubscriptionProductModifier,
 )
 
+
 # Register your models here.
 class ChoiceFieldNoValidation(forms.ChoiceField):
     def validate(self, value):
         pass
+
 
 class ProductForm(forms.ModelForm):
     pass
@@ -72,8 +81,15 @@ class ProductAdmin(BaseAdmin):
         "recurring_price",
         "trial_product",
     )
-    search_fields = ("name", "component", "group",)
-    readonly_fields = BaseAdmin.readonly_fields + ("is_recurring_product", "recurring_price")
+    search_fields = (
+        "name",
+        "component",
+        "group",
+    )
+    readonly_fields = BaseAdmin.readonly_fields + (
+        "is_recurring_product",
+        "recurring_price",
+    )
     inlines = (
         ProductModifierInline,
         RecurringProductInline,
@@ -99,7 +115,17 @@ class ProductModifieradmin(BaseAdmin):
 
 @admin.register(OrganizationProduct)
 class OrganizationProduct(BaseAdmin):
-    list_display = ("org", "product", "subscription", "subscription_product", "component", "component_object", "created", "updated", "expires")
+    list_display = (
+        "org",
+        "product",
+        "subscription",
+        "subscription_product",
+        "component",
+        "component_object",
+        "created",
+        "updated",
+        "expires",
+    )
     search_fields = ("product__name", "org__name", "org__slug")
     readonly_fields = ("component_object", "component")
     list_filter = ("product__component__slug",)
@@ -116,11 +142,20 @@ class OrganizationProduct(BaseAdmin):
         except AttributeError:
             return None
 
+
 @admin.register(OrganizationProductHistory)
 class OrganizationProductHistoryAdmin(BaseAdmin):
-    list_display = ("org", "product", "component_object_id", "component_object_name", "created", "updated")
+    list_display = (
+        "org",
+        "product",
+        "component_object_id",
+        "component_object_name",
+        "created",
+        "updated",
+    )
     search_fields = ("product__name", "org__name", "org__slug")
     list_filter = ("product__component__slug",)
+
 
 class SubscriptionProductModifierInline(admin.TabularInline):
     model = SubscriptionProductModifier
@@ -154,16 +189,18 @@ class SubscriptionCycleInline(admin.TabularInline):
             return None
 
         # Create the link to the admin page of the PaymentCharge object
-        url = reverse("admin:billing_paymentcharge_change", args=[charge.payment_charge.id])
+        url = reverse(
+            "admin:billing_paymentcharge_change", args=[charge.payment_charge.id]
+        )
 
         # Return the link with the charge status as the link text
         return format_html('<a href="{}">{}</a>', url, charge_status)
 
     # Set short description and allow HTML
-    charge_status_link.short_description = 'Charge Status'
+    charge_status_link.short_description = "Charge Status"
     charge_status_link.allow_tags = True
 
-    #def has_change_permission(self, request, obj=None):
+    # def has_change_permission(self, request, obj=None):
     #    return not obj.ended if obj else False
 
     def has_delete_permission(self, request, obj=None):
@@ -189,8 +226,14 @@ class SubscriptionProductForm(forms.ModelForm):
 class SubscriptionProductInline(admin.TabularInline):
     model = SubscriptionProduct
     form = SubscriptionProductForm
-    fields = ("product","component", "component_object_id", "component_object_name", "expires")
-    readonly_fields =("component", "component_object_name")
+    fields = (
+        "product",
+        "component",
+        "component_object_id",
+        "component_object_name",
+        "expires",
+    )
+    readonly_fields = ("component", "component_object_name")
     extra = 0
 
     def has_change_permission(self, request, obj=None):
@@ -201,24 +244,28 @@ class SubscriptionProductInline(admin.TabularInline):
         # and add a new one to make a change
         return False
 
+
 class SubscriptionAdminForm(forms.ModelForm):
     """
     Custom form for SubscriptionAdmin to filter payment_method field
     """
+
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         org = self.instance.org if self.instance.pk else None
-        print("ORG", self.instance.pk, org)
         if org and self.instance.pk:
-            self.fields['payment_method'].queryset = PaymentMethod.objects.filter(billing_contact__org=org)
+            self.fields["payment_method"].queryset = PaymentMethod.objects.filter(
+                billing_contact__org=org
+            )
         elif self.instance.pk:
-            self.fields['payment_method'].queryset = PaymentMethod.objects.none()
+            self.fields["payment_method"].queryset = PaymentMethod.objects.none()
         else:
-            self.fields['payment_method'].queryset = PaymentMethod.objects.all()
+            self.fields["payment_method"].queryset = PaymentMethod.objects.all()
+
 
 @admin.register(Subscription)
 class SubscriptionAdmin(BaseAdmin):
@@ -231,14 +278,21 @@ class SubscriptionAdmin(BaseAdmin):
     form = SubscriptionAdminForm
 
     class Media:
-        js = ('billing/admin.js',)  # Include the JavaScript file in Django admin
+        js = ("billing/admin.js",)  # Include the JavaScript file in Django admin
 
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('component-entities/', self.admin_site.admin_view(self.load_component_objects), name='ajax_load_component_objects'),
-            path('payment-methods/', self.admin_site.admin_view(self.load_payment_methods), name='ajax_load_payment_methods'),
-
+            path(
+                "component-entities/",
+                self.admin_site.admin_view(self.load_component_objects),
+                name="ajax_load_component_objects",
+            ),
+            path(
+                "payment-methods/",
+                self.admin_site.admin_view(self.load_payment_methods),
+                name="ajax_load_payment_methods",
+            ),
         ]
         return my_urls + urls
 
@@ -246,15 +300,16 @@ class SubscriptionAdmin(BaseAdmin):
         """
         This view returns a list of component objects for a given product.
         """
-        product_id = request.GET.get('product_id')
-        org_id = request.GET.get('org_id')
+        product_id = request.GET.get("product_id")
+        org_id = request.GET.get("org_id")
         product = Product.objects.get(id=product_id)
 
-        bridge = get_client_bridge(product.component.slug, product.component_billable_entity)
+        bridge = get_client_bridge(
+            product.component.slug, product.component_billable_entity
+        )
 
         objects = [
-            { "id": obj.id, "name": obj.name} for obj in 
-            bridge.objects(org=org_id)
+            {"id": obj.id, "name": obj.name} for obj in bridge.objects(org=org_id)
         ]
 
         # prepend an empty option (null)
@@ -267,16 +322,15 @@ class SubscriptionAdmin(BaseAdmin):
         """
         This view returns a list of payment methods for a given org.
         """
-        org_id = request.GET.get('org_id')
+        org_id = request.GET.get("org_id")
         payment_methods = PaymentMethod.objects.filter(billing_contact__org_id=org_id)
 
-        methods = [
-            {"id": method.id, "name": method.name} for method in payment_methods
-        ]
+        methods = [{"id": method.id, "name": method.name} for method in payment_methods]
         # prepend an empty option (null)
 
         methods.insert(0, {"id": None, "name": "---------"})
         return JsonResponse(methods, safe=False)
+
 
 class SubscriptionCycleProductInline(admin.TabularInline):
     model = SubscriptionCycleProduct
@@ -290,7 +344,14 @@ class SubscriptionCycleChargeInline(admin.TabularInline):
 
 @admin.register(SubscriptionCycle)
 class SubscriptionCycleAdmin(BaseAdmin):
-    list_display = ("subscription", "start", "end", "status", "charge_status", "organization_name")
+    list_display = (
+        "subscription",
+        "start",
+        "end",
+        "status",
+        "charge_status",
+        "organization_name",
+    )
     search_fields = (
         "subscription__product__name",
         "subscription__org__name",
@@ -359,7 +420,7 @@ class PaymentChargeAdmin(BaseAdmin):
         "payment_method__billing_contact__org__name",
         "payment_method__billing_contact__org__slug",
     )
-    list_filter = ("status", )
+    list_filter = ("status",)
 
     def billing_contact(self, obj):
         return obj.payment_method.billing_contact
@@ -384,24 +445,126 @@ class BillingContactAdmin(BaseAdmin):
 
 @admin.register(Ledger)
 class LedgerAdmin(BaseAdmin):
-    list_display = ("id", "org", "content_type", "order_number", "invoice_number", "description", "amount", "currency", "txn_id", "created")
-    readonly_fields = ("description", "amount", "currency", "order_number", "invoice_number", "txn_id")
+    list_display = (
+        "id",
+        "org",
+        "content_type",
+        "order_number",
+        "invoice_number",
+        "description",
+        "amount",
+        "currency",
+        "txn_id",
+        "created",
+    )
+    readonly_fields = (
+        "description",
+        "amount",
+        "currency",
+        "order_number",
+        "invoice_number",
+        "txn_id",
+    )
     search_fields = ("org__name", "org__slug", "order_number", "invoice_number")
 
     def org(self, obj):
-        return obj.content_object.org
+        if obj.content_object:
+            return obj.content_object.org
 
     def ref_tag(self, obj):
-        return obj.content_object.HandleRef.tag
+        if obj.content_object:
+            return obj.content_object.HandleRef.tag
 
     def description(self, obj):
-        return getattr(obj.content_object, "description", None)
+        if obj.content_object:
+            return getattr(obj.content_object, "description", None)
 
     def txn_id(self, obj):
-        return getattr(obj.content_object, "payment_processor_txn_id", None)
+        if obj.content_object:
+            return getattr(obj.content_object, "payment_processor_txn_id", None)
 
     def amount(self, obj):
-        return obj.content_object.amount
-    
+        if obj.content_object:
+            return obj.content_object.amount
+
     def currency(self, obj):
-        return obj.content_object.currency
+        if obj.content_object:
+            return obj.content_object.currency
+
+
+class OrderLineInlineAdmin(admin.TabularInline):
+    model = OrderLine
+    extra = 0
+
+
+@admin.register(Order)
+class OrderAdmin(BaseAdmin):
+    list_display = (
+        "order_number",
+        "invoice",
+        "org",
+        "created",
+    )
+
+    actions = ["invoice_order"]
+
+    autocomplete_fields = ("org",)
+
+    inlines = (OrderLineInlineAdmin,)
+
+    search_fields = ("org__name", "org__slug", "order_number", "invoice_number")
+
+    def invoice_order(self, request, queryset):
+        """
+        Create invoices out of selected orders
+        """
+
+        for order in queryset:
+            order.create_invoice()
+
+    invoice_order.short_description = "Invoice selected orders"
+
+
+class InvoiceLineInlineAdmin(admin.TabularInline):
+    model = InvoiceLine
+    extra = 0
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(BaseAdmin):
+    list_display = (
+        "invoice_number",
+        "order",
+        "org",
+        "status",
+    )
+
+    autocomplete_fields = ("order", "org", "charge_object")
+
+    inlines = (InvoiceLineInlineAdmin,)
+
+    search_fields = ("org__name", "org__slug", "order__order_number", "invoice_number")
+
+    readonly_fields = ("paid",)
+
+
+@admin.register(Payment)
+class PaymentAdmin(BaseAdmin):
+    list_display = (
+        "invoice_number",
+        "order_number",
+        "org",
+        "created",
+        "payment_processor_txn_id",
+        "currency",
+        "amount",
+        "charge_object",
+    )
+
+    search_fields = (
+        "org__name",
+        "org__slug",
+        "order_number",
+        "invoice_number",
+        "payment_processor_txn_id",
+    )

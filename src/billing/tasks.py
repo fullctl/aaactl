@@ -1,10 +1,9 @@
+from django.core.exceptions import ValidationError
 from fullctl.django.models import Task
 from fullctl.django.tasks import register
 
-from django.core.exceptions import ValidationError
-
-import billing.models
 import account.models
+import billing.models
 
 __all__ = ["UpdateSubscriptionProductInfo"]
 
@@ -18,9 +17,9 @@ class UpdateSubscriptionProductInfo(Task):
         tag = "task_update_subscription_product_info"
 
     def run(self, subscription_product_id, *args, **kwargs):
-
-
-        subscription_product = billing.models.SubscriptionProduct.objects.get(id=subscription_product_id)
+        subscription_product = billing.models.SubscriptionProduct.objects.get(
+            id=subscription_product_id
+        )
 
         if subscription_product.component_object_id:
             obj = subscription_product.component_object
@@ -43,5 +42,7 @@ class UpdateSubscriptionProductInfo(Task):
                 )
 
             org_name = org.name if org else "Unknown Organization"
-            subscription_product.component_object_name = f"{subscription_product.component_object.name} ({org_name})"
+            subscription_product.component_object_name = (
+                f"{subscription_product.component_object.name} ({org_name})"
+            )
             subscription_product.save()

@@ -23,7 +23,7 @@ class UpdatePermissions(Task):
     @property
     def generate_limit_id(self):
         if self.param["kwargs"].get("target_org"):
-            return "org:"+str(self.param["kwargs"].get("target_org"))
+            return "org:" + str(self.param["kwargs"].get("target_org"))
         return ""
 
     def run(self, target_org=None, *args, **kwargs):

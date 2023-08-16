@@ -2,7 +2,7 @@ import reversion
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
-from billing.models import OrganizationProduct, Subscription
+from billing.models import Invoice, OrganizationProduct, Subscription
 
 
 class Command(CommandInterface):
@@ -11,6 +11,7 @@ class Command(CommandInterface):
     def run(self, *args, **kwargs):
         self.progress_product_expiry()
         self.progress_subscription_cycles()
+        self.sync_open_invoices()
 
     def progress_product_expiry(self, *args, **kwargs):
         qset = OrganizationProduct.objects.filter(expires__lt=timezone.now())
@@ -30,14 +31,18 @@ class Command(CommandInterface):
                 replacement_product.add_to_org(org_prod.org)
 
     def progress_subscription_product_expiry(self, subscription):
-        qset = subscription.subscription_product_set.filter(
-            expires__lt=timezone.now()
-        )
+        qset = subscription.subscription_product_set.filter(expires__lt=timezone.now())
         for subscription_product in qset:
-            self.log_info(f"Expiring {subscription_product.product} from subscription {subscription}")
+            self.log_info(
+                f"Expiring {subscription_product.product} from subscription {subscription}"
+            )
             if subscription_product.product.expiry_replacement_product_id:
-                replacement_product = subscription_product.product.expiry_replacement_product
-                if replacement_product and replacement_product.can_add_to_org(subscription.org):
+                replacement_product = (
+                    subscription_product.product.expiry_replacement_product
+                )
+                if replacement_product and replacement_product.can_add_to_org(
+                    subscription.org
+                ):
                     self.log_info(
                         f"Replacing expired product with {replacement_product} in subscription {subscription}"
                     )
@@ -61,7 +66,6 @@ class Command(CommandInterface):
             for subscription_cycle in subscription.subscription_cycle_set.filter(
                 status__in=["open", "failed"]
             ):
-
                 if not subscription_cycle.ended and subscription.charge_type == "end":
                     continue
                 if not subscription.payment_method_id:
@@ -72,26 +76,26 @@ class Command(CommandInterface):
                     )
                     break
 
-
                 if not subscription_cycle.charged:
-                    
                     if subscription_cycle.status == "failed":
                         # we are retrying a failed subscription cycle charge
 
                         self.log_info("-- retrying failed subscription cycle charge")
-                    
+
                     self.log_info(
                         f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
                     )
 
                     with reversion.create_revision():
-                        subscription_cycle_charge = subscription_cycle.charge(commit=self.commit)
+                        subscription_cycle_charge = subscription_cycle.charge(
+                            commit=self.commit
+                        )
 
                     with reversion.create_revision():
                         if subscription_cycle_charge:
-                            subscription_cycle_charge.payment_charge.sync_status(commit=self.commit)
-
-
+                            subscription_cycle_charge.payment_charge.sync_status(
+                                commit=self.commit
+                            )
 
     def collect(self, subscription_product, subscription_cycle):
         org = subscription_cycle.subscription.org
@@ -109,3 +113,13 @@ class Command(CommandInterface):
             subscription_cycle.update_usage(subscription_product, usage)
         except KeyError as exc:
             self.log_error(f"{exc}")
+
+    def sync_open_invoices(self):
+        qset = Invoice.objects.filter(status="pending").order_by("created")
+
+        for invoice in qset:
+            if not invoice.data.get("stripe_invoice"):
+                continue
+
+            self.log_info(f"syncing open invoice {invoice}")
+            invoice.sync_status(commit=self.commit)

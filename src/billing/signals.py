@@ -3,15 +3,15 @@ from django.dispatch import receiver
 from fullctl.django import auditlog
 
 from billing.models import (
-    OrganizationProduct, 
-    OrganizationProductHistory, 
-    SubscriptionProduct,
-    Invoice,
-    Order,
-    Payment,
     Deposit,
-    Withdrawal,
+    InvoiceLine,
     Ledger,
+    OrderLine,
+    OrganizationProduct,
+    OrganizationProductHistory,
+    Payment,
+    SubscriptionProduct,
+    Withdrawal,
 )
 
 
@@ -35,6 +35,7 @@ def handle_orgproduct_save(sender, **kwargs):
             log.log("product_added_to_org", log_object=org_product.product)
 
         org_product.add_to_history()
+
 
 @receiver(post_delete, sender=OrganizationProduct)
 def handle_orgproduct_delete(sender, **kwargs):
@@ -77,9 +78,9 @@ def handle_subscription_product_save(sender, **kwargs):
     )
 
     if sub_product.subscription.subscription_cycle:
-        sub_product.subscription.subscription_cycle.add_subscription_product(sub_product)
-
-
+        sub_product.subscription.subscription_cycle.add_subscription_product(
+            sub_product
+        )
 
 
 @receiver(post_delete, sender=SubscriptionProduct)
@@ -101,7 +102,8 @@ def handle_subscription_product_delete(sender, **kwargs):
         org_product.delete()
 
 
-for TransactionModel in [Invoice, Order, Payment, Deposit, Withdrawal]:
+for TransactionModel in [InvoiceLine, OrderLine, Payment, Deposit, Withdrawal]:
+
     @receiver(post_save, sender=TransactionModel)
     def handle_billing_object_save(sender, **kwargs):
         created = kwargs.get("created")

@@ -150,13 +150,19 @@ class Organization(viewsets.ViewSet):
         if not service.trial_product_id:
             return Response({"service_id": ["This service has no trial"]}, status=400)
 
-        if not service.trial_product.can_add_to_org(org, component_object_id=component_object_id):
+        if not service.trial_product.can_add_to_org(
+            org, component_object_id=component_object_id
+        ):
             return Response(
                 {"non_field_errors": ["Trial could not be started at this time"]},
                 status=400,
             )
 
-        org_product = service.trial_product.add_to_org(org, component_object_id=component_object_id, notes="Trial started through service bridge")
+        org_product = service.trial_product.add_to_org(
+            org,
+            component_object_id=component_object_id,
+            notes="Trial started through service bridge",
+        )
 
         serializer = Serializers.org_product(org_product)
         return Response(serializer.data)
@@ -171,6 +177,18 @@ class Organization(viewsets.ViewSet):
         )
         queryset = queryset.order_by("-processed")
         serializer = Serializers.order_history(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("billing.{org.id}", explicit=False)
+    def open_invoices(self, request, pk, org):
+        queryset = models.Invoice.objects.filter(org=org)
+        queryset = queryset.order_by("-created")[:25]
+
+        instances = [invoice for invoice in queryset if not invoice.paid]
+
+        serializer = Serializers.invoice(instances, many=True)
         return Response(serializer.data)
 
 

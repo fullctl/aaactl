@@ -4,25 +4,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('billing', '0021_auto_20230808_1558'),
+        ("billing", "0021_auto_20230808_1558"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='paymentcharge',
-            name='failure_notified',
-            field=models.DateTimeField(blank=True, help_text='When billing contact was notified of failure', null=True),
+            model_name="paymentcharge",
+            name="failure_notified",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="When billing contact was notified of failure",
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='paymentcharge',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('ok', 'Ok'), ('failed', 'Failed')], default='pending', max_length=32),
+            model_name="paymentcharge",
+            name="status",
+            field=models.CharField(
+                choices=[("pending", "Pending"), ("ok", "Ok"), ("failed", "Failed")],
+                default="pending",
+                max_length=32,
+            ),
         ),
         migrations.AlterField(
-            model_name='subscriptioncycle',
-            name='status',
-            field=models.CharField(choices=[('open', 'Open'), ('paid', 'Paid'), ('failed', 'Payment failure')], default='open', max_length=32),
+            model_name="subscriptioncycle",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("open", "Open"),
+                    ("paid", "Paid"),
+                    ("failed", "Payment failure"),
+                ],
+                default="open",
+                max_length=32,
+            ),
         ),
     ]

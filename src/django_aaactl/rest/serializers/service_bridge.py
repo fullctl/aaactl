@@ -68,9 +68,9 @@ class Service(ModelSerializer):
 
         return False
 
+
 @register
 class OrganizationCanTrialForObject(serializers.Serializer):
-
     org_slug = serializers.CharField()
     service_slug = serializers.CharField()
     object_id = serializers.IntegerField(required=False, allow_null=True, default=None)
@@ -108,8 +108,8 @@ class OrganizationCanTrialForObject(serializers.Serializer):
         if not org or not trial_product:
             return False
 
-        return trial_product.can_add_to_org(org, component_object_id=obj['object_id'])
-        
+        return trial_product.can_add_to_org(org, component_object_id=obj["object_id"])
+
 
 @register
 class User(ModelSerializer):

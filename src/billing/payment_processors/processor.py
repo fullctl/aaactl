@@ -3,13 +3,11 @@ Payment processor interface
 """
 
 import reversion
+import structlog
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from fullctl.django.util import host_url
-
-
-import structlog
 
 MAP = {}
 
@@ -96,4 +94,16 @@ class PaymentProcessor:
             except ObjectDoesNotExist:
                 pass
 
+        return status
+
+    @reversion.create_revision()
+    def sync_invoice(self, invoice):
+        if invoice.status == "pending":
+            return self._sync_invoice(invoice)
+        return invoice.status
+
+    def _sync_invoice(self, invoice, status=None):
+        if status:
+            invoice.status = status
+            invoice.save()
         return status

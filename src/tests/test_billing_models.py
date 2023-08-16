@@ -5,10 +5,10 @@ import pytest
 from django.contrib.contenttypes.models import ContentType
 
 from billing.models import (
-    Invoice,
+    InvoiceLine,
     Ledger,
-    Order,
     OrderHistory,
+    OrderLine,
     Payment,
     SubscriptionCycle,
     SubscriptionCycleProduct,
@@ -282,8 +282,14 @@ def test_create_transactions_from_subscriptionsubscription_cycle(
     subscription_cycle = charge_objects["subscriptionsubscription_cycle"]
     charge_objects["subscription"]
 
-    assert Order.objects.count() == subscription_cycle.subscription_cycle_product_set.count()
-    assert Invoice.objects.count() == subscription_cycle.subscription_cycle_product_set.count()
+    assert (
+        OrderLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
+    assert (
+        InvoiceLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
 
 
 @pytest.mark.django_db
@@ -291,8 +297,8 @@ def test_create_transactions_from_product(billing_objects):
     product = billing_objects.product
     product.create_transactions(billing_objects.org)
 
-    assert Invoice.objects.count() == 1
-    assert Order.objects.count() == 1
+    assert InvoiceLine.objects.count() == 1
+    assert OrderLine.objects.count() == 1
     assert Payment.objects.count() == 1
 
 
@@ -353,14 +359,14 @@ def test_ledger_init(ledger):
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Order)
+            content_type=ContentType.objects.get_for_model(OrderLine)
         ).count()
         == 1
     )
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Invoice)
+            content_type=ContentType.objects.get_for_model(InvoiceLine)
         ).count()
         == 1
     )

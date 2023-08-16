@@ -4,29 +4,29 @@ import uuid
 
 import dateutil.relativedelta
 import reversion
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
+from django.shortcuts import render
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django.shortcuts import render
 from django_countries.fields import CountryField
-from django.conf import settings
 from django_grainy.decorators import grainy_model
-from fullctl.django.models.concrete import AuditLog
 from fullctl.django.fields.service_bridge import ReferencedObjectField
+from fullctl.django.models.concrete import AuditLog
 
 import account.models
 import applications.models
-from applications.service_bridge import get_client_bridge, get_client_bridge_cls
 import billing.const as const
 import billing.payment_processors
 import billing.product_handlers
+from applications.service_bridge import get_client_bridge, get_client_bridge_cls
 from billing.exceptions import OrgProductAlreadyExists
-from common.models import HandleRefModel
 from common.email import email
+from common.models import HandleRefModel
 
 # Create your models here.
 
@@ -90,7 +90,9 @@ class Product(HandleRefModel):
         null=True,
         blank=True,
         verbose_name=_("Billed object"),
-        help_text=_("Links the product to specific entity type in the component (.e.g, InternetExchange for ixctl). Free-form field at this point. Ask developers if you are unsure."),
+        help_text=_(
+            "Links the product to specific entity type in the component (.e.g, InternetExchange for ixctl). Free-form field at this point. Ask developers if you are unsure."
+        ),
     )
 
     # example: actively monitored prefixes
@@ -174,34 +176,39 @@ class Product(HandleRefModel):
         return f"{self.name}: {self.description}"
 
     def create_transactions(self, org):
-        order_number = "ORDER_" + unique_order_id()
+        order_number = unique_order_id()
         self._create_order(org, order_number)
 
-        invoice_number = "INVOICE_" + unique_invoice_id()
+        invoice_number = unique_invoice_id()
         self._create_invoice(org, invoice_number, order_number)
         self._create_payment(org, invoice_number)
 
     def _create_order(self, org, order_number):
-        order = Order.objects.create(
+        order, _ = Order.objects.get_or_create(
             org=org,
-            amount=self.price,
-            product=self,
-            description=self.description,
             order_number=order_number,
         )
-        return order
+
+        order_line = OrderLine.objects.create(
+            amount=self.price, product=self, description=self.description, order=order
+        )
+        return order_line
 
     def _create_invoice(self, org, invoice_number, order_number):
-        invoice = Invoice.objects.create(
-            # Not sure how we want to access this
+        invoice, _ = Invoice.objects.get_or_create(
             org=org,
+            invoice_number=invoice_number,
+            order=Order.objects.get(order_number=order_number),
+        )
+
+        invoice_line = InvoiceLine.objects.create(
+            # Not sure how we want to access this
             amount=self.price,
             product=self,
             description=self.description,
-            invoice_number=invoice_number,
-            order_number=order_number,
+            invoice=invoice,
         )
-        return invoice
+        return invoice_line
 
     def _create_payment(self, org, invoice_number):
         payment = Payment.objects.create(
@@ -218,22 +225,18 @@ class Product(HandleRefModel):
         Checks whether or not this product can be added to the supplied org.
         """
 
-
         if self.component_billable_entity and not component_object_id:
-            
             # product requires a component_object_id but none was supplied
 
             return False
 
         if not self.component_billable_entity and component_object_id:
-
             # product does not require a component_object_id but one was supplied
 
             return False
 
         org_product = org.products.filter(
-            product=self,
-            component_object_id=component_object_id
+            product=self, component_object_id=component_object_id
         )
 
         if org_product.exists():
@@ -249,9 +252,7 @@ class Product(HandleRefModel):
 
         most_recent = (
             OrganizationProductHistory.objects.filter(
-                org=org,
-                product=self,
-                component_object_id=component_object_id
+                org=org, product=self, component_object_id=component_object_id
             )
             .order_by("-created")
             .first()
@@ -271,7 +272,6 @@ class Product(HandleRefModel):
         return tdiff > self.renewable
 
     def add_to_org(self, org, notes=None, component_object_id=None):
-
         """
         Attempts to add this product to the supplied org.
 
@@ -280,8 +280,7 @@ class Product(HandleRefModel):
         """
 
         qset = org.products.filter(
-            product=self, 
-            component_object_id=component_object_id
+            product=self, component_object_id=component_object_id
         )
 
         if qset.exists():
@@ -296,7 +295,11 @@ class Product(HandleRefModel):
         if not self.is_recurring_product:
             print("adding non recurring product")
             OrganizationProduct.objects.create(
-                org=org, product=self, notes=notes, expires=expires, component_object_id=component_object_id
+                org=org,
+                product=self,
+                notes=notes,
+                expires=expires,
+                component_object_id=component_object_id,
             )
 
         print("adding recurring product")
@@ -307,13 +310,13 @@ class Product(HandleRefModel):
         if not subscription:
             print("creating subscription")
             subscription = Subscription.create(
-                group=self.group, 
+                group=self.group,
                 org=org,
                 subscription_cycle_start=timezone.now(),
                 data={"created-through": str(self), "notes": notes},
             )
         subscription_product = SubscriptionProduct(
-            subscription=subscription, 
+            subscription=subscription,
             product=self,
             component_object_id=component_object_id,
             data={"notes": notes},
@@ -321,15 +324,17 @@ class Product(HandleRefModel):
         subscription_product.full_clean()
         subscription_product.save()
 
-
     def clean(self):
         try:
             if self.component_billable_entity:
-                get_client_bridge_cls(self.component.slug, self.component_billable_entity)
+                get_client_bridge_cls(
+                    self.component.slug, self.component_billable_entity
+                )
         except AttributeError as e:
             raise ValidationError(
                 f"Invalid component-billable-entity for {self.component.slug}: {e}"
             )
+
 
 @reversion.register()
 class ProductPermissionGrant(HandleRefModel):
@@ -684,13 +689,32 @@ class SubscriptionProduct(HandleRefModel):
     expires = models.DateTimeField(
         blank=True,
         null=True,
-        help_text=_("If set, this subscription product will end and be removed at the given time"),
+        help_text=_(
+            "If set, this subscription product will end and be removed at the given time"
+        ),
     )
 
-    ends_next_cycle = models.BooleanField(default=False, help_text=_("If true, this subscription product will end and be removed at the end of the current subscription cycle"))
+    ends_next_cycle = models.BooleanField(
+        default=False,
+        help_text=_(
+            "If true, this subscription product will end and be removed at the end of the current subscription cycle"
+        ),
+    )
 
-    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
-    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+    component_object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"),
+    )
+    component_object_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        editable=False,
+        help_text=_(
+            "Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"
+        ),
+    )
 
     class HandleRef:
         tag = "subscription_product"
@@ -707,17 +731,22 @@ class SubscriptionProduct(HandleRefModel):
     @property
     def component_object_handle(self):
         if self.component_object_id and self.product.component_billable_entity:
-            return ".".join([self.product.component.slug, self.product.component_billable_entity, str(self.component_object_id)])
+            return ".".join(
+                [
+                    self.product.component.slug,
+                    self.product.component_billable_entity,
+                    str(self.component_object_id),
+                ]
+            )
 
     @property
     def component_object(self):
-
         if hasattr(self, "_component_object"):
             return self._component_object
 
         if not self.product.component:
             return None
-        
+
         if not self.component_object_id:
             return None
 
@@ -728,7 +757,9 @@ class SubscriptionProduct(HandleRefModel):
             self.product.component.slug, self.product.component_billable_entity
         )
 
-        self._component_object = bridge.first(id=self.component_object_id, org_slug=self.subscription.org.slug)
+        self._component_object = bridge.first(
+            id=self.component_object_id, org_slug=self.subscription.org.slug
+        )
         return self._component_object
 
     @property
@@ -770,14 +801,15 @@ class SubscriptionProduct(HandleRefModel):
     def __str__(self):
         return f"{self.subscription} - {self.description}"
 
-
     def update_expires(self):
         """
         Will update the expire date of the subscription product based on the product's
         expiry date.
         """
         if not self.expires and self.product.expiry_period:
-            self.expires = timezone.now() + datetime.timedelta(days=self.product.expiry_period)
+            self.expires = timezone.now() + datetime.timedelta(
+                days=self.product.expiry_period
+            )
             self.save()
 
     def clean(self):
@@ -793,12 +825,16 @@ class SubscriptionProduct(HandleRefModel):
 
             if not org:
                 raise ValidationError(
-                    _(f"{self.component_object_handle} organization does not exist (reach out to devops)")
+                    _(
+                        f"{self.component_object_handle} organization does not exist (reach out to devops)"
+                    )
                 )
 
             if org != self.subscription.org:
                 raise ValidationError(
-                    _(f"{self.component_object_handle}: {obj.name}'s organization `{org.name} ({org.slug})` does not match subscription organization `{self.subscription.org.name} ({self.subscription.org.slug})`")
+                    _(
+                        f"{self.component_object_handle}: {obj.name}'s organization `{org.name} ({org.slug})` does not match subscription organization `{self.subscription.org.name} ({self.subscription.org.slug})`"
+                    )
                 )
 
             org_name = org.name if org else "Unknown Organization"
@@ -819,11 +855,15 @@ class SubscriptionCycle(HandleRefModel):
         Subscription, on_delete=models.CASCADE, related_name="subscription_cycle_set"
     )
 
-    status = models.CharField(max_length=32, choices=(
-        ("open", "Open"),
-        ("paid", "Paid"),
-        ("failed", "Payment failure"),
-    ), default="open")
+    status = models.CharField(
+        max_length=32,
+        choices=(
+            ("open", "Open"),
+            ("paid", "Paid"),
+            ("failed", "Payment failure"),
+        ),
+        default="open",
+    )
 
     start = models.DateField()
     end = models.DateField()
@@ -880,14 +920,13 @@ class SubscriptionCycle(HandleRefModel):
             if self.ended:
                 return "Overdue"
             return None
-        
+
         status = charge.payment_charge.status
 
         if status == "ok":
             return "paid"
-        
-        return status
 
+        return status
 
     def __str__(self):
         return f"{self.subscription} {self.start} - {self.end}"
@@ -950,7 +989,7 @@ class SubscriptionCycle(HandleRefModel):
         )
 
         order_number = self.create_orders()
-        self.create_invoice(order_number)
+        invoice = self.create_invoice(order_number)
 
         if commit:
             self.subscription.payment_method.processor_instance.charge(payment_charge)
@@ -961,54 +1000,63 @@ class SubscriptionCycle(HandleRefModel):
             payment_charge.notify_failure()
             self.save()
 
+        invoice.charge_object = payment_charge
+        invoice.save()
+
         return subscription_cycle_charge
 
     def create_invoice(self, order_number):
         org = self.subscription.org
-        invoice_number = "INVOICE_" + unique_invoice_id()
-        self._create_invoices(org, invoice_number, order_number)
-        return invoice_number
+        invoice_number = unique_invoice_id()
+        return self._create_invoices(org, invoice_number, order_number)
 
     def create_orders(self):
         org = self.subscription.org
-        order_number = "ORDER_" + unique_order_id()
+        order_number = unique_order_id()
         self._create_orders(org, order_number)
         return order_number
 
     def create_transactions(self, org):
         # DEPRECATED
-        order_number = "ORDER_" + unique_order_id()
+        order_number = unique_order_id()
         self._create_orders(org, order_number)
 
-        invoice_number = "INVOICE_" + unique_invoice_id()
+        invoice_number = unique_invoice_id()
         self._create_invoices(org, invoice_number, order_number)
 
     def _create_orders(self, org, order_number):
+        order, _ = Order.objects.get_or_create(
+            org=org,
+            order_number=order_number,
+        )
+
         for cycle_product in self.subscription_cycle_product_set.all():
-            Order.objects.create(
-                org=org,
+            OrderLine.objects.create(
                 amount=cycle_product.price,
                 subscription=self.subscription,
                 subscription_cycle_product=cycle_product,
                 product=cycle_product.subscription_product.product,
                 description=cycle_product.subscription_product.description,
-                order_number=order_number,
+                order=order,
             )
 
     def _create_invoices(self, org, invoice_number, order_number):
+        invoice, _ = Invoice.objects.get_or_create(
+            org=org,
+            invoice_number=invoice_number,
+            order=Order.objects.get(order_number=order_number),
+        )
+
         for cycle_product in self.subscription_cycle_product_set.all():
-            Invoice.objects.create(
-                org=org,
+            InvoiceLine.objects.create(
                 amount=cycle_product.price,
                 subscription=self.subscription,
                 subscription_cycle_product=cycle_product,
                 product=cycle_product.subscription_product.product,
                 description=cycle_product.subscription_product.description,
-                invoice_number=invoice_number,
-                order_number=order_number,
+                invoice=invoice,
             )
-
-
+        return invoice
 
 
 @reversion.register()
@@ -1039,7 +1087,9 @@ class SubscriptionCycleCharge(HandleRefModel):
 
     @property
     def invoice_number(self):
-        return self.subscription_cycle.subscription_cycle_product_set.first().invoice_number
+        return (
+            self.subscription_cycle.subscription_cycle_product_set.first().invoice_number
+        )
 
 
 @reversion.register()
@@ -1082,7 +1132,7 @@ class SubscriptionCycleProduct(HandleRefModel):
             recurring_product = self.subscription_product.product.recurring_product
         except RecurringProduct.DoesNotExist:
             return 0
-        
+
         if recurring_product.type == "metered":
             price = float(self.usage) * float(recurring_product.price)
         else:
@@ -1191,8 +1241,20 @@ class OrganizationProduct(HandleRefModel):
         help_text=_("Product access is granted through this subscription"),
     )
 
-    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
-    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+    component_object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"),
+    )
+    component_object_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        editable=False,
+        help_text=_(
+            "Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"
+        ),
+    )
 
     expires = models.DateTimeField(
         help_text=_("Product access expires at this date"),
@@ -1232,6 +1294,7 @@ class OrganizationProduct(HandleRefModel):
             component_object_name=self.component_object_name,
         )
 
+
 class OrganizationProductHistory(HandleRefModel):
 
     """
@@ -1260,8 +1323,20 @@ class OrganizationProductHistory(HandleRefModel):
         blank=True,
     )
 
-    component_object_id = models.PositiveIntegerField(null=True, blank=True, help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"))
-    component_object_name = models.CharField(max_length=255, blank=True, null=True, editable=False, help_text=_("Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"))
+    component_object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_("ID of the component object (e.g., Internet exchange id in ixctl)"),
+    )
+    component_object_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        editable=False,
+        help_text=_(
+            "Name of the component object (e.g., Internet exchange name in ixctl) - set automatically during save"
+        ),
+    )
 
     class HandleRef:
         tag = "org_product_history"
@@ -1270,14 +1345,14 @@ class OrganizationProductHistory(HandleRefModel):
         db_table = "billing_org_product_history"
         verbose_name = _("Organization Product Access History")
         verbose_name_plural = _("Organization Product Access History")
-        
 
-def unique_id(Model, field):
+
+def unique_id(Model, field, prefix=""):
     i = 0
     while i < 1000:
         unique_id = f"{secrets.token_urlsafe(10)}"
 
-        if not Model.objects.filter(**{field: unique_id}).exists():
+        if not Model.objects.filter(**{field: f"{prefix}{unique_id}"}).exists():
             return unique_id
         i += 1
     raise OSError(f"Could not generate a unique {Model} id")
@@ -1352,24 +1427,11 @@ class OrderHistory(HandleRefModel):
         )
         order.save()
 
-        try:
-            for (
-                subscription_cycle_product
-            ) in (
-                payment_charge.subscription_cycle_charge.subscription_cycle.subscription_cycle_product_set.all()
-            ):
-                OrderHistoryItem.objects.create(
-                    order=order,
-                    subscription_cycle_product=subscription_cycle_product,
-                    description=subscription_cycle_product.subscription_product.description,
-                    price=subscription_cycle_product.price,
-                )
-
-        except SubscriptionCycleCharge.DoesNotExist:
+        for order_line in payment_charge.invoice.order.order_line_set.all():
             OrderHistoryItem.objects.create(
                 order=order,
-                price=payment_charge.price,
-                description=payment_charge.description,
+                description=order_line.description,
+                price=order_line.amount,
             )
 
         return order
@@ -1546,7 +1608,11 @@ class PaymentCharge(HandleRefModel):
     )
     description = models.CharField(max_length=255, null=True, blank=True)
     data = models.JSONField(default=dict, blank=True, help_text=_("Any extra data"))
-    failure_notified = models.DateTimeField(null=True, blank=True, help_text=_("When billing contact was notified of failure"))
+    failure_notified = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("When billing contact was notified of failure"),
+    )
 
     status = models.CharField(
         max_length=32,
@@ -1580,32 +1646,43 @@ class PaymentCharge(HandleRefModel):
             details += [f"Period {cycle.start} - {cycle.end}", ""]
 
         for invoice_line in self.invoice_lines:
-            details.append(f"{invoice_line.description} - {invoice_line.currency} {invoice_line.amount}")
+            details.append(
+                f"{invoice_line.description} - {invoice_line.currency} {invoice_line.amount}"
+            )
 
         return "\n".join(details)
-    
+
     @property
     def org(self):
         return self.payment_method.billing_contact.org
 
     @property
     def invoice_number(self):
+        try:
+            return self.invoice.invoice_number
+        except Invoice.DoesNotExist:
+            pass
+
         if self.subscription_cycle_charge:
             return self.subscription_cycle_charge.invoice_number
-    
+
     @property
     def order_number(self):
         try:
-            return Invoice.objects.filter(invoice_number=self.invoice_number).first().order_number
+            return (
+                InvoiceLine.objects.filter(invoice__invoice_number=self.invoice_number)
+                .first()
+                .order_number
+            )
         except AttributeError:
             return None
-    
+
     @property
     def invoice_lines(self):
         invoice_number = self.invoice_number
         if not invoice_number:
             return []
-        return Invoice.objects.filter(invoice_number=invoice_number)
+        return InvoiceLine.objects.filter(invoice__invoice_number=invoice_number)
 
     def __str__(self):
         return f"{self.payment_method.name} Charge {self.id}"
@@ -1615,6 +1692,14 @@ class PaymentCharge(HandleRefModel):
         self.status = "ok"
         self.save()
 
+        try:
+            self.invoice
+        except Invoice.DoesNotExist:
+            invoice = Invoice.objects.get(invoice_number=self.invoice_number)
+            invoice.charge_object = self
+            invoice.status = "ok"
+            invoice.save()
+
         OrderHistory.create_from_payment_charge(self)
 
     @reversion.create_revision()
@@ -1622,18 +1707,16 @@ class PaymentCharge(HandleRefModel):
         if self.status == "pending":
             if commit:
                 self.payment_method.processor_instance.sync_charge(self)
-            if self.status == "ok" or not commit:
+            if self.status == "ok":
                 self.capture()
-        
+
         if self.status == "ok":
             self.create_payment_transaction()
 
         return self.status
 
-
     @reversion.create_revision()
     def create_payment_transaction(self):
-
         try:
             return self.payment_transaction
         except Payment.DoesNotExist:
@@ -1651,10 +1734,9 @@ class PaymentCharge(HandleRefModel):
             payment_method=charge.payment_method,
             invoice_number=invoice_number,
             order_number=self.order_number,
-            payment_processor_txn_id=self.data.get("processor_txn_id","")
+            payment_processor_txn_id=self.data.get("processor_txn_id", ""),
         )
         return payment
-
 
     @reversion.create_revision()
     def notify_failure(self):
@@ -1670,15 +1752,19 @@ class PaymentCharge(HandleRefModel):
 
         self.failure_notified = timezone.now()
 
-        notification = render(
-            None, "billing/email/payment-failure.txt", {
-                "payment_charge": self,
-                "payment_method": self.payment_method,
-                "billing_contact": self.payment_method.billing_contact,
-                "org": self.org,
-                "support_email": settings.SUPPORT_EMAIL,
-            }
-        ).content.decode("utf-8"),
+        notification = (
+            render(
+                None,
+                "billing/email/payment-failure.txt",
+                {
+                    "payment_charge": self,
+                    "payment_method": self.payment_method,
+                    "billing_contact": self.payment_method.billing_contact,
+                    "org": self.org,
+                    "support_email": settings.SUPPORT_EMAIL,
+                },
+            ).content.decode("utf-8"),
+        )
 
         # notification to the customer
 
@@ -1691,20 +1777,273 @@ class PaymentCharge(HandleRefModel):
 
         email(
             settings.SUPPORT_EMAIL,
-            #TODO: send to billing specific email?
+            # TODO: send to billing specific email?
             [settings.SUPPORT_EMAIL],
             f"Payment Failure for {self.org.name}",
         )
-    
+
         self.save()
 
-class Transaction(HandleRefModel):
+
+@reversion.register
+class Order(HandleRefModel):
+
+    """
+    Describes an order
+    """
+
     org = models.ForeignKey(
         account.models.Organization,
         on_delete=models.PROTECT,
-        related_name="%(class)s_transaction_set",
+        related_name="order_set",
         null=True,
     )
+
+    order_number = models.CharField(max_length=255, default=unique_order_id)
+
+    class HandleRef:
+        tag = "order"
+
+    class Meta:
+        db_table = "billing_order"
+        verbose_name = _("Order")
+        verbose_name_plural = _("Orders")
+
+    def __str__(self):
+        return f"{self.org.name} Order {self.order_number}"
+
+    @property
+    def price(self):
+        price = 0
+        for order_line in self.order_line_set.all():
+            price += order_line.price
+        return price
+
+    @property
+    def payment_method(self):
+        payment_method = (
+            PaymentMethod.get_for_org(self.org).order_by("-created").first()
+        )
+        return payment_method
+
+    @transaction.atomic
+    def create_invoice(self, create_processor_invoice=True):
+        try:
+            return self.invoice
+        except Invoice.DoesNotExist:
+            pass
+
+        invoice = Invoice.objects.create(
+            org=self.org,
+            order=self,
+            status="pending",
+        )
+
+        for order_line in self.order_line_set.all():
+            InvoiceLine.objects.create(
+                amount=order_line.amount,
+                subscription=order_line.subscription,
+                subscription_cycle_product=order_line.subscription_cycle_product,
+                product=order_line.product,
+                description=order_line.description,
+                invoice=invoice,
+            )
+
+        # payment method isn't used to charge the invoice, but we need it to create the invoice in the payment processor
+        # as it holds the customer data
+        payment_method = self.payment_method
+
+        if not payment_method:
+            raise OSError("No payment method found for org")
+
+        if not create_processor_invoice:
+            return
+
+        # this creates an invoice in the payment processor (stripe)
+        payment_method.processor_instance.create_invoice(
+            invoice, charge_automatically=False
+        )
+
+
+@reversion.register
+class Invoice(HandleRefModel):
+
+    """
+    Describes an invoice
+    """
+
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="invoice_set",
+        null=True,
+    )
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.PROTECT,
+        related_name="invoice",
+    )
+
+    charge_object = models.OneToOneField(
+        PaymentCharge,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="invoice",
+    )
+
+    invoice_number = models.CharField(max_length=255, default=unique_invoice_id)
+
+    data = models.JSONField(default=dict, blank=True, help_text=_("Any extra data"))
+
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ("pending", _("Pending")),
+            ("ok", _("Paid")),
+            ("failed", _("Failed")),
+        ],
+        default="pending",
+    )
+
+    class HandleRef:
+        tag = "invoice"
+
+    class Meta:
+        db_table = "billing_invoice"
+        verbose_name = _("Invoice")
+        verbose_name_plural = _("Invoices")
+
+    def __str__(self):
+        return f"{self.org.name} Invoice {self.invoice_number}"
+
+    @property
+    def payment_method(self):
+        payment_method = (
+            PaymentMethod.get_for_org(self.org).order_by("-created").first()
+        )
+        return payment_method
+
+    @property
+    def price(self):
+        price = 0
+        for invoice_line in self.invoice_line_set.all():
+            price += invoice_line.price
+        return price
+
+    @property
+    def currency(self):
+        try:
+            return self.invoice_line_set.first().currency
+        except AttributeError:
+            return "USD"
+
+    @property
+    def paid(self):
+        """
+        Date this invoice was paid
+        """
+
+        try:
+            return (
+                Payment.objects.filter(invoice_number=self.invoice_number)
+                .first()
+                .created
+            )
+        except AttributeError:
+            return None
+
+    @property
+    def details(self):
+        """
+        Will attempt to generate charge details from the related
+        subscription or one time purchase.
+        """
+
+        details = []
+
+        for invoice_line in self.invoice_line_set.all():
+            details.append(f"{invoice_line.description}")
+
+        return "\n".join(details)
+
+    def __str__(self):
+        return f"{self.org.name} Invoice {self.invoice_number}"
+
+    @reversion.create_revision()
+    def capture(self):
+        """
+        Will sync the invoice status from the remote payment
+        processor (stripe)
+        """
+
+        # TODO probably dont hardcode stripe?
+        stripe_charge = self.data.get("stripe_charge")
+
+        # no stipe charge exists for this invoice yet
+        # meaning its still open
+        if not stripe_charge:
+            return
+
+        # payment method on stripe's side
+        processor_payment_method = stripe_charge["payment_method"]
+
+        # payment method on our side
+        payment_method = PaymentMethod.objects.filter(
+            billing_contact__org=self.org,
+            data__stripe_card=processor_payment_method,
+        ).first()
+
+        if not payment_method:
+            # we dont have the payment method on our side
+            # so we cannot track it
+            #
+            # invoice will still be marked as paid but we
+            # need to defer to stripe for further charge
+            # details
+            return
+
+        # create a payment charge entry on our side
+        # based on the stripe charge tied to the invoice
+        charge = PaymentCharge.objects.create(
+            payment_method=payment_method,
+            price=stripe_charge["amount"] / 100,
+            description=stripe_charge["description"],
+            data={
+                "stripe_charge": stripe_charge["id"],
+                "processor_txn_id": stripe_charge["id"],
+                "receipt_url": stripe_charge["receipt_url"],
+            },
+        )
+
+        # link the charge to the invoice
+        self.charge_object = charge
+        self.save()
+
+    @reversion.create_revision()
+    def sync_status(self, commit=True):
+        if self.status == "pending":
+            # invoice is still open
+
+            if commit:
+                # sync invoice status from stripe
+                self.payment_method.processor_instance.sync_invoice(self)
+
+            if self.status == "ok":
+                # invoice has been paid, capture the payment
+                # on our side
+
+                self.capture()
+
+                # we also need to sync payment charge status
+
+                self.charge_object.sync_status(commit=commit)
+
+        return self.status
+
+
+class Transaction(HandleRefModel):
     # Should this be auto_now_add ? Or is default=now better.
     created = models.DateTimeField(
         help_text=_("When transaction was created."), default=timezone.now
@@ -1741,7 +2080,11 @@ class MoneyTransaction(Transaction):
 
 
 @reversion.register()
-class Order(Transaction):
+class OrderLine(Transaction):
+    order = models.ForeignKey(
+        "billing.Order", on_delete=models.CASCADE, related_name="order_line_set"
+    )
+
     product = models.ForeignKey(
         "billing.Product", on_delete=models.PROTECT, related_name="order_set", null=True
     )
@@ -1750,67 +2093,115 @@ class Order(Transaction):
         on_delete=models.PROTECT,
         related_name="order_set",
         null=True,
+        blank=True,
     )
     subscription_cycle_product = models.ForeignKey(
         "billing.SubscriptionCycleProduct",
         on_delete=models.PROTECT,
         related_name="order_set",
         null=True,
+        blank=True,
     )
     description = models.TextField(blank=True)
-    order_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
-        tag = "order"
+        tag = "order_line"
 
     class Meta:
-        db_table = "billing_order"
+        db_table = "billing_order_line"
         verbose_name = _("Order Line")
         verbose_name_plural = _("Order Lines")
 
+    @property
+    def order_number(self):
+        return self.order.order_number
+
+    @property
+    def org(self):
+        return self.order.org
+
 
 @reversion.register()
-class Invoice(Transaction):
+class InvoiceLine(Transaction):
+    invoice = models.ForeignKey(
+        "billing.Invoice",
+        on_delete=models.CASCADE,
+        related_name="invoice_line_set",
+    )
+
     product = models.ForeignKey(
         "billing.Product",
         on_delete=models.PROTECT,
         related_name="invoice_set",
         null=True,
+        blank=True,
     )
     subscription = models.ForeignKey(
         "billing.Subscription",
         on_delete=models.PROTECT,
         related_name="invoice_set",
+        blank=True,
         null=True,
     )
     subscription_cycle_product = models.ForeignKey(
         "billing.SubscriptionCycleProduct",
         on_delete=models.PROTECT,
         related_name="invoice_set",
+        blank=True,
         null=True,
     )
     description = models.TextField(blank=True)
-    order_number = models.CharField(blank=True, max_length=255)
-    invoice_number = models.CharField(blank=True, max_length=255)
 
     class HandleRef:
-        tag = "invoice"
+        tag = "invoice_line"
 
     class Meta:
-        db_table = "billing_invoice"
+        db_table = "billing_invoice_line"
         verbose_name = _("Invoice Line")
         verbose_name_plural = _("Invoice Lines")
+
+    @property
+    def paid(self):
+        """
+        Date this invoice was paid
+        """
+
+        try:
+            return (
+                Payment.objects.filter(invoice_number=self.invoice_number)
+                .first()
+                .created
+            )
+        except AttributeError:
+            return None
+
+    @property
+    def invoice_number(self):
+        return self.invoice.invoice_number
+
+    @property
+    def order_number(self):
+        return self.invoice.order.order_number
+
+    @property
+    def org(self):
+        return self.invoice.org
 
 
 @reversion.register()
 class Payment(MoneyTransaction):
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="payment_transaction_set",
+    )
     invoice_number = models.CharField(blank=True, max_length=255)
     order_number = models.CharField(blank=True, max_length=255)
     charge_object = models.OneToOneField(
-        PaymentCharge, 
-        null=True, 
+        PaymentCharge,
+        null=True,
         on_delete=models.PROTECT,
-        related_name="payment_transaction"
+        related_name="payment_transaction",
     )
 
     class HandleRef:
@@ -1821,8 +2212,15 @@ class Payment(MoneyTransaction):
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
 
+
 @reversion.register()
 class Deposit(MoneyTransaction):
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="deposit_transaction_set",
+    )
+
     class HandleRef:
         tag = "deposit"
 
@@ -1834,6 +2232,12 @@ class Deposit(MoneyTransaction):
 
 @reversion.register()
 class Withdrawal(MoneyTransaction):
+    org = models.ForeignKey(
+        account.models.Organization,
+        on_delete=models.PROTECT,
+        related_name="withdrawal_transaction_set",
+    )
+
     class HandleRef:
         tag = "withdrawal"
 
@@ -1851,14 +2255,14 @@ class Ledger(HandleRefModel):
         related_name="ledger",
         null=True,
     )
-    
+
     content_type = models.ForeignKey(ContentType, on_delete=models.PROTECT)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
-    
+
     invoice_number = models.CharField(blank=True, null=True, max_length=255)
     order_number = models.CharField(blank=True, null=True, max_length=255)
-    
+
     class HandleRef:
         tag = "ledger"
 

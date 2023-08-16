@@ -1,12 +1,13 @@
-import fullctl.service_bridge.client as client
-import fullctl.service_bridge as service_bridge
 import importlib
+
+import fullctl.service_bridge as service_bridge
+import fullctl.service_bridge.client as client
 
 from account.models import InternalAPIKey, Organization
 
-def get_client_bridge_cls(service_tag, cls_name):
 
-    #module = getattr(service_bridge, service_tag, None)
+def get_client_bridge_cls(service_tag, cls_name):
+    # module = getattr(service_bridge, service_tag, None)
     try:
         module = importlib.import_module(f"fullctl.service_bridge.{service_tag}")
     except ModuleNotFoundError:
@@ -14,12 +15,16 @@ def get_client_bridge_cls(service_tag, cls_name):
     cls = getattr(module, cls_name, None)
 
     if not cls:
-        raise AttributeError(f"Service bridge class {service_tag}.{cls_name} not found")#
+        raise AttributeError(
+            f"Service bridge class {service_tag}.{cls_name} not found"
+        )  #
     return cls
+
 
 def get_client_bridge(service_tag, cls_name):
     api_key = InternalAPIKey.objects.first()
     return get_client_bridge_cls(service_tag, cls_name)(key=api_key.key)
+
 
 class Bridge(client.Bridge):
     def __init__(self, service, org, user=None):

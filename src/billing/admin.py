@@ -387,7 +387,7 @@ class OrderHistoryAdmin(BaseAdmin):
     readonly_fields = ("org",)
 
     def org(self, obj):
-        return obj.org
+        return obj.billing_contact.org
 
 
 class PaymentMethodForm(forms.ModelForm):

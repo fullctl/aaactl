@@ -49,6 +49,18 @@ class RecurringProduct(serializers.ModelSerializer):
 
 
 @register
+class Invoice(serializers.ModelSerializer):
+    class Meta:
+        model = models.Invoice
+        fields = [
+            "org",
+            "invoice_number",
+            "price",
+            "currency",
+        ]
+
+
+@register
 class PaymentMethod(serializers.ModelSerializer):
     country = serializers.CharField()
 
@@ -57,6 +69,7 @@ class PaymentMethod(serializers.ModelSerializer):
         fields = [
             "billing_contact",
             "custom_name",
+            "name",
             "holder",
             "country",
             "city",
@@ -132,13 +145,14 @@ class Subscription(serializers.ModelSerializer):
             return []
         return [
             {
-                "description": subscription_product.product.description,
+                "description": subscription_product.description,
                 "type": subscription_product.product.recurring_product.type_description,
                 "usage": subscription_product.subscription_cycle_usage,
                 "cost": subscription_product.subscription_cycle_cost,
                 "name": subscription_product.product.name,
                 "unit_name": subscription_product.product.recurring_product.unit,
                 "unit_name_plural": subscription_product.product.recurring_product.unit_plural,
+                "expiration_date": subscription_product.expires,
             }
             for subscription_product in subscription.subscription_product_set.all()
         ]

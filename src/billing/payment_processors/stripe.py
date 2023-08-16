@@ -48,6 +48,8 @@ class Stripe(PaymentProcessor):
 
         customer = stripe.Customer.create(
             description=f"billing_contact{self.payment_method.billing_contact.id}",
+            name=self.payment_method.billing_contact.name,
+            email=self.payment_method.billing_contact.email,
             api_key=self.api_key,
         )
 
@@ -101,18 +103,32 @@ class Stripe(PaymentProcessor):
         if not self.source:
             raise ValueError("Payment method not setup.")
 
-        charge = stripe.Charge.create(
-            customer=self.customer,
-            source=self.source,
-            amount=int(payment_charge.price * 100),
-            description=payment_charge.description,
-            api_key=self.api_key,
-            currency=self.default_currency,
-        )
+        try:
+            charge = stripe.Charge.create(
+                customer=self.customer,
+                source=self.source,
+                amount=int(payment_charge.price * 100),
+                description=payment_charge.details,
+                api_key=self.api_key,
+                currency=self.default_currency,
+            )
+            self.log.info("stripe charge", status="ok", payment_charge=payment_charge)
+        except Exception as e:
+            # failed to charge on the stripe end, log the error
+            # and mark the charge as failed
+            payment_charge.status = "failed"
+            payment_charge.data["processor_failure"] = str(e)
+            payment_charge.save()
+            self.log.error(
+                "stripe charge", status="failed", payment_charge=payment_charge, error=e
+            )
+            return
 
         payment_charge.status = "pending"
 
         payment_charge.data["stripe_charge"] = charge["id"]
+        payment_charge.data["processor_txn_id"] = charge["id"]
+        payment_charge.data["receipt_url"] = charge["receipt_url"]
         payment_charge.save()
 
     def _sync_charge(self, payment_charge, status=None):
@@ -130,3 +146,67 @@ class Stripe(PaymentProcessor):
 
         elif charge["status"] == "failed":
             return super()._sync_charge(payment_charge, "failed")
+
+    def _sync_invoice(self, invoice, **kwargs):
+        reversion.set_comment("Stripe invoice status sync")
+
+        if not invoice.data.get("stripe_invoice"):
+            return super()._sync_invoice(invoice, "failed")
+
+        stripe_invoice = stripe.Invoice.retrieve(
+            invoice.data["stripe_invoice"], api_key=self.api_key
+        )
+
+        if not stripe_invoice["charge"]:
+            return
+
+        stripe_charge = stripe.Charge.retrieve(
+            stripe_invoice["charge"], api_key=self.api_key
+        )
+
+        if stripe_invoice["status"] == "paid":
+            invoice.data["stripe_charge"] = stripe_charge
+
+            return super()._sync_invoice(invoice, "ok")
+
+        elif stripe_invoice["status"] == "uncollectible":
+            return super()._sync_invoice(invoice, "failed")
+
+    def create_invoice(self, invoice, charge_automatically=False):
+        """
+        Creates a strip invoice from a aaactl Invoice instance
+        """
+
+        # if the invoice has already been created raise ValueError
+
+        if invoice.data.get("stripe_invoice"):
+            raise ValueError("Stripe invoice already created")
+
+        for invoice_line in invoice.invoice_line_set.all():
+            stripe.InvoiceItem.create(
+                customer=self.customer,
+                amount=int(invoice_line.amount * 100),
+                currency=invoice_line.currency,
+                description=invoice_line.description,
+                api_key=self.api_key,
+            )
+
+        stripe_invoice = stripe.Invoice.create(
+            customer=self.customer,
+            days_until_due=30,
+            api_key=self.api_key,
+            description="FullCtl Invoice",
+            collection_method="charge_automatically"
+            if charge_automatically
+            else "send_invoice",
+        )
+
+        stripe.Invoice.finalize_invoice(
+            stripe_invoice["id"],
+            api_key=self.api_key,
+        )
+
+        invoice.data["stripe_invoice"] = stripe_invoice["id"]
+        invoice.save()
+
+        return stripe_invoice

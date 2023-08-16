@@ -3,6 +3,7 @@
 
 
 {% block controlpanel %}
+<h4>{{ request.selected_org }}</h4>
 <h5>{{ order_history.description }} - <small>{{ order_history.processed|date:"Y-m-d" }}</small></h5>
 <h6>#{{ order_history.order_id }}</h6>
 <h6>{% trans "Billed to" %} {{ order_history.billed_to }}</h6>
@@ -25,6 +26,15 @@
     </tbody>
   </table>
 </div>
+{% if order_history.payment_charge.data.receipt_url %}
+<div class="row">
+  <div class="col-4">
+    <a href="{{ order_history.payment_charge.data.receipt_url }}">Download Receipt</a>
+  </div>
+  <div class="col">
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block menu %}

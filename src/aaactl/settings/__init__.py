@@ -237,6 +237,8 @@ REST_FRAMEWORK = {
 settings_manager.set_default_append()
 
 settings_manager.set_from_env("AAACTL_URL")
+settings_manager.set_from_env("IXCTL_URL")
+
 
 if "AAACTL_URL" not in globals():
     raise ValueError(

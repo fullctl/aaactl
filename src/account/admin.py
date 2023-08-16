@@ -136,7 +136,7 @@ class OrganizationRoleInline(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "slug")
-    search_fields = ("org_user_set__last_name", "name")
+    search_fields = ("name",)
 
     def get_inlines(self, request, obj=None):
         if obj is not None:

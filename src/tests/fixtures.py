@@ -348,7 +348,7 @@ def charge_objects(billing_objects, mocker):
 
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
 
@@ -387,14 +387,12 @@ def charge_objects(billing_objects, mocker):
 
 def create_transaction_data(billing_objects):
     return {
-        "user": billing_objects.user,
         "amount": 1200.99,
     }
 
 
 def create_money_transaction_data(billing_objects):
     return {
-        "user": billing_objects.user,
         "amount": 1200.99,
         "billing_contact": billing_objects.billing_contact,
         "payment_method": billing_objects.payment_method,
@@ -403,34 +401,38 @@ def create_money_transaction_data(billing_objects):
 
 @pytest.fixture
 def order(billing_objects):
-    from billing.models import Order
+    from billing.models import Order, OrderLine
 
     data = create_transaction_data(billing_objects)
     data.update(
         {
             "product": billing_objects.product,
             "description": "This product is helpful",
-            "order_number": 132,
         }
     )
-    order = Order.objects.create(**data)
-    return order
+
+    order = Order.objects.create(org=billing_objects.org, order_number=132)
+    order_line = OrderLine.objects.create(order=order, **data)
+    return order_line
 
 
 @pytest.fixture
-def invoice(billing_objects):
-    from billing.models import Invoice
+def invoice(billing_objects, order):
+    from billing.models import Invoice, InvoiceLine, Order
 
     data = create_transaction_data(billing_objects)
     data.update(
         {
             "subscription": billing_objects.monthly_subscription,
             "description": "This subscription is helpful",
-            "invoice_number": 312,
         }
     )
-    invoice = Invoice.objects.create(**data)
-    return invoice
+    order = Order.objects.create(org=billing_objects.org, order_number=132)
+    invoice = Invoice.objects.create(
+        order=order, invoice_number=312, org=billing_objects.org
+    )
+    invoice_line = InvoiceLine.objects.create(invoice=invoice, **data)
+    return invoice_line
 
 
 @pytest.fixture
@@ -438,7 +440,7 @@ def payment(billing_objects):
     from billing.models import Payment
 
     data = create_money_transaction_data(billing_objects)
-    data.update({"invoice_number": 1231})
+    data.update({"invoice_number": 1231, "org": billing_objects.org})
     payment = Payment.objects.create(**data)
     return payment
 
@@ -448,7 +450,7 @@ def deposit(billing_objects):
     from billing.models import Deposit
 
     data = create_money_transaction_data(billing_objects)
-    deposit = Deposit.objects.create(**data)
+    deposit = Deposit.objects.create(org=billing_objects.org, **data)
     return deposit
 
 
@@ -457,15 +459,10 @@ def withdrawal(billing_objects):
     from billing.models import Withdrawal
 
     data = create_money_transaction_data(billing_objects)
-    withdrawal = Withdrawal.objects.create(**data)
+    withdrawal = Withdrawal.objects.create(org=billing_objects.org, **data)
     return withdrawal
 
 
 @pytest.fixture
 def ledger(withdrawal, order, invoice):
-    import billing.models
-
-    withdrawal = billing.models.Ledger(content_object=withdrawal).save()
-    order = billing.models.Ledger(content_object=order).save()
-    invoice = billing.models.Ledger(content_object=invoice).save()
     return [withdrawal, order, invoice]

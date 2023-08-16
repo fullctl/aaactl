@@ -44,6 +44,7 @@
 
 <div
   class="payment_method-listing"
+  data-billing-contact-id="{{ billing_contact.id }}"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="payment_methods">
   <div style="display:none" data-api-submit="yes">

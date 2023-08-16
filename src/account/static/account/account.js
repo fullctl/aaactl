@@ -27,8 +27,11 @@ account.ControlPanel = twentyc.cls.define(
       this.elements = {};
       this.forms = {};
 
-      this.loadDropDown();
-      this.styleDropDown();
+      if ($('.org-select').length > 0) {
+        this.loadDropDown();
+        this.styleDropDown();
+      }
+
 
       this.createOrganization();
       this.editOrganization();
@@ -56,7 +59,9 @@ account.ControlPanel = twentyc.cls.define(
         console.log(response.content);
       }.bind(this));
 
-      this.personal_invites = new account.PersonalInvites();
+      if($('.personal-keys').length > 0) {
+        this.personal_invites = new account.PersonalInvites();
+      }
 
     },
 
@@ -158,6 +163,10 @@ account.ControlPanel = twentyc.cls.define(
 
     createOrganization: function(){
       this.initializeForm('create-organization', '/');
+      if ( !this.forms['create_organization'] ){
+        return
+      }
+
       this.forms['create_organization'].post_success = function(response){
         var slug = response.content.data[0].slug;
         document.location.href = `/?org=${slug}`
@@ -166,6 +175,10 @@ account.ControlPanel = twentyc.cls.define(
 
     editOrganization: function(){
       this.initializeForm('edit-organization');
+      if (!this.forms['edit_organization']) {
+        return
+      }
+
       $(this.forms['edit_organization']).on("api-write:success", function() {
         document.location.href = '/';
       });
@@ -196,7 +209,12 @@ account.ControlPanel = twentyc.cls.define(
 
     initializeForm: function(form_class){
       var form_name = form_class.replace('-','_');
-      this.elements[form_name] = $(`form.${form_class}`);
+      const form = $(`form.${form_class}`);
+      if (form.length == 0) {
+        return
+      }
+
+      this.elements[form_name] = form;
       this.forms[form_name] = new twentyc.rest.Form(this.elements[form_name]);
     },
 
@@ -677,18 +695,23 @@ account.Services = twentyc.cls.define(
               $('<tr>').append([
                 ihf.formattedDescription(),
                 ihf.formattedUsageType(),
-                ihf.formattedUsageAmount(),,
+                ihf.formattedUsageAmount(),
                 ihf.formattedLink().hide(),
+                ihf.formatted_expiration_date(),
                 ihf.formattedCost()
               ])
             )
           total_cost += parseFloat(item.cost);
         });
-        item_heading.children().append(
-          $('<span>').addClass('float-right').append([
-             $('<span>').text('Total Monthly Cost: ').addClass('lighter-grey'),
-             $('<span>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white')
-          ])
+        item_heading.children().addClass('px-0').append(
+          $('<div>').addClass('container-fluid').append(
+            $('<div>').addClass("row align-items-center").append([
+             $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
+             $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
+             $('<div>').addClass('col'),
+             $('<div>').text(data.subscription_cycle.start).addClass('ms-auto col-auto pe-0')
+            ])
+          )
         );
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
@@ -704,6 +727,7 @@ account.Services = twentyc.cls.define(
 
       this.rest_api_list.load();
     },
+
     itemHtmlFormatter: function(item) {
       this.description = item.description;
       this.type = item.type;
@@ -711,10 +735,12 @@ account.Services = twentyc.cls.define(
       this.cost = item.cost;
       this.unit_name_plural = item.unit_name_plural;
       this.unit_name = item.unit_name;
+      this.expiration_date = item.expiration_date;
 
       this.formattedDescription = () => {
         return $('<td>').text(this.description).addClass('dark-grey table-text-bold')
       }
+
       this.formattedUsageType = () => {
         if(this.type == "Fixed Price") {
           return $('<td>');
@@ -725,6 +751,7 @@ account.Services = twentyc.cls.define(
           ])
         }
       }
+
       this.editedUsageType = () => {
         if ( this.type == 'Metered Usage') {
           return 'metered'
@@ -756,6 +783,12 @@ account.Services = twentyc.cls.define(
       this.formattedLink = () => {
         return $('<td>').addClass('small-links').append(
           $('<a>').attr('href','/').text('Details')
+        )
+      }
+
+      this.formatted_expiration_date = () => {
+        return $('<td>').addClass('light-grey').text(
+          this.expiration_date ? 'Expires at ' + window.fullctl.formatters.datetime(this.expiration_date) : ''
         )
       }
 
@@ -970,12 +1003,24 @@ account.PendingUsers = twentyc.cls.define(
 
 
 account.expand_user_info = () => {
+  // only run if the user info section is present
+  // TODO: don't load this file at places where this doesn't exist
+  if ($('#userInfoCollapse').length == 0) {
+    return
+  }
+
   $('#userInfoCollapse').addClass('show');
   $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
   $('#userInformation').get(0).scrollIntoView();
 }
 
 account.prompt_link_to_pdb = () => {
+  // only run if the linked auth section is present
+  // TODO: don't load this file at places where this doesn't exist
+  if ($('#linkedAuthCollapse').length == 0) {
+    return
+  }
+
   $('#linkedAuthCollapse').addClass('show');
   $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
   $('#linkedAuthCollapse').get(0).scrollIntoView();

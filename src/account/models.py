@@ -685,7 +685,6 @@ class ManagedPermission(HandleRefModel):
     @classmethod
     def apply_roles(cls, org, user, delete_permissions=True):
         user_roles = [ur.role_id for ur in user.roles.filter(org=org)]
-
         # delete all those namespaces for the user in the org
         if delete_permissions and org:
             for ns in cls.namespaces():
@@ -734,7 +733,6 @@ class ManagedPermission(HandleRefModel):
         Takes an organization id and re-applies permissions for all
         users in the organization.
         """
-
         for user in org.org_user_set.all().select_related("user", "org"):
             cls.apply_roles(org, user.user)
 

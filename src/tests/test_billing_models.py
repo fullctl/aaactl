@@ -5,10 +5,10 @@ import pytest
 from django.contrib.contenttypes.models import ContentType
 
 from billing.models import (
-    Invoice,
+    InvoiceLine,
     Ledger,
-    Order,
     OrderHistory,
+    OrderLine,
     Payment,
     SubscriptionCycle,
     SubscriptionCycleProduct,
@@ -100,7 +100,7 @@ def test_end_subscription_cycle(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
 
     subscription = billing_objects.monthly_subscription
@@ -120,7 +120,7 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
@@ -152,7 +152,7 @@ def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocke
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
@@ -245,7 +245,7 @@ def test_calc_subscription_charge(db, billing_objects):
 def test_order_history(db, billing_objects, mocker):
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
@@ -282,21 +282,23 @@ def test_create_transactions_from_subscriptionsubscription_cycle(
     subscription_cycle = charge_objects["subscriptionsubscription_cycle"]
     charge_objects["subscription"]
 
-    subscription_cycle.create_transactions(billing_objects.user)
-
-    assert Order.objects.count() == 2
-
-    assert Invoice.objects.count() == 2
-    assert Payment.objects.count() == 1
+    assert (
+        OrderLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
+    assert (
+        InvoiceLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
 
 
 @pytest.mark.django_db
 def test_create_transactions_from_product(billing_objects):
     product = billing_objects.product
-    product.create_transactions(billing_objects.user)
+    product.create_transactions(billing_objects.org)
 
-    assert Invoice.objects.count() == 1
-    assert Order.objects.count() == 1
+    assert InvoiceLine.objects.count() == 1
+    assert OrderLine.objects.count() == 1
     assert Payment.objects.count() == 1
 
 
@@ -305,7 +307,7 @@ def test_create_transactions_from_product(billing_objects):
 
 @pytest.mark.django_db
 def test_order_init(order, billing_objects):
-    assert order.user == billing_objects.user
+    assert order.org == billing_objects.org
     assert order.amount == 1200.99
     assert order.currency == "USD"
     assert type(order.transaction_id) == uuid.UUID
@@ -317,7 +319,7 @@ def test_order_init(order, billing_objects):
 
 @pytest.mark.django_db
 def test_invoice_init(invoice, billing_objects):
-    assert invoice.user == billing_objects.user
+    assert invoice.org == billing_objects.org
     assert invoice.amount == 1200.99
     assert invoice.currency == "USD"
     assert type(invoice.transaction_id) == uuid.UUID
@@ -357,14 +359,14 @@ def test_ledger_init(ledger):
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Order)
+            content_type=ContentType.objects.get_for_model(OrderLine)
         ).count()
         == 1
     )
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Invoice)
+            content_type=ContentType.objects.get_for_model(InvoiceLine)
         ).count()
         == 1
     )

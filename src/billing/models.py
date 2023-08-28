@@ -232,7 +232,6 @@ class Product(HandleRefModel):
 
         if not self.component_billable_entity and component_object_id:
             # product does not require a component_object_id but one was supplied
-
             return False
 
         org_product = org.products.filter(
@@ -293,7 +292,6 @@ class Product(HandleRefModel):
 
         # non recurring products can be added standalone
         if not self.is_recurring_product:
-            print("adding non recurring product")
             OrganizationProduct.objects.create(
                 org=org,
                 product=self,
@@ -302,14 +300,11 @@ class Product(HandleRefModel):
                 component_object_id=component_object_id,
             )
 
-        print("adding recurring product")
-
         # recurring products should be added to subscription
         # if no subscription exists, create one
         subscription = org.subscription_set.filter(group=self.group).first()
         if not subscription:
-            print("creating subscription")
-            subscription = Subscription.create(
+            subscription = Subscription.objects.create(
                 group=self.group,
                 org=org,
                 subscription_cycle_start=timezone.now(),

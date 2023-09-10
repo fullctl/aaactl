@@ -117,7 +117,10 @@ BILLING_DEFAULT_CURRENCY = "USD"
 
 # Auth
 
-AUTHENTICATION_BACKENDS = ["django_grainy.backends.GrainyBackend"]
+AUTHENTICATION_BACKENDS = [
+    "account.backends.EmailOrUsernameModelBackend",
+    "django_grainy.backends.GrainyBackend",
+]
 VALIDATE_PASSWORD_LENGTH = 8
 
 # OAUTH PROVIDER

@@ -14,12 +14,12 @@ from applications.models import Service
 
 
 class Login(forms.Form):
-    username = forms.CharField()
+    username_or_email = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
 
     def clean_username(self):
-        username = self.cleaned_data["username"].lower()
-        return username
+        username_or_email = self.cleaned_data["username_or_email"].lower()
+        return username_or_email
 
 
 class UserInformationBase(forms.Form):

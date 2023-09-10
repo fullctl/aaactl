@@ -50,7 +50,7 @@ def login(request):
         if form.is_valid():
             user = authenticate(
                 request,
-                username=form.cleaned_data["username"],
+                username=form.cleaned_data["username_or_email"],
                 password=form.cleaned_data["password"],
             )
 
@@ -61,7 +61,9 @@ def login(request):
                 # through valid_redirect at this point
                 return redirect(redirect_next)  # lgtm[py/url-redirection]
             else:
-                messages.error(request, _("Login failed: Wrong username / password"))
+                messages.error(
+                    request, _("Login failed: Wrong username / email / password")
+                )
 
     else:
         form = account.forms.Login()

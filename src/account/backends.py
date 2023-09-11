@@ -4,9 +4,8 @@ from django.db.models import Q
 
 class EmailOrUsernameModelBackend:
     def authenticate(self, request, username=None, password=None):
-        try:
-            user = User.objects.filter(Q(email=username) | Q(username=username)).first()
-        except User.DoesNotExist:
+        user = User.objects.filter(Q(email=username) | Q(username=username)).first()
+        if user is None:
             return None
 
         return user if user.check_password(password) else None

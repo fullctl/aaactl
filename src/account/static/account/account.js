@@ -709,7 +709,9 @@ account.Services = twentyc.cls.define(
              $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
              $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
              $('<div>').addClass('col'),
-             $('<div>').text(data.subscription_cycle.start).addClass('ms-auto col-auto pe-0')
+             $('<div>').html(
+              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
+              ).addClass('ms-auto col-auto pe-0')
             ])
           )
         );

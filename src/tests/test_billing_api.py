@@ -6,9 +6,9 @@ from tests.helpers import strip_api_fields
 
 
 @pytest.mark.django_db
-def test_get_organization(billing_objects):
-    response = billing_objects.api_client.get(
-        reverse("billing_api:org-detail", args=[billing_objects.org.slug])
+def test_get_organization(billing_objects_w_pay):
+    response = billing_objects_w_pay.api_client.get(
+        reverse("billing_api:org-detail", args=[billing_objects_w_pay.org.slug])
     )
 
     assert response.status_code == 200
@@ -16,8 +16,8 @@ def test_get_organization(billing_objects):
 
 
 @pytest.mark.django_db
-def test_post_billing_setup(billing_objects, mocker):
-    last_4 = billing_objects.payment_method.data["stripe_card"][-4:]
+def test_post_billing_setup(billing_objects_w_pay, mocker):
+    last_4 = billing_objects_w_pay.payment_method.data["stripe_card"][-4:]
     data = {
         "holder": "George Contact",
         "country": "US",
@@ -50,8 +50,8 @@ def test_post_billing_setup(billing_objects, mocker):
         return_value=None,
     )
 
-    response = billing_objects.api_client.post(
-        reverse("billing_api:org-billing-setup", args=[billing_objects.org.slug]),
+    response = billing_objects_w_pay.api_client.post(
+        reverse("billing_api:org-billing-setup", args=[billing_objects_w_pay.org.slug]),
         data=data,
     )
 
@@ -60,17 +60,17 @@ def test_post_billing_setup(billing_objects, mocker):
 
 
 @pytest.mark.django_db
-def test_get_payment_methods(billing_objects, data_billing_api_billing_contact):
-    response = billing_objects.api_client.get(
-        reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
+def test_get_payment_methods(billing_objects_w_pay, data_billing_api_billing_contact):
+    response = billing_objects_w_pay.api_client.get(
+        reverse("billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug])
     )
     assert response.status_code == 400
     assert "billing_contact" in response.json()["errors"]
 
     # Cannot access without billing_contact
-    response = billing_objects.api_client.get(
-        reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
-        + f"?billing_contact={billing_objects.billing_contact.id}"
+    response = billing_objects_w_pay.api_client.get(
+        reverse("billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug])
+        + f"?billing_contact={billing_objects_w_pay.billing_contact.id}"
     )
     print(response.content)
 
@@ -80,7 +80,7 @@ def test_get_payment_methods(billing_objects, data_billing_api_billing_contact):
 
 
 @pytest.mark.django_db
-def test_delete_payment_methods(billing_objects):
+def test_delete_payment_methods(billing_objects_w_pay):
     input_data = {
         "custom_name": "Test Customer 2",
         "holder": "George Contact",
@@ -92,16 +92,16 @@ def test_delete_payment_methods(billing_objects):
     }
 
     new_payment_method = models.PaymentMethod.objects.create(
-        billing_contact=billing_objects.billing_contact,
+        billing_contact=billing_objects_w_pay.billing_contact,
         data={"stripe_card": "1200828282828210"},
         **input_data,
     )
 
     input_data["id"] = new_payment_method.id
-    input_data["billing_contact"] = billing_objects.billing_contact.id
+    input_data["billing_contact"] = billing_objects_w_pay.billing_contact.id
 
-    response = billing_objects.api_client.delete(
-        reverse("billing_api:org-payment-method", args=[billing_objects.org.slug]),
+    response = billing_objects_w_pay.api_client.delete(
+        reverse("billing_api:org-payment-method", args=[billing_objects_w_pay.org.slug]),
         data=input_data,
     )
     output_data = response.json()["data"][0]
@@ -111,63 +111,63 @@ def test_delete_payment_methods(billing_objects):
 
 
 @pytest.mark.django_db
-def test_update_billing_contact(billing_objects):
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])
+def test_update_billing_contact(billing_objects_w_pay):
+    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
     data = {
-        "id": billing_objects.billing_contact.id,
-        "org": billing_objects.billing_contact.org,
-        "name": billing_objects.billing_contact.name,
+        "id": billing_objects_w_pay.billing_contact.id,
+        "org": billing_objects_w_pay.billing_contact.org,
+        "name": billing_objects_w_pay.billing_contact.name,
         "email": "newemail@localhost",
     }
-    response = billing_objects.api_client.put(url, data=data)
+    response = billing_objects_w_pay.api_client.put(url, data=data)
     assert response.status_code == 200
     assert models.BillingContact.objects.first().email == "newemail@localhost"
 
     # Test incomplete information
     del data["email"]
-    response = billing_objects.api_client.put(url, data=data)
+    response = billing_objects_w_pay.api_client.put(url, data=data)
     assert response.status_code == 400
 
 
 @pytest.mark.django_db
-def test_delete_billing_contact(billing_objects):
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])
+def test_delete_billing_contact(billing_objects_w_pay):
+    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
     data = {
-        "id": billing_objects.billing_contact.id,
-        "org": billing_objects.billing_contact.org,
-        "name": billing_objects.billing_contact.name,
+        "id": billing_objects_w_pay.billing_contact.id,
+        "org": billing_objects_w_pay.billing_contact.org,
+        "name": billing_objects_w_pay.billing_contact.name,
         "email": "newemail@localhost",
     }
-    response = billing_objects.api_client.delete(url, data=data)
+    response = billing_objects_w_pay.api_client.delete(url, data=data)
     assert response.status_code == 200
     assert models.BillingContact.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_delete_active_billing_contact(billing_objects):
+def test_delete_active_billing_contact(billing_objects_w_pay):
     # Connect payment method to subscription, ie make billing contact active
-    subscription = billing_objects.monthly_subscription
-    subscription.payment_method = billing_objects.payment_method
+    subscription = billing_objects_w_pay.monthly_subscription
+    subscription.payment_method = billing_objects_w_pay.payment_method
     subscription.save()
-    assert billing_objects.billing_contact.active
+    assert billing_objects_w_pay.billing_contact.active
 
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])
+    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
     data = {
-        "id": billing_objects.billing_contact.id,
-        "org": billing_objects.billing_contact.org,
-        "name": billing_objects.billing_contact.name,
+        "id": billing_objects_w_pay.billing_contact.id,
+        "org": billing_objects_w_pay.billing_contact.org,
+        "name": billing_objects_w_pay.billing_contact.name,
         "email": "newemail@localhost",
     }
 
-    response = billing_objects.api_client.delete(url, data=data)
+    response = billing_objects_w_pay.api_client.delete(url, data=data)
     assert response.status_code == 200
     assert models.BillingContact.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_get_services(billing_objects, data_billing_api_subscriptions):
-    response = billing_objects.api_client.get(
-        reverse("billing_api:org-services", args=[billing_objects.org.slug])
+def test_get_services(billing_objects_w_pay, data_billing_api_subscriptions):
+    response = billing_objects_w_pay.api_client.get(
+        reverse("billing_api:org-services", args=[billing_objects_w_pay.org.slug])
     )
     assert strip_api_fields(response.json()) == strip_api_fields(
         data_billing_api_subscriptions.expected
@@ -175,16 +175,16 @@ def test_get_services(billing_objects, data_billing_api_subscriptions):
 
 
 @pytest.mark.django_db
-def test_get_orders(billing_objects, charge_objects):
-    response = billing_objects.api_client.get(
-        reverse("billing_api:org-orders", args=[billing_objects.org.slug])
+def test_get_orders(billing_objects_w_pay, charge_objects):
+    response = billing_objects_w_pay.api_client.get(
+        reverse("billing_api:org-orders", args=[billing_objects_w_pay.org.slug])
     )
     assert response.status_code == 200
 
 
 @pytest.mark.django_db
-def test_get_products(billing_objects, data_billing_api_product):
-    response = billing_objects.api_client.get(reverse("billing_api:product-list"))
+def test_get_products(billing_objects_w_pay, data_billing_api_product):
+    response = billing_objects_w_pay.api_client.get(reverse("billing_api:product-list"))
     assert response.status_code == 200
     assert strip_api_fields(response.json()) == strip_api_fields(
         data_billing_api_product.expected

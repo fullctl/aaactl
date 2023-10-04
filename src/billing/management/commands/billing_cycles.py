@@ -52,13 +52,15 @@ class Command(CommandInterface):
         qset = Subscription.objects.filter(status="ok")
 
         for subscription in qset:
-            self.log_info(f"checking subscription {subscription} ...")
+            self.log_info(f"checking subscription {subscription} ({subscription.id}) ...")
 
             if not subscription.subscription_cycle:
                 subscription.start_subscription_cycle()
                 self.log_info(
                     f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
                 )
+            else:
+                self.log_info(f"-- subscription_cycle: {subscription.subscription_cycle}")
 
             for subscription_product in subscription.subscription_product_set.all():
                 self.collect(subscription_product, subscription.subscription_cycle)
@@ -83,7 +85,7 @@ class Command(CommandInterface):
                         self.log_info("-- retrying failed subscription cycle charge")
 
                     self.log_info(
-                        f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
+                        f"-- charging ${subscription_cycle.price} for subscription cycle: {subscription_cycle}"
                     )
 
                     with reversion.create_revision():

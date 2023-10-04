@@ -17,25 +17,25 @@ from billing.models import (
 )
 
 
-def test_product_group(db, billing_objects):
-    assert str(billing_objects.product.group) == "Test Group"
-    assert str(billing_objects.product_subscription_fixed.group) == "Test Group"
-    assert str(billing_objects.product_subscription_metered.group) == "Test Group"
+def test_product_group(db, billing_objects_w_pay):
+    assert str(billing_objects_w_pay.product.group) == "Test Group"
+    assert str(billing_objects_w_pay.product_subscription_fixed.group) == "Test Group"
+    assert str(billing_objects_w_pay.product_subscription_metered.group) == "Test Group"
 
 
-def test_recurring_products(db, billing_objects):
-    assert billing_objects.product.is_recurring_product is False
-    assert billing_objects.product_subscription_fixed.is_recurring_product is True
-    assert billing_objects.product_subscription_metered.is_recurring_product is True
+def test_recurring_products(db, billing_objects_w_pay):
+    assert billing_objects_w_pay.product.is_recurring_product is False
+    assert billing_objects_w_pay.product_subscription_fixed.is_recurring_product is True
+    assert billing_objects_w_pay.product_subscription_metered.is_recurring_product is True
 
 
-def test_recurring_product_type(db, billing_objects):
+def test_recurring_product_type(db, billing_objects_w_pay):
     assert (
-        billing_objects.product_subscription_fixed.recurring_product.type_description
+        billing_objects_w_pay.product_subscription_fixed.recurring_product.type_description
         == "Fixed Price"
     )
     assert (
-        billing_objects.product_subscription_metered.recurring_product.type_description
+        billing_objects_w_pay.product_subscription_metered.recurring_product.type_description
         == "Metered Usage"
     )
 
@@ -45,21 +45,21 @@ def test_recurring_product_type(db, billing_objects):
     """
 
 
-def test_subscription_products(db, billing_objects):
+def test_subscription_products(db, billing_objects_w_pay):
     """
     Test adding a product to subscription.
     """
-    subscription = billing_objects.monthly_subscription
-    product_subscription_fixed = billing_objects.product_subscription_fixed
+    subscription = billing_objects_w_pay.monthly_subscription
+    product_subscription_fixed = billing_objects_w_pay.product_subscription_fixed
     subscription.add_product(product_subscription_fixed)
     assert SubscriptionProduct.objects.filter(subscription=subscription).count() == 2
 
 
-def test_subscription_cycle_start(db, billing_objects):
+def test_subscription_cycle_start(db, billing_objects_w_pay):
     """
     Test how subscription_cycle is calculated in terms of time.
     """
-    subscription = billing_objects.monthly_subscription
+    subscription = billing_objects_w_pay.monthly_subscription
 
     # Test subscription_cycle start
     assert subscription.subscription_cycle_start is None
@@ -71,11 +71,11 @@ def test_subscription_cycle_start(db, billing_objects):
         subscription.start_subscription_cycle()
 
 
-def test_subscription_cycle(db, billing_objects):
+def test_subscription_cycle(db, billing_objects_w_pay):
     """
     Test how subscription_cycle is calculated in terms of time and frequency.
     """
-    m_subscription = billing_objects.monthly_subscription
+    m_subscription = billing_objects_w_pay.monthly_subscription
 
     # Start a subscription_cycle two months ago
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
@@ -96,18 +96,18 @@ def test_subscription_cycle(db, billing_objects):
     assert SubscriptionCycle.objects.count() == 2
 
 
-def test_end_subscription_cycle(db, billing_objects, mocker):
+def test_end_subscription_cycle(db, billing_objects_w_pay, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
         return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
 
-    subscription = billing_objects.monthly_subscription
+    subscription = billing_objects_w_pay.monthly_subscription
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
 
-    subscription.payment_method = billing_objects.payment_method
+    subscription.payment_method = billing_objects_w_pay.payment_method
     subscription.save()
 
     # FIXME - This doesn't seem to be the test we want
@@ -116,14 +116,14 @@ def test_end_subscription_cycle(db, billing_objects, mocker):
         subscription.end_subscription_cycle()
 
 
-def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
+def test_subscriptionsubscription_cycle_charge(db, billing_objects_w_pay, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
         return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
-    subscription = billing_objects.monthly_subscription
-    subscription.payment_method = billing_objects.payment_method
+    subscription = billing_objects_w_pay.monthly_subscription
+    subscription.payment_method = billing_objects_w_pay.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
@@ -148,14 +148,14 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
     assert payment_charge.description == subscription.charge_description
 
 
-def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocker):
+def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects_w_pay, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
         return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
-    subscription = billing_objects.monthly_subscription
-    subscription.payment_method = billing_objects.payment_method
+    subscription = billing_objects_w_pay.monthly_subscription
+    subscription.payment_method = billing_objects_w_pay.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
@@ -191,23 +191,23 @@ def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocke
         subscriptionsubscription_cycle.charge()
 
 
-def test_calc_subscription_charge(db, billing_objects):
+def test_calc_subscription_charge(db, billing_objects_w_pay):
     """
     Test how subscription charges are calculated.
     """
 
     # Create subscription_cycle
-    subscription = billing_objects.monthly_subscription
+    subscription = billing_objects_w_pay.monthly_subscription
     two_months_ago = (datetime.now(timezone.utc) - timedelta(days=60)).date()
     subscription_cycle = subscription.start_subscription_cycle(two_months_ago)
 
     # Create product subscriptions
 
-    product_fixed = billing_objects.product_subscription_fixed
+    product_fixed = billing_objects_w_pay.product_subscription_fixed
     subscription.add_product(product_fixed)
     fixed_subscription_product = product_fixed.subscription_set.first()
 
-    product_metered = billing_objects.product_subscription_metered
+    product_metered = billing_objects_w_pay.product_subscription_metered
     subscription.add_product(product_metered)
     metered_subscription_product = product_metered.subscription_set.first()
 
@@ -242,13 +242,13 @@ def test_calc_subscription_charge(db, billing_objects):
     """
 
 
-def test_order_history(db, billing_objects, mocker):
+def test_order_history(db, billing_objects_w_pay, mocker):
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",
         return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
-    subscription = billing_objects.monthly_subscription
-    subscription.payment_method = billing_objects.payment_method
+    subscription = billing_objects_w_pay.monthly_subscription
+    subscription.payment_method = billing_objects_w_pay.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
     subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
@@ -270,14 +270,14 @@ def test_order_history(db, billing_objects, mocker):
     assert order_history
 
 
-def test_billing_contact(db, billing_objects):
-    billing_contact = billing_objects.billing_contact
+def test_billing_contact(db, billing_objects_w_pay):
+    billing_contact = billing_objects_w_pay.billing_contact
     assert billing_contact.active is False
 
 
 @pytest.mark.django_db
 def test_create_transactions_from_subscriptionsubscription_cycle(
-    charge_objects, billing_objects
+    charge_objects, billing_objects_w_pay
 ):
     subscription_cycle = charge_objects["subscriptionsubscription_cycle"]
     charge_objects["subscription"]
@@ -293,9 +293,9 @@ def test_create_transactions_from_subscriptionsubscription_cycle(
 
 
 @pytest.mark.django_db
-def test_create_transactions_from_product(billing_objects):
-    product = billing_objects.product
-    product.create_transactions(billing_objects.org)
+def test_create_transactions_from_product(billing_objects_w_pay):
+    product = billing_objects_w_pay.product
+    product.create_transactions(billing_objects_w_pay.org)
 
     assert InvoiceLine.objects.count() == 1
     assert OrderLine.objects.count() == 1
@@ -306,46 +306,46 @@ def test_create_transactions_from_product(billing_objects):
 
 
 @pytest.mark.django_db
-def test_order_init(order, billing_objects):
-    assert order.org == billing_objects.org
+def test_order_init(order, billing_objects_w_pay):
+    assert order.org == billing_objects_w_pay.org
     assert order.amount == 1200.99
     assert order.currency == "USD"
     assert type(order.transaction_id) == uuid.UUID
 
-    assert order.product == billing_objects.product
+    assert order.product == billing_objects_w_pay.product
     assert order.description == "This product is helpful"
     assert order.order_number == 132
 
 
 @pytest.mark.django_db
-def test_invoice_init(invoice, billing_objects):
-    assert invoice.org == billing_objects.org
+def test_invoice_init(invoice, billing_objects_w_pay):
+    assert invoice.org == billing_objects_w_pay.org
     assert invoice.amount == 1200.99
     assert invoice.currency == "USD"
     assert type(invoice.transaction_id) == uuid.UUID
 
-    assert invoice.subscription == billing_objects.monthly_subscription
+    assert invoice.subscription == billing_objects_w_pay.monthly_subscription
     assert invoice.description == "This subscription is helpful"
     assert invoice.invoice_number == 312
 
 
 @pytest.mark.django_db
-def test_payment_init(payment, billing_objects):
+def test_payment_init(payment, billing_objects_w_pay):
     assert payment.invoice_number == 1231
-    assert payment.billing_contact == billing_objects.billing_contact
-    assert payment.payment_method == billing_objects.payment_method
+    assert payment.billing_contact == billing_objects_w_pay.billing_contact
+    assert payment.payment_method == billing_objects_w_pay.payment_method
 
 
 @pytest.mark.django_db
-def test_deposit_init(deposit, billing_objects):
-    assert deposit.billing_contact == billing_objects.billing_contact
-    assert deposit.payment_method == billing_objects.payment_method
+def test_deposit_init(deposit, billing_objects_w_pay):
+    assert deposit.billing_contact == billing_objects_w_pay.billing_contact
+    assert deposit.payment_method == billing_objects_w_pay.payment_method
 
 
 @pytest.mark.django_db
-def test_withdrawal_init(withdrawal, billing_objects):
-    assert withdrawal.billing_contact == billing_objects.billing_contact
-    assert withdrawal.payment_method == billing_objects.payment_method
+def test_withdrawal_init(withdrawal, billing_objects_w_pay):
+    assert withdrawal.billing_contact == billing_objects_w_pay.billing_contact
+    assert withdrawal.payment_method == billing_objects_w_pay.payment_method
 
 
 @pytest.mark.django_db

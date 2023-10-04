@@ -891,7 +891,7 @@ class SubscriptionCycle(HandleRefModel):
         if not self.end:
             return False
 
-        return self.end < datetime.date.today()
+        return self.end <= datetime.date.today()
 
     @property
     def charged(self):
@@ -1747,19 +1747,17 @@ class PaymentCharge(HandleRefModel):
 
         self.failure_notified = timezone.now()
 
-        notification = (
-            render(
-                None,
-                "billing/email/payment-failure.txt",
-                {
-                    "payment_charge": self,
-                    "payment_method": self.payment_method,
-                    "billing_contact": self.payment_method.billing_contact,
-                    "org": self.org,
-                    "support_email": settings.SUPPORT_EMAIL,
-                },
-            ).content.decode("utf-8"),
-        )
+        notification = render(
+            None,
+            "billing/email/payment-failure.txt",
+            {
+                "payment_charge": self,
+                "payment_method": self.payment_method,
+                "billing_contact": self.payment_method.billing_contact,
+                "org": self.org,
+                "support_email": settings.SUPPORT_EMAIL,
+            },
+        ).content.decode("utf-8")
 
         # notification to the customer
 
@@ -1775,6 +1773,7 @@ class PaymentCharge(HandleRefModel):
             # TODO: send to billing specific email?
             [settings.SUPPORT_EMAIL],
             f"Payment Failure for {self.org.name}",
+            notification,
         )
 
         self.save()

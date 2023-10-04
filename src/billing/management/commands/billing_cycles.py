@@ -52,7 +52,9 @@ class Command(CommandInterface):
         qset = Subscription.objects.filter(status="ok")
 
         for subscription in qset:
-            self.log_info(f"checking subscription {subscription} ({subscription.id}) ...")
+            self.log_info(
+                f"checking subscription {subscription} ({subscription.id}) ..."
+            )
 
             if not subscription.subscription_cycle:
                 subscription.start_subscription_cycle()
@@ -60,7 +62,9 @@ class Command(CommandInterface):
                     f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
                 )
             else:
-                self.log_info(f"-- subscription_cycle: {subscription.subscription_cycle}")
+                self.log_info(
+                    f"-- subscription_cycle: {subscription.subscription_cycle}"
+                )
 
             for subscription_product in subscription.subscription_product_set.all():
                 self.collect(subscription_product, subscription.subscription_cycle)

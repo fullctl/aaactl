@@ -11,7 +11,9 @@ def test_processor_default():
 
 @pytest.mark.django_db
 def test_payment_processor_interface(billing_objects_w_pay):
-    payment_processor = bpp.processor.PaymentProcessor(billing_objects_w_pay.payment_method)
+    payment_processor = bpp.processor.PaymentProcessor(
+        billing_objects_w_pay.payment_method
+    )
     assert payment_processor.data == {"stripe_card": "5200828282828210"}
     assert (
         payment_processor.billing_contact_customer.billing_contact

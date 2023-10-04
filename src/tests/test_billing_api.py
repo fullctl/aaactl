@@ -62,14 +62,18 @@ def test_post_billing_setup(billing_objects_w_pay, mocker):
 @pytest.mark.django_db
 def test_get_payment_methods(billing_objects_w_pay, data_billing_api_billing_contact):
     response = billing_objects_w_pay.api_client.get(
-        reverse("billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug])
+        reverse(
+            "billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug]
+        )
     )
     assert response.status_code == 400
     assert "billing_contact" in response.json()["errors"]
 
     # Cannot access without billing_contact
     response = billing_objects_w_pay.api_client.get(
-        reverse("billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug])
+        reverse(
+            "billing_api:org-payment-methods", args=[billing_objects_w_pay.org.slug]
+        )
         + f"?billing_contact={billing_objects_w_pay.billing_contact.id}"
     )
     print(response.content)
@@ -101,7 +105,9 @@ def test_delete_payment_methods(billing_objects_w_pay):
     input_data["billing_contact"] = billing_objects_w_pay.billing_contact.id
 
     response = billing_objects_w_pay.api_client.delete(
-        reverse("billing_api:org-payment-method", args=[billing_objects_w_pay.org.slug]),
+        reverse(
+            "billing_api:org-payment-method", args=[billing_objects_w_pay.org.slug]
+        ),
         data=input_data,
     )
     output_data = response.json()["data"][0]
@@ -112,7 +118,9 @@ def test_delete_payment_methods(billing_objects_w_pay):
 
 @pytest.mark.django_db
 def test_update_billing_contact(billing_objects_w_pay):
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
+    url = reverse(
+        "billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug]
+    )
     data = {
         "id": billing_objects_w_pay.billing_contact.id,
         "org": billing_objects_w_pay.billing_contact.org,
@@ -131,7 +139,9 @@ def test_update_billing_contact(billing_objects_w_pay):
 
 @pytest.mark.django_db
 def test_delete_billing_contact(billing_objects_w_pay):
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
+    url = reverse(
+        "billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug]
+    )
     data = {
         "id": billing_objects_w_pay.billing_contact.id,
         "org": billing_objects_w_pay.billing_contact.org,
@@ -151,7 +161,9 @@ def test_delete_active_billing_contact(billing_objects_w_pay):
     subscription.save()
     assert billing_objects_w_pay.billing_contact.active
 
-    url = reverse("billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug])
+    url = reverse(
+        "billing_api:org-billing-contact", args=[billing_objects_w_pay.org.slug]
+    )
     data = {
         "id": billing_objects_w_pay.billing_contact.id,
         "org": billing_objects_w_pay.billing_contact.org,

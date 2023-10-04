@@ -1,11 +1,11 @@
 # test billing subscription manager
-import pytest
-import os
-import json
 import io
+import json
+import os
 from unittest.mock import patch
+
+import pytest
 from django.core.management import call_command
-from tests.fixtures import billing_objects, billing_objects_w_pay
 from django.utils import timezone
 
 STRIPE_CARD_ERROR = "CardError(message='The zip code you supplied failed validation.', param='address_zip', code='incorrect_zip', http_status=402, request_id='req_nVPxvQvGIjDtHe')"
@@ -16,11 +16,13 @@ def stripe_mock_data():
     loads stripe mock data from data/billing/stripe_mock_data.json
     """
 
-    file_path = os.path.join(os.path.dirname(__file__), "data/billing/stripe_mock_data.json")
+    file_path = os.path.join(
+        os.path.dirname(__file__), "data/billing/stripe_mock_data.json"
+    )
 
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         mock_data_dict = json.load(f)
-    
+
     return mock_data_dict
 
 
@@ -50,14 +52,15 @@ def mock_stripe():
     for patcher in patches.values():
         patcher.stop()
 
-def assert_no_charge():
 
+def assert_no_charge():
     out = io.StringIO()
     call_command("billing_cycles", commit=True, stdout=out)
 
     output = out.getvalue()
 
     assert "-- charging " not in output
+
 
 def assert_retrying_charge():
     out = io.StringIO()
@@ -68,8 +71,7 @@ def assert_retrying_charge():
     assert "-- retrying failed subscription cycle charge" in output
 
 
-def run_billing_cycle_with_cutover(billing_objects) -> dict:
-
+def run_billing_cycle_with_cutover(_billing_objects) -> dict:
     """
     Run the billing cycle command twice
 
@@ -81,36 +83,34 @@ def run_billing_cycle_with_cutover(billing_objects) -> dict:
 
     call_command("billing_cycles", commit=True)
 
-    assert billing_objects.monthly_subscription.subscription_cycle is not None
+    assert _billing_objects.monthly_subscription.subscription_cycle is not None
 
     # first billing cycle created, now back-date it, by shifting both `start`
     # and `end` back a month
 
-    billing_cycle = billing_objects.monthly_subscription.subscription_cycle
+    billing_cycle = _billing_objects.monthly_subscription.subscription_cycle
 
     billing_cycle.start = billing_cycle.start - timezone.timedelta(days=32)
     billing_cycle.end = billing_cycle.end - timezone.timedelta(days=32)
     billing_cycle.save()
 
-    # now run the billing_cycles command again, and check that the billing cycle has 
+    # now run the billing_cycles command again, and check that the billing cycle has
     # processed payment and a new billing cycle has been created
 
     out = io.StringIO()
     err = io.StringIO()
     call_command("billing_cycles", commit=True, stdout=out, stderr=err)
 
-    assert billing_objects.monthly_subscription.subscription_cycle is not None
-    assert billing_objects.monthly_subscription.subscription_cycle != billing_cycle
-
+    assert _billing_objects.monthly_subscription.subscription_cycle is not None
+    assert _billing_objects.monthly_subscription.subscription_cycle != billing_cycle
 
     return {
         "stdout": out.getvalue(),
         "stderr": err.getvalue(),
         "billing_cycle": billing_cycle,
-        "new_billing_cycle": billing_objects.monthly_subscription.subscription_cycle
+        "new_billing_cycle": _billing_objects.monthly_subscription.subscription_cycle,
     }
 
-##### TESTS
 
 @pytest.mark.django_db
 def test_new_billing_cycle_creation(billing_objects, mock_stripe):
@@ -143,24 +143,24 @@ def test_billing_cycle_progression(billing_objects_w_pay, mock_stripe):
 
     cycle_charge = billing_cycle.subscription_cycle_charge_set.first()
     payment_charge = cycle_charge.payment_charge
-    
+
     assert cycle_charge.invoice_number
     assert payment_charge.invoice_number
     assert payment_charge.order_number
 
     assert float(payment_charge.price) == 125.99
     assert payment_charge.data == {
-        'processor_txn_id': 'ch_4fdAW5ftNQow1a', 
-        'stripe_charge': 'ch_4fdAW5ftNQow1a',
-        'receipt_url': "https://pay.stripe.com/receipts/acct_1032D82eZvKYlo2C/ch_4fdAW5ftNQow1a/rcpt_4fdAW5ftNQow1a"
-    } 
+        "processor_txn_id": "ch_4fdAW5ftNQow1a",
+        "stripe_charge": "ch_4fdAW5ftNQow1a",
+        "receipt_url": "https://pay.stripe.com/receipts/acct_1032D82eZvKYlo2C/ch_4fdAW5ftNQow1a/rcpt_4fdAW5ftNQow1a",
+    }
 
     # assert idempotency
     assert_no_charge()
 
+
 @pytest.mark.django_db
 def test_billing_cycle_progression_stripe_failure(billing_objects_w_pay, mock_stripe):
-
     """
     Test proper handling of Stripe failure when billing cycle is progressed
     """

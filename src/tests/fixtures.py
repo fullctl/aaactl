@@ -334,9 +334,9 @@ def account_objects():
 def billing_objects():
     return make_billing_objects()
 
+
 @pytest.fixture
 def billing_objects_w_pay(billing_objects):
-
     # add product to monthly subscription
 
     billing_objects.monthly_subscription.add_product(
@@ -344,7 +344,7 @@ def billing_objects_w_pay(billing_objects):
     )
 
     # add payment method to monthly subscription
-    
+
     billing_objects.monthly_subscription.payment_method = billing_objects.payment_method
     billing_objects.monthly_subscription.save()
 

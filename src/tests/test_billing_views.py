@@ -70,4 +70,6 @@ def test_setup_billing_contact_prepop(billing_objects_w_pay):
         + f"org={billing_objects_w_pay.org.slug}"
     )
     assert response.status_code == 200
-    assert billing_objects_w_pay.billing_contact.name in response.content.decode("utf-8")
+    assert billing_objects_w_pay.billing_contact.name in response.content.decode(
+        "utf-8"
+    )

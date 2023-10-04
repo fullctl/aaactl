@@ -26,7 +26,9 @@ def test_product_group(db, billing_objects_w_pay):
 def test_recurring_products(db, billing_objects_w_pay):
     assert billing_objects_w_pay.product.is_recurring_product is False
     assert billing_objects_w_pay.product_subscription_fixed.is_recurring_product is True
-    assert billing_objects_w_pay.product_subscription_metered.is_recurring_product is True
+    assert (
+        billing_objects_w_pay.product_subscription_metered.is_recurring_product is True
+    )
 
 
 def test_recurring_product_type(db, billing_objects_w_pay):
@@ -148,7 +150,9 @@ def test_subscriptionsubscription_cycle_charge(db, billing_objects_w_pay, mocker
     assert payment_charge.description == subscription.charge_description
 
 
-def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects_w_pay, mocker):
+def test_subscriptionsubscription_cycle_charge_exists(
+    db, billing_objects_w_pay, mocker
+):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Charge.create",

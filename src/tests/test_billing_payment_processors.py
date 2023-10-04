@@ -10,20 +10,18 @@ def test_processor_default():
 
 
 @pytest.mark.django_db
-def test_payment_processor_interface(billing_objects_w_pay):
-    payment_processor = bpp.processor.PaymentProcessor(
-        billing_objects_w_pay.payment_method
-    )
+def test_payment_processor_interface(billing_objects):
+    payment_processor = bpp.processor.PaymentProcessor(billing_objects.payment_method)
     assert payment_processor.data == {"stripe_card": "5200828282828210"}
     assert (
         payment_processor.billing_contact_customer.billing_contact
-        == billing_objects_w_pay.billing_contact
+        == billing_objects.billing_contact
     )
 
 
 @pytest.mark.django_db
-def test_stripe_processor(billing_objects_w_pay):
-    stripe = bpp.stripe.Stripe(billing_objects_w_pay.payment_method)
+def test_stripe_processor(billing_objects):
+    stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     assert "stripe_token" in stripe.form.fields
     assert stripe.customer is None
     assert stripe.source == "5200828282828210"
@@ -31,31 +29,31 @@ def test_stripe_processor(billing_objects_w_pay):
 
 
 @pytest.mark.django_db
-def test_stripe_setup_customer(billing_objects_w_pay, mocker):
+def test_stripe_setup_customer(billing_objects, mocker):
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Customer.create",
         return_value={"id": 1234},
     )
-    stripe = bpp.stripe.Stripe(billing_objects_w_pay.payment_method)
+    stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     assert stripe.customer is None
     stripe.setup_customer()
     assert stripe.customer == 1234
 
 
 @pytest.mark.django_db
-def test_stripe_charge_invitealid(billing_objects_w_pay):
-    billing_objects_w_pay.payment_method.data = {}
-    billing_objects_w_pay.payment_method.save()
-    stripe = bpp.stripe.Stripe(billing_objects_w_pay.payment_method)
+def test_stripe_charge_invitealid(billing_objects):
+    billing_objects.payment_method.data = {}
+    billing_objects.payment_method.save()
+    stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     with pytest.raises(ValueError, match="Payment method not setup."):
         stripe.charge({})
 
 
 @pytest.mark.django_db
-def test_stripe_setup_card(billing_objects_w_pay, mocker):
-    last_4 = billing_objects_w_pay.payment_method.data["stripe_card"][-4:]
-    billing_objects_w_pay.payment_method.data = {}
-    billing_objects_w_pay.payment_method.save()
+def test_stripe_setup_card(billing_objects, mocker):
+    last_4 = billing_objects.payment_method.data["stripe_card"][-4:]
+    billing_objects.payment_method.data = {}
+    billing_objects.payment_method.save()
 
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Customer.create",
@@ -69,7 +67,7 @@ def test_stripe_setup_card(billing_objects_w_pay, mocker):
         "billing.payment_processors.stripe.stripe.Customer.modify_source",
         return_value=None,
     )
-    stripe = bpp.stripe.Stripe(billing_objects_w_pay.payment_method)
+    stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     card_id = stripe.setup_card("token")
     assert card_id == 2345
     assert stripe.data["stripe_card"] == 2345
@@ -78,10 +76,10 @@ def test_stripe_setup_card(billing_objects_w_pay, mocker):
 
 
 @pytest.mark.django_db
-def test_stripe_sync_charge_success(billing_objects_w_pay, mocker):
-    stripe = bpp.stripe.Stripe(billing_objects_w_pay.payment_method)
+def test_stripe_sync_charge_success(billing_objects, mocker):
+    stripe = bpp.stripe.Stripe(billing_objects.payment_method)
     payment_charge = models.PaymentCharge.objects.create(
-        payment_method=billing_objects_w_pay.payment_method,
+        payment_method=billing_objects.payment_method,
         price=100,
         description="Test payment",
         status="pending",

@@ -692,32 +692,37 @@ account.Services = twentyc.cls.define(
         data.items.forEach((item, idx, array) => {
           var ihf = new this.itemHtmlFormatter(item);
           item_table.append(
-              $('<tr>').append([
-                ihf.formattedDescription(),
-                ihf.formattedUsageType(),
-                ihf.formattedUsageAmount(),
-                ihf.formattedLink().hide(),
-                ihf.formatted_expiration_date(),
-                ihf.formattedCost()
-              ])
-            )
-          total_cost += parseFloat(item.cost);
-        });
-        item_heading.children().addClass('px-0').append(
-          $('<div>').addClass('container-fluid').append(
-            $('<div>').addClass("row align-items-center").append([
-             $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
-             $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
-             $('<div>').addClass('col'),
-             $('<div>').html(
-              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
-              ).addClass('ms-auto col-auto pe-0')
+            $('<tr>').append([
+              ihf.formattedDescription(),
+              ihf.formattedUsageType(),
+              ihf.formattedUsageAmount(),
+              ihf.formattedLink().hide(),
+              ihf.formatted_expiration_date(),
+              ihf.formattedCost()
             ])
           )
-        );
+          total_cost += parseFloat(item.cost);
+        });
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
         item_table.after($('<tr>').addClass('blank-row'));
+
+        const item_cost_summary = $('<div>').addClass("row align-items-center").append([
+          $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
+          $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
+          $('<div>').addClass('col'),
+        ]);
+        if (data.subscription_cycle) {
+          item_cost_summary.append(
+            $('<div>').html(
+              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
+            ).addClass('ms-auto col-auto pe-0')
+          );
+        }
+
+        item_heading.children().addClass('px-0').append(
+          $('<div>').addClass('container-fluid').append(item_cost_summary)
+        );
       });
 
       $(this.rest_api_list).on("load:after", () => {

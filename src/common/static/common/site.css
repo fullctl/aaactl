@@ -387,8 +387,11 @@ appears when the header is clicked.*/
 }
 
 
-.controlpanel{
+.tab-pane {
   border-top: 1px solid var(--lighter-gray);
+}
+
+.controlpanel{
   padding-top: var(--size-400);
 }
 

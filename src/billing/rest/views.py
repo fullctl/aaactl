@@ -47,8 +47,10 @@ class Organization(viewsets.ViewSet):
         if not billing_contact:
             return Response({"billing_contact": ["Required field"]}, status=400)
 
-        queryset = models.PaymentMethod.get_for_org(org).filter(
-            billing_contact_id=billing_contact
+        queryset = (
+            models.PaymentMethod.get_for_org(org)
+            .filter(billing_contact_id=billing_contact)
+            .order_by("-updated")
         )
         serializer = Serializers.payment_method(queryset, many=True)
         return Response(serializer.data)

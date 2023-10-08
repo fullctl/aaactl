@@ -17,6 +17,7 @@ billing.BillingContact = twentyc.cls.define(
         let billing_contact_id = this.elements.payment_method_list.data('billing-contact-id');
         return `${url}?billing_contact=${billing_contact_id}`
       }
+      this.rest_api_payment_method_list.formatters.updated = fullctl.formatters.datetime;
       this.rest_api_payment_method_list.load()
 
       this.rest_api_billing_contact_form = new twentyc.rest.Form(this.elements.billing_contact_form);

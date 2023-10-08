@@ -21,8 +21,8 @@
     <div class="row controlpanel">
       <div class="col-xs-12 col">
         {% block controlpanel %}
-        <div class="row mt-2 justify-content-between">
-          <div class="col-xs-12 col-sm-auto ps-0">
+        <div class="row justify-content-between">
+          <div class="col-xs-12 col-sm-auto">
             <h2>Account Dashboard</h2>
           </div>
           <div class="col-xs-12 col-sm-auto ps-0">
@@ -63,7 +63,7 @@
         
 
         <div class="row">
-          <div class="col ps-0 mt-4 mb-4">
+          <div class="col mt-4 mb-4">
             {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
             <div class="alert alert-warning">
               <div class="row">
@@ -161,6 +161,74 @@
           </div>
           {% endif %}
 
+
+        </div>
+
+        {% endblock %}
+      </div>
+      <div class="col-xs-12 col-md-4">
+        {% block menu %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col tab-pane" id="page-billing" role="tabpanel" aria-labelledby="tab-billing" tabindex="0">
+    <div class="row">
+      <div class="col">
+
+        <div class="row mb-3">
+          <div class="col">
+            <h2>Billing</h2>
+          </div>
+          <div class="col-auto">
+            <a class="primary btn" type="button" href="{% url "billing:billing-contacts" %}">
+              <div class="row align-items-center">
+                <div class="col label pe-0">Billing Contacts</div>
+                <div class="col-auto">
+                    <span class="icon icon-edit"></span>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="accordion dashboard-cards">
+
+          <div class="accordion-item">
+            <h5 class="accordion-header" id="heading-service-charges">
+              <button 
+                class="accordion-button fs-5 collapsed" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#collapse-service-charges" 
+                aria-expanded="false" 
+                aria-controls="collapse-service-charges">
+                {% trans "Service Charges" %}
+              </button>
+            </h5>
+            <div id="collapse-service-charges" class="accordion-collapse collapse" aria-labelledby="heading-service-charges">
+
+              <div
+                class="service-listing"
+                data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+                data-api-action="services">
+                <div class="templates" style="display:none">
+                  <table >
+                    <tr data-template="row" class="">
+                      <td scope="col" data-field="name"></td>
+                    </tr>
+                  </table>
+                </div>
+
+                <table class="table table-sm table-inline service-list">
+                  <tbody id="serviceListBody" class="list-body"></tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+
           {% if permissions.read_org_billing %}
           <div class="accordion-item">
             <h5 class="accordion-header" id="heading-order-history">
@@ -175,66 +243,48 @@
               </button>
             </h5>
             <div id="collapse-order-history" class="accordion-collapse collapse" aria-labelledby="heading-order-history">
+
+              <div
+                class="order-history"
+                data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
+                data-api-action="orders">
+                <div class="templates" style="display:none">
+                  <table>
+                    <tr data-template="row">
+                      <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
+                      <td scope="col" data-field="processed" class="light-grey"></td>
+                      <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
+                      <td scope="col" data-field="order_id" class="small-links"></td>
+                    </tr>
+                  </table>
+                </div>
+                <table class="table table-sm table-inline small-table-row">
+                  <tbody id="orderHistoryListBody" class="list-body">
+                  </tbody>
+                </table>
+              </div>
+
             </div>
           </div>
           {% endif %}
 
         </div>
 
-        {% endblock %}
-      </div>
-      <div class="col-xs-12 col-md-4">
-        {% block menu %}
-        {% endblock %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col tab-pane" id="page-billing" role="tabpanel" aria-labelledby="tab-billing" tabindex="0">
-    <h2 class="pt-3">Service Charges</h2>
-    <div
-      class="service-listing"
-      data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
-      data-api-action="services">
-      <div class="templates" style="display:none">
-        <table >
-          <tr data-template="row" class="">
-            <td scope="col" data-field="name"></td>
-          </tr>
-        </table>
       </div>
 
-      <table class="table table-sm table-inline service-list">
-        <tbody id="serviceListBody" class="list-body"></tbody>
-      </table>
-    </div>
-
-    <h2>Order History</h2>
-    <div class="row order-history-container">
-      <div
-        class="order-history"
-        data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
-        data-api-action="orders">
-        <div class="templates" style="display:none">
-          <table>
-            <tr data-template="row">
-              <td scope="col" data-field="description" class="table-text-bold dark-grey"></td>
-              <td scope="col" data-field="processed" class="light-grey"></td>
-              <td scope="col" data-field="price" class="dark-grey pe-4 right "></td>
-              <td scope="col" data-field="order_id" class="small-links"></td>
-            </tr>
-          </table>
-        </div>
-        <table class="table table-sm table-inline small-table-row">
-          <tbody id="orderHistoryListBody" class="list-body">
-          </tbody>
-        </table>
-      </div>
+      <div class="col-xs-12 col-md-4"></div>
     </div>
   </div>
 
   <div class="col tab-pane" id="page-account" role="tabpanel" aria-labelledby="tab-account" tabindex="0">
-    {% include "account/controlpanel/menu.html" %}
+    <div class="row">
+      <div class="col">
+        <h2>Account Settings</h2>
+        {% include "account/controlpanel/menu.html" %}
+      </div>
+
+      <div class="col-xs-12 col-md-4"></div>
+    </div>
   </div>
 </div>
 

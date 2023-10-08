@@ -389,9 +389,6 @@ appears when the header is clicked.*/
 
 .tab-pane {
   border-top: 1px solid var(--lighter-gray);
-}
-
-.controlpanel{
   padding-top: var(--size-400);
 }
 
@@ -884,11 +881,6 @@ div.permissions.override .delete-override {
 }
 
 
-.dashboard-cards .accordion-item > div {
-  background-color: var(--background);
-  padding: 10px 0px;
-}
-
 .dashboard-cards .accordion-item {
   border: none;
 }
@@ -896,5 +888,12 @@ div.permissions.override .delete-override {
 .dashboard-cards {
   background-color: var(--box-bg);
   border-radius: 4px;
-  margin: 0px 0px 0px -15px !important;
+}
+
+.dashboard-cards .accordion-item .accordion-collapse {
+  padding-left: var(--bs-accordion-btn-padding-x);
+  padding-right: var(--bs-accordion-btn-padding-x);
+  background-color: var(--background);
+  padding-top: 10px;
+  padding-bottom: 10px;
 }

@@ -79,39 +79,6 @@ class Stripe(PaymentProcessor):
 
         return customer["id"]
 
-    def setup_card(self, token):
-        # DEPRECATED
-        if self.data.get("stripe_card"):
-            return self.data["stripe_card"]
-
-        self.setup_customer()
-
-        card = stripe.Customer.create_source(
-            self.customer, source=token, api_key=self.api_key
-        )
-
-        self.data["stripe_card"] = card["id"]
-        self.payment_method.custom_name = "Credit Card {}".format(card["last4"])
-        self.payment_method.status = "ok"
-        self.save()
-
-        details = self.payment_method
-
-        stripe.Customer.modify_source(
-            self.customer,
-            card["id"],
-            address_city=details.city,
-            address_country=details.country,
-            address_zip=details.postal_code,
-            address_line1=details.address1,
-            address_line2=details.address2,
-            address_state=details.state,
-            name=details.holder,
-            api_key=self.api_key,
-        )
-
-        return card["id"]
-
     def setup_unconfirmed_payment_method(self, client_secret, setup_intent_id):
 
         self.setup_customer()
@@ -129,8 +96,6 @@ class Stripe(PaymentProcessor):
             self.source,
             customer=self.customer,
         )
-
-
 
     @reversion.create_revision()
     def setup_billing(self, **kwargs):

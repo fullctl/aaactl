@@ -23,13 +23,6 @@
 <script>
   const stripe = Stripe("{{ stripe.public_key }}");
 
-
-  $('#submit').on('click', function(e) {
-    e.preventDefault();
-    console.log("CLICK CLICK")
-    handleSubmit(e)
-  });
-
   let elements;
   let setupIntent;
   let paymentElement;

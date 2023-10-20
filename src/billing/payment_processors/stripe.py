@@ -5,6 +5,26 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from billing.payment_processors.processor import PaymentProcessor
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def payment_method_name(stripe_payment_method_id):
+
+    """
+    Returns the name of a stripe payment method based on the type
+
+    Currently supports card and us_bank_account
+    """
+
+    stripe_pm = stripe.PaymentMethod.retrieve(stripe_payment_method_id)
+
+    if stripe_pm.type == "card":
+        pm_name = stripe_pm.card.brand + " " + stripe_pm.card.last4
+    elif stripe_pm.type == "us_bank_account":
+        pm_name = stripe_pm.us_bank_account.bank_name + " " + stripe_pm.us_bank_account.last4
+    else:
+        pm_name = None
+
+    return pm_name
 
 
 class Stripe(PaymentProcessor):
@@ -12,15 +32,16 @@ class Stripe(PaymentProcessor):
     name = _("Stripe")
 
     class Form(forms.Form):
-        stripe_token = forms.CharField(widget=forms.HiddenInput())
+        client_secret = forms.CharField(widget=forms.HiddenInput())
+        setup_intent_id = forms.CharField(widget=forms.HiddenInput())
 
         @property
         def template(self):
-            return "billing/setup/stripe.html"
+            return "billing/setup/stripe-elements.html"
 
     @property
     def source(self):
-        return self.data.get("stripe_card")
+        return self.data.get("stripe_payment_method", self.data.get("stripe_card"))
 
     @property
     def customer(self):
@@ -59,6 +80,7 @@ class Stripe(PaymentProcessor):
         return customer["id"]
 
     def setup_card(self, token):
+        # DEPRECATED
         if self.data.get("stripe_card"):
             return self.data["stripe_card"]
 
@@ -90,29 +112,70 @@ class Stripe(PaymentProcessor):
 
         return card["id"]
 
+    def setup_unconfirmed_payment_method(self, client_secret, setup_intent_id):
+
+        self.setup_customer()
+
+        self.payment_method.status = "unconfirmed"
+
+        self.data["stripe_setup_intent"] = setup_intent_id
+        self.data["stripe_client_secret"] = client_secret
+
+        self.save()
+
+    def link_customer(self):
+
+        stripe.PaymentMethod.attach(
+            self.source,
+            customer=self.customer,
+        )
+
+
+
     @reversion.create_revision()
     def setup_billing(self, **kwargs):
         if self.source:
             self.payment_method.status = "ok"
             self.save()
             return
-        self.setup_card(kwargs.pop("stripe_token"), **kwargs)
+        self.setup_unconfirmed_payment_method(**kwargs)
 
     @reversion.create_revision()
     def charge(self, payment_charge):
         if not self.source:
             raise ValueError("Payment method not setup.")
 
+        payment_intent = None
+        charge = None
+
         try:
-            charge = stripe.Charge.create(
-                customer=self.customer,
-                source=self.source,
-                amount=int(payment_charge.price * 100),
-                description=payment_charge.details,
-                api_key=self.api_key,
-                currency=self.default_currency,
-            )
-            self.log.info("stripe charge", status="ok", payment_charge=payment_charge)
+            if self.source.startswith("pm_"):
+                payment_intent = stripe.PaymentIntent.create(
+                    amount=int(payment_charge.price * 100),
+                    currency=self.default_currency,
+                    description=payment_charge.details,
+                    customer=self.customer,
+                    payment_method=self.source,
+                    confirm=True,
+                    automatic_payment_methods={"enabled": True, "allow_redirects":"never"},
+                    api_key=self.api_key,
+                )
+                self.log.info("stripe payment intent", status="ok", payment_intent=payment_intent)
+            
+            else:
+            
+                # Legacy charge. This should be removed once all customers have been migrated to payment intents
+
+                charge = stripe.Charge.create(
+                    customer=self.customer,
+                    source=self.source,
+                    amount=int(payment_charge.price * 100),
+                    description=payment_charge.details,
+                    api_key=self.api_key,
+                    currency=self.default_currency,
+                )
+                self.log.info("stripe charge", status="ok", payment_charge=payment_charge)
+
         except Exception as e:
             # failed to charge on the stripe end, log the error
             # and mark the charge as failed
@@ -126,9 +189,13 @@ class Stripe(PaymentProcessor):
 
         payment_charge.status = "pending"
 
-        payment_charge.data["stripe_charge"] = charge["id"]
-        payment_charge.data["processor_txn_id"] = charge["id"]
-        payment_charge.data["receipt_url"] = charge["receipt_url"]
+        if self.source.startswith("pm_"):
+            payment_charge.data["stripe_payment_intent"] = payment_intent["id"]
+            payment_charge.data["processor_txn_id"] = payment_intent["id"]
+        else:
+            payment_charge.data["stripe_charge"] = charge["id"]
+            payment_charge.data["processor_txn_id"] = charge["id"]
+            payment_charge.data["receipt_url"] = charge["receipt_url"]
         payment_charge.save()
 
     def _sync_charge(self, payment_charge, status=None):

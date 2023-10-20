@@ -42,12 +42,9 @@ billing.BillingSetup = twentyc.cls.define(
 
       this.rest_api_form = new twentyc.rest.Form(this.elements.form);
       this.track_form_changes();
-      $(this.rest_api_form).on("api-post:success", function() {
-        if (this.rest_api_form.redirect){
-          document.location.href = this.rest_api_form.redirect;
-        } else {
-          document.location.href = "/";
-        }
+      $(this.rest_api_form).on("api-post:success", function(e, endpoint, sent_data, response) {
+        console.log("Got submit success", {e, endpoint, response, sent_data});
+        window.processorHandleConfirm(response.first().payment_method_id);
       }.bind(this));
       this.elements.button_create_payopt.click(function() {
         this.toggle_create_payopt();

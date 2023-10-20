@@ -1561,6 +1561,15 @@ class PaymentMethod(HandleRefModel):
     address2 = models.CharField(max_length=255, null=True, blank=True)
     postal_code = models.CharField(max_length=255)
     state = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(
+        max_length=32,
+        choices=(
+            ("unconfirmed", "Unconfirmed"),
+            ("ok", "Ok"),
+            ("inactive", "Inactive"),
+        ),
+        default="unconfirmed",
+    )
 
     class HandleRef:
         tag = "payment_method"
@@ -1593,7 +1602,7 @@ class PaymentMethod(HandleRefModel):
 @reversion.register()
 class PaymentCharge(HandleRefModel):
     payment_method = models.ForeignKey(
-        PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
+        PaymentMethod, on_delete=models.SET_NULL, related_name="payment_charge_set", null=True
     )
     price = models.DecimalField(
         default=0.0,

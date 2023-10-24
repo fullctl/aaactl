@@ -4,8 +4,13 @@ from django import forms
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from billing.payment_processors.processor import PaymentProcessor
+from billing.payment_processors.processor import PaymentProcessor, InternalProcessorError
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+class LegacyPaymentMethodDetected(InternalProcessorError):
+    def __init__(self):
+        super().__init__("Legacy payment method detected - no longer supported")
 
 def payment_method_name(stripe_payment_method_id):
 
@@ -41,7 +46,7 @@ class Stripe(PaymentProcessor):
 
     @property
     def source(self):
-        return self.data.get("stripe_payment_method", self.data.get("stripe_card"))
+        return self.data.get("stripe_payment_method")
 
     @property
     def customer(self):
@@ -90,7 +95,12 @@ class Stripe(PaymentProcessor):
 
         self.save()
 
+        return self.payment_method.id
+
     def link_customer(self):
+
+        print("linking customer")
+        print(self.source, self.customer)
 
         stripe.PaymentMethod.attach(
             self.source,
@@ -111,35 +121,22 @@ class Stripe(PaymentProcessor):
             raise ValueError("Payment method not setup.")
 
         payment_intent = None
-        charge = None
+
+        if self.source.startswith("card_"):
+            raise LegacyPaymentMethodDetected()
 
         try:
-            if self.source.startswith("pm_"):
-                payment_intent = stripe.PaymentIntent.create(
-                    amount=int(payment_charge.price * 100),
-                    currency=self.default_currency,
-                    description=payment_charge.details,
-                    customer=self.customer,
-                    payment_method=self.source,
-                    confirm=True,
-                    automatic_payment_methods={"enabled": True, "allow_redirects":"never"},
-                    api_key=self.api_key,
-                )
-                self.log.info("stripe payment intent", status="ok", payment_intent=payment_intent)
-            
-            else:
-            
-                # Legacy charge. This should be removed once all customers have been migrated to payment intents
-
-                charge = stripe.Charge.create(
-                    customer=self.customer,
-                    source=self.source,
-                    amount=int(payment_charge.price * 100),
-                    description=payment_charge.details,
-                    api_key=self.api_key,
-                    currency=self.default_currency,
-                )
-                self.log.info("stripe charge", status="ok", payment_charge=payment_charge)
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(payment_charge.price * 100),
+                currency=self.default_currency,
+                description=payment_charge.details,
+                customer=self.customer,
+                payment_method=self.source,
+                confirm=True,
+                automatic_payment_methods={"enabled": True, "allow_redirects":"never"},
+                api_key=self.api_key,
+            )
+            self.log.info("stripe payment intent", status="ok", payment_intent=payment_intent)
 
         except Exception as e:
             # failed to charge on the stripe end, log the error
@@ -148,35 +145,41 @@ class Stripe(PaymentProcessor):
             payment_charge.data["processor_failure"] = str(e)
             payment_charge.save()
             self.log.error(
-                "stripe charge", status="failed", payment_charge=payment_charge, error=e
+                "stripe payment intent", status="failed", payment_charge=payment_charge, error=e
             )
             return
 
         payment_charge.status = "pending"
 
-        if self.source.startswith("pm_"):
-            payment_charge.data["stripe_payment_intent"] = payment_intent["id"]
-            payment_charge.data["processor_txn_id"] = payment_intent["id"]
-        else:
-            payment_charge.data["stripe_charge"] = charge["id"]
-            payment_charge.data["processor_txn_id"] = charge["id"]
-            payment_charge.data["receipt_url"] = charge["receipt_url"]
+        payment_charge.data["stripe_payment_intent"] = payment_intent["id"]
+        payment_charge.data["processor_txn_id"] = payment_intent["id"]
+
+        if payment_intent.get("latest_charge"):
+            payment_charge.data["receipt_url"] = stripe.Charge.retrieve(
+                payment_intent["latest_charge"]
+            )["receipt_url"]
+
         payment_charge.save()
 
     def _sync_charge(self, payment_charge, status=None):
         reversion.set_comment("Stripe charge status sync")
 
-        if not payment_charge.data.get("stripe_charge"):
+        if not payment_charge.data.get("stripe_payment_intent"):
             return super()._sync_charge(payment_charge, "failed")
 
-        charge = stripe.Charge.retrieve(
-            payment_charge.data["stripe_charge"], api_key=self.api_key
+        payment_intent = stripe.PaymentIntent.retrieve(
+            payment_charge.data["stripe_payment_intent"], api_key=self.api_key
         )
 
-        if charge["status"] == "succeeded":
+        if payment_intent["status"] == "succeeded":
+            # set receupt url from latest_charge
+            if payment_intent.get("latest_charge"):
+                payment_charge.data["receipt_url"] = stripe.Charge.retrieve(
+                    payment_intent["latest_charge"]
+                )["receipt_url"]
             return super()._sync_charge(payment_charge, "ok")
 
-        elif charge["status"] == "failed":
+        elif payment_intent["status"] == "failed":
             return super()._sync_charge(payment_charge, "failed")
 
     def _sync_invoice(self, invoice, **kwargs):
@@ -189,15 +192,15 @@ class Stripe(PaymentProcessor):
             invoice.data["stripe_invoice"], api_key=self.api_key
         )
 
-        if not stripe_invoice["charge"]:
+        if not stripe_invoice["payment_intent"]:
             return
 
-        stripe_charge = stripe.Charge.retrieve(
-            stripe_invoice["charge"], api_key=self.api_key
+        stripe_payment_intent = stripe.Charge.retrieve(
+            stripe_invoice["payment_intent"], api_key=self.api_key
         )
 
         if stripe_invoice["status"] == "paid":
-            invoice.data["stripe_charge"] = stripe_charge
+            invoice.data["stripe_payment_intent"] = stripe_payment_intent
 
             return super()._sync_invoice(invoice, "ok")
 

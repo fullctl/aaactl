@@ -10,6 +10,19 @@
   <input type="hidden"  name="setup_intent_id" id="setup_intent_id" />
 </div>
 
+{% if billing_env == "test" %}
+<div class="alert alert-warning">
+<p>TESTING MODE</p>
+<p>Credit card numbers for testing (any 3 digits for CVC)</p>
+<pre>
+4242424242424242  Visa
+4000056655665556  Visa (debit)
+5555555555554444  Mastercard
+2223003122003222  Mastercard
+</pre>
+</div>
+{% endif %}
+
 <form id="payment-form">
   <div id="link-authentication-element">
     <!--Stripe.js injects the Link Authentication Element-->
@@ -19,6 +32,8 @@
   </div>
   <div id="payment-message" class="hidden"></div>
 </form>
+
+
 
 <script>
   const stripe = Stripe("{{ stripe.public_key }}");

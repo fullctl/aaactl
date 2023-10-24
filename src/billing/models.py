@@ -1581,8 +1581,10 @@ class PaymentMethod(HandleRefModel):
 
     @classmethod
     def get_for_org(cls, org, status="ok"):
-        return cls.objects.filter(billing_contact__org=org, status=status)
-
+        if status:
+            return cls.objects.filter(billing_contact__org=org, status=status)
+        else:
+            return cls.objects.filter(billing_contact__org=org)
     @property
     def name(self):
         if self.custom_name:
@@ -1689,7 +1691,10 @@ class PaymentCharge(HandleRefModel):
         return InvoiceLine.objects.filter(invoice__invoice_number=invoice_number)
 
     def __str__(self):
-        return f"{self.payment_method.name} Charge {self.id}"
+        if self.payment_method:
+            return f"{self.payment_method.name} Charge {self.id}"
+        else:
+            return f"[Payment Method Removed] Charge {self.id}"
 
     @reversion.create_revision()
     def capture(self):
@@ -1982,20 +1987,20 @@ class Invoice(HandleRefModel):
         """
 
         # TODO probably dont hardcode stripe?
-        stripe_charge = self.data.get("stripe_charge")
+        stripe_payment_intent = self.data.get("stripe_payment_intent")
 
         # no stipe charge exists for this invoice yet
         # meaning its still open
-        if not stripe_charge:
+        if not stripe_payment_intent:
             return
 
         # payment method on stripe's side
-        processor_payment_method = stripe_charge["payment_method"]
+        processor_payment_method = stripe_payment_intent["payment_method"]
 
         # payment method on our side
         payment_method = PaymentMethod.objects.filter(
             billing_contact__org=self.org,
-            data__stripe_card=processor_payment_method,
+            data__stripe_payment_method=processor_payment_method,
         ).first()
 
         if not payment_method:
@@ -2011,12 +2016,12 @@ class Invoice(HandleRefModel):
         # based on the stripe charge tied to the invoice
         charge = PaymentCharge.objects.create(
             payment_method=payment_method,
-            price=stripe_charge["amount"] / 100,
-            description=stripe_charge["description"],
+            price=stripe_payment_intent["amount"] / 100,
+            description=stripe_payment_intent["description"],
             data={
-                "stripe_charge": stripe_charge["id"],
-                "processor_txn_id": stripe_charge["id"],
-                "receipt_url": stripe_charge["receipt_url"],
+                "stripe_payment_intent": stripe_payment_intent["id"],
+                "processor_txn_id": stripe_payment_intent["id"],
+                "receipt_url": stripe_payment_intent["receipt_url"],
             },
         )
 

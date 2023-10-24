@@ -2,8 +2,22 @@ import reversion
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
+from billing.payment_processors.processor import InternalProcessorError
 from billing.models import Invoice, OrganizationProduct, Subscription
 
+
+def catch_internal_processor_error(fn):
+    """
+    decorator to catch internal processor errors and log them
+    """
+
+    def wrapper(self, *args, **kwargs):
+        try:
+            return fn(self, *args, **kwargs)
+        except InternalProcessorError as exc:
+            self.log_error(f"\n\n---- INTERNAL PROCESSING ERROR\n\n{exc}\n\n----\n\n")
+
+    return wrapper
 
 class Command(CommandInterface):
     help = "Progresses billing subscription cycles and product expiry"
@@ -48,6 +62,7 @@ class Command(CommandInterface):
                     )
                     replacement_product.add_to_org(subscription.org)
 
+    @catch_internal_processor_error
     def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
@@ -102,6 +117,20 @@ class Command(CommandInterface):
                             subscription_cycle_charge.payment_charge.sync_status(
                                 commit=self.commit
                             )
+
+            for subscription_cycle in subscription.subscription_cycle_set.filter(
+                subscription_cycle_charge_set__payment_charge__status__in=["pending"]
+            ).distinct("id"):
+                subscription_cycle_charges = subscription_cycle.subscription_cycle_charge_set.filter(
+                    payment_charge__status="pending"
+                )
+                for subscription_cycle_charge in subscription_cycle_charges:
+                    self.log_info(
+                        f"-- syncing pending subscription cycle charge: {subscription_cycle_charge}"
+                    )
+                    subscription_cycle_charge.payment_charge.sync_status(
+                        commit=self.commit
+                    )
 
     def collect(self, subscription_product, subscription_cycle):
         org = subscription_cycle.subscription.org

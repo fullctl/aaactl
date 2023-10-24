@@ -24,6 +24,7 @@ def get_processor(_id):
 class InternalProcessorError(OSError):
     pass
 
+
 class PaymentProcessor:
     id = "_processor"
     name = "Payment Processor Interface"

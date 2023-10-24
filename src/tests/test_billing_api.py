@@ -53,7 +53,11 @@ def test_post_billing_setup(billing_objects, mocker):
     )
     mocker.patch(
         "billing.payment_processors.stripe.stripe.SetupIntent.create",
-        return_value={"id":2345, "client_secret": "test_secret", "status": "succeeded"},
+        return_value={
+            "id": 2345,
+            "client_secret": "test_secret",
+            "status": "succeeded",
+        },
     )
 
     response = billing_objects.api_client.post(

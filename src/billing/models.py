@@ -1585,6 +1585,7 @@ class PaymentMethod(HandleRefModel):
             return cls.objects.filter(billing_contact__org=org, status=status)
         else:
             return cls.objects.filter(billing_contact__org=org)
+
     @property
     def name(self):
         if self.custom_name:
@@ -1604,7 +1605,10 @@ class PaymentMethod(HandleRefModel):
 @reversion.register()
 class PaymentCharge(HandleRefModel):
     payment_method = models.ForeignKey(
-        PaymentMethod, on_delete=models.SET_NULL, related_name="payment_charge_set", null=True
+        PaymentMethod,
+        on_delete=models.SET_NULL,
+        related_name="payment_charge_set",
+        null=True,
     )
     price = models.DecimalField(
         default=0.0,

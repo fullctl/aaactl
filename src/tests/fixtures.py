@@ -126,7 +126,7 @@ class BillingObjects:
             postal_code="60600",
             state="IL",
             data={"stripe_payment_method": "5200828282828210"},
-            status="ok"
+            status="ok",
         )
 
         self.user = get_user_model().objects.create_user(
@@ -386,9 +386,7 @@ def charge_objects(billing_objects, mocker):
 
     subscription_cycle.charge()
 
-    subscription_cycle_charge = (
-        subscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
     payment_charge = subscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)

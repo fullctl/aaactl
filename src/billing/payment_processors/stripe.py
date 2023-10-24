@@ -4,7 +4,11 @@ from django import forms
 from django.conf import settings
 from django.utils.translation import gettext as _
 
-from billing.payment_processors.processor import PaymentProcessor, InternalProcessorError
+from billing.payment_processors.processor import (
+    InternalProcessorError,
+    PaymentProcessor,
+)
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -12,8 +16,8 @@ class LegacyPaymentMethodDetected(InternalProcessorError):
     def __init__(self):
         super().__init__("Legacy payment method detected - no longer supported")
 
-def payment_method_name(stripe_payment_method_id):
 
+def payment_method_name(stripe_payment_method_id):
     """
     Returns the name of a stripe payment method based on the type
 
@@ -25,7 +29,9 @@ def payment_method_name(stripe_payment_method_id):
     if stripe_pm.type == "card":
         pm_name = stripe_pm.card.brand + " " + stripe_pm.card.last4
     elif stripe_pm.type == "us_bank_account":
-        pm_name = stripe_pm.us_bank_account.bank_name + " " + stripe_pm.us_bank_account.last4
+        pm_name = (
+            stripe_pm.us_bank_account.bank_name + " " + stripe_pm.us_bank_account.last4
+        )
     else:
         pm_name = None
 
@@ -85,7 +91,6 @@ class Stripe(PaymentProcessor):
         return customer["id"]
 
     def setup_unconfirmed_payment_method(self, client_secret, setup_intent_id):
-
         self.setup_customer()
 
         self.payment_method.status = "unconfirmed"
@@ -98,7 +103,6 @@ class Stripe(PaymentProcessor):
         return self.payment_method.id
 
     def link_customer(self):
-
         print("linking customer")
         print(self.source, self.customer)
 
@@ -133,10 +137,12 @@ class Stripe(PaymentProcessor):
                 customer=self.customer,
                 payment_method=self.source,
                 confirm=True,
-                automatic_payment_methods={"enabled": True, "allow_redirects":"never"},
+                automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
                 api_key=self.api_key,
             )
-            self.log.info("stripe payment intent", status="ok", payment_intent=payment_intent)
+            self.log.info(
+                "stripe payment intent", status="ok", payment_intent=payment_intent
+            )
 
         except Exception as e:
             # failed to charge on the stripe end, log the error
@@ -145,7 +151,10 @@ class Stripe(PaymentProcessor):
             payment_charge.data["processor_failure"] = str(e)
             payment_charge.save()
             self.log.error(
-                "stripe payment intent", status="failed", payment_charge=payment_charge, error=e
+                "stripe payment intent",
+                status="failed",
+                payment_charge=payment_charge,
+                error=e,
             )
             return
 

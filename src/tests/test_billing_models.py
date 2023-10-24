@@ -128,22 +128,15 @@ def test_subscription_cycle_charge(db, billing_objects, mocker):
     subscription.start_subscription_cycle(two_weeks_ago)
     subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
     assert subscription_cycle.price > 0
 
     subscription_cycle.charge()
-    subscription_cycle_charge = (
-        subscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
     payment_charge = subscription_cycle_charge.payment_charge
 
-    assert (
-        subscription_cycle_charge.subscription_cycle
-        == subscription_cycle
-    )
+    assert subscription_cycle_charge.subscription_cycle == subscription_cycle
     assert payment_charge.price == subscription_cycle.price
     assert payment_charge.description == subscription.charge_description
 
@@ -160,27 +153,19 @@ def test_subscription_cycle_charge_exists(db, billing_objects, mocker):
     subscription.start_subscription_cycle(two_weeks_ago)
     subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
     assert subscription_cycle.price > 0
 
     subscription_cycle.charge()
 
-    subscription_cycle_charge = (
-        subscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
 
     # Returns charge if charge is still "pending"
-    assert (
-        subscription_cycle.charge() == subscription_cycle_charge
-    )
+    assert subscription_cycle.charge() == subscription_cycle_charge
 
     # Now we set status of payment charge from ok to pending
-    subscription_cycle_charge = (
-        subscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
     payment_charge = subscription_cycle_charge.payment_charge
     payment_charge.status = "ok"
     payment_charge.save()
@@ -253,17 +238,13 @@ def test_order_history(db, billing_objects, mocker):
     subscription.start_subscription_cycle(two_weeks_ago)
     subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
     assert subscription_cycle.price > 0
 
     subscription_cycle.charge()
 
-    subscription_cycle_charge = (
-        subscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
     payment_charge = subscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)
@@ -276,9 +257,7 @@ def test_billing_contact(db, billing_objects):
 
 
 @pytest.mark.django_db
-def test_create_transactions_from_subscription_cycle(
-    charge_objects, billing_objects
-):
+def test_create_transactions_from_subscription_cycle(charge_objects, billing_objects):
     subscription_cycle = charge_objects["subscription_cycle"]
     charge_objects["subscription"]
 

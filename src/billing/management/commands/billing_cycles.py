@@ -2,8 +2,8 @@ import reversion
 from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
-from billing.payment_processors.processor import InternalProcessorError
 from billing.models import Invoice, OrganizationProduct, Subscription
+from billing.payment_processors.processor import InternalProcessorError
 
 
 def catch_internal_processor_error(fn):
@@ -18,6 +18,7 @@ def catch_internal_processor_error(fn):
             self.log_error(f"\n\n---- INTERNAL PROCESSING ERROR\n\n{exc}\n\n----\n\n")
 
     return wrapper
+
 
 class Command(CommandInterface):
     help = "Progresses billing subscription cycles and product expiry"
@@ -121,8 +122,10 @@ class Command(CommandInterface):
             for subscription_cycle in subscription.subscription_cycle_set.filter(
                 subscription_cycle_charge_set__payment_charge__status__in=["pending"]
             ).distinct("id"):
-                subscription_cycle_charges = subscription_cycle.subscription_cycle_charge_set.filter(
-                    payment_charge__status="pending"
+                subscription_cycle_charges = (
+                    subscription_cycle.subscription_cycle_charge_set.filter(
+                        payment_charge__status="pending"
+                    )
                 )
                 for subscription_cycle_charge in subscription_cycle_charges:
                     self.log_info(

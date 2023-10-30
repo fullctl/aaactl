@@ -5,7 +5,7 @@
 
 {% endblock %}
 
-<div data-api-submit="yes">
+<div data-api-submit="yes" id="processor-data">
   <input type="hidden"  name="client_secret" id="client-secret" />
   <input type="hidden"  name="setup_intent_id" id="setup_intent_id" />
 </div>
@@ -69,6 +69,14 @@
 
     paymentElement = elements.create('payment');
     paymentElement.mount('#payment-element');
+
+    // Handle payment element events
+    paymentElement.addEventListener('change', function(event) {
+      // mark the setup as completed
+      if (event.complete) {
+        $('#processor-data').data('setup-completed', "yes");
+      }
+    });
 
   }
 

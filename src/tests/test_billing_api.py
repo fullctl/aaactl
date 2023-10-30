@@ -19,6 +19,7 @@ def test_get_organization(billing_objects):
 def test_post_billing_setup(billing_objects, mocker):
     last_4 = billing_objects.payment_method.data["stripe_payment_method"][-4:]
     data = {
+        "agreement_tos": True,
         "holder": "George Contact",
         "country": "US",
         "city": "Chicago",
@@ -29,7 +30,7 @@ def test_post_billing_setup(billing_objects, mocker):
         "setup_intent_id": "test_id",
     }
     output = {
-        "agreement_tos": False,
+        "agreement_tos": True,
         "payment_method": "George Contact: stripe-3",
         "payment_method_id": 3,
         "holder": "George Contact",

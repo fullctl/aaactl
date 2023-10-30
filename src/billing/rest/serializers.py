@@ -243,6 +243,13 @@ class BillingSetup(serializers.Serializer):
         else:
             data["processor_data"] = {}
 
+        # agreement_tos needs to be True
+
+        if not data.get("agreement_tos"):
+            raise serializers.ValidationError(
+                {"agreement_tos": _("You need to agree to the Terms of Service")}
+            )
+
         return data
 
     @reversion.create_revision()

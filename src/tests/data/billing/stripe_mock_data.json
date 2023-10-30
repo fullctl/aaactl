@@ -15,6 +15,22 @@
         "receipt_url": "https://pay.stripe.com/receipts/acct_1032D82eZvKYlo2C/ch_4fdAW5ftNQow1a/rcpt_4fdAW5ftNQow1a"
     },
     "stripe.Charge.retrieve": {
-        "status": "succeeded"
+        "status": "succeeded",
+        "receipt_url": "https://pay.stripe.com/receipts/acct_1032D82eZvKYlo2C/ch_4fdAW5ftNQow1a/rcpt_4fdAW5ftNQow1a"
+    },
+    "stripe.PaymentIntent.create": {
+        "id": "pi_1F7J1e2eZvKYlo2C7qX9QZ1c",
+        "amount": 1000,
+        "currency": "usd",
+        "status": "succeeded",
+        "latest_charge" : "ch_4fdAW5ftNQow1a"
+
+    },
+    "stripe.PaymentIntent.retrieve": {
+        "id": "pi_1F7J1e2eZvKYlo2C7qX9QZ1c",
+        "amount": 1000,
+        "currency": "usd",
+        "status": "succeeded",
+        "latest_charge" : "ch_4fdAW5ftNQow1a"
     }
 }

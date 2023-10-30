@@ -150,8 +150,8 @@ def test_billing_cycle_progression(billing_objects_w_pay, mock_stripe):
 
     assert float(payment_charge.price) == 125.99
     assert payment_charge.data == {
-        "processor_txn_id": "ch_4fdAW5ftNQow1a",
-        "stripe_charge": "ch_4fdAW5ftNQow1a",
+        "processor_txn_id": "pi_1F7J1e2eZvKYlo2C7qX9QZ1c",
+        "stripe_payment_intent": "pi_1F7J1e2eZvKYlo2C7qX9QZ1c",
         "receipt_url": "https://pay.stripe.com/receipts/acct_1032D82eZvKYlo2C/ch_4fdAW5ftNQow1a/rcpt_4fdAW5ftNQow1a",
     }
 
@@ -165,7 +165,7 @@ def test_billing_cycle_progression_stripe_failure(billing_objects_w_pay, mock_st
     Test proper handling of Stripe failure when billing cycle is progressed
     """
 
-    mock_stripe["stripe.Charge.create"].side_effect = Exception("Stripe error")
+    mock_stripe["stripe.PaymentIntent.create"].side_effect = Exception("Stripe error")
 
     result = run_billing_cycle_with_cutover(billing_objects_w_pay)
 

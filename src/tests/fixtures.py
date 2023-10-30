@@ -125,7 +125,8 @@ class BillingObjects:
             address1="3400 Test Ave",
             postal_code="60600",
             state="IL",
-            data={"stripe_card": "5200828282828210"},
+            data={"stripe_payment_method": "5200828282828210"},
+            status="ok",
         )
 
         self.user = get_user_model().objects.create_user(
@@ -375,27 +376,25 @@ def charge_objects(billing_objects, mocker):
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
-    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
+    subscription_cycle = subscription.subscription_cycle_set.first()
 
     SubscriptionCycleProduct.objects.create(
-        subscription_cycle=subscriptionsubscription_cycle,
+        subscription_cycle=subscription_cycle,
         subscription_product=fixed_subscription_product,
         usage=1,
     )
 
-    subscriptionsubscription_cycle.charge()
+    subscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = (
-        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    )
-    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
+    payment_charge = subscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)
 
     return {
         "subscription": subscription,
-        "subscriptionsubscription_cycle": subscriptionsubscription_cycle,
-        "subscriptionsubscription_cycle_charge": subscriptionsubscription_cycle_charge,
+        "subscription_cycle": subscription_cycle,
+        "subscription_cycle_charge": subscription_cycle_charge,
         "payment_charge": payment_charge,
         "order_history": order_history,
     }

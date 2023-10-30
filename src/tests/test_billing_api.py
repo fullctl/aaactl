@@ -17,7 +17,7 @@ def test_get_organization(billing_objects):
 
 @pytest.mark.django_db
 def test_post_billing_setup(billing_objects, mocker):
-    last_4 = billing_objects.payment_method.data["stripe_card"][-4:]
+    last_4 = billing_objects.payment_method.data["stripe_payment_method"][-4:]
     data = {
         "holder": "George Contact",
         "country": "US",
@@ -25,11 +25,13 @@ def test_post_billing_setup(billing_objects, mocker):
         "address1": "123 Test Ave",
         "postal_code": "60660",
         "state": "IL",
-        "stripe_token": "test_token",
+        "client_secret": "test_secret",
+        "setup_intent_id": "test_id",
     }
     output = {
         "agreement_tos": False,
-        "payment_method": "George Contact: Credit Card 8210",
+        "payment_method": "George Contact: stripe-3",
+        "payment_method_id": 3,
         "holder": "George Contact",
         "country": "US",
         "city": "Chicago",
@@ -49,11 +51,21 @@ def test_post_billing_setup(billing_objects, mocker):
         "billing.payment_processors.stripe.stripe.Customer.modify_source",
         return_value=None,
     )
+    mocker.patch(
+        "billing.payment_processors.stripe.stripe.SetupIntent.create",
+        return_value={
+            "id": 2345,
+            "client_secret": "test_secret",
+            "status": "succeeded",
+        },
+    )
 
     response = billing_objects.api_client.post(
         reverse("billing_api:org-billing-setup", args=[billing_objects.org.slug]),
         data=data,
     )
+
+    print(response.content)
 
     assert response.status_code == 200
     assert response.json()["data"][0] == output
@@ -61,17 +73,20 @@ def test_post_billing_setup(billing_objects, mocker):
 
 @pytest.mark.django_db
 def test_get_payment_methods(billing_objects, data_billing_api_billing_contact):
+    # Cannot access without billing_contact
     response = billing_objects.api_client.get(
         reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
     )
     assert response.status_code == 400
     assert "billing_contact" in response.json()["errors"]
 
-    # Cannot access without billing_contact
+    # Can access with billing_contact
     response = billing_objects.api_client.get(
         reverse("billing_api:org-payment-methods", args=[billing_objects.org.slug])
         + f"?billing_contact={billing_objects.billing_contact.id}"
     )
+    assert billing_objects.billing_contact.org == billing_objects.org
+    print("methods", billing_objects.billing_contact.payment_method_set.all())
     print(response.content)
 
     assert strip_api_fields(response.json()) == strip_api_fields(
@@ -93,7 +108,8 @@ def test_delete_payment_methods(billing_objects):
 
     new_payment_method = models.PaymentMethod.objects.create(
         billing_contact=billing_objects.billing_contact,
-        data={"stripe_card": "1200828282828210"},
+        data={"stripe_payment_method": "1200828282828210"},
+        status="ok",
         **input_data,
     )
 
@@ -104,6 +120,7 @@ def test_delete_payment_methods(billing_objects):
         reverse("billing_api:org-payment-method", args=[billing_objects.org.slug]),
         data=input_data,
     )
+
     output_data = response.json()["data"][0]
     assert response.status_code == 200
     assert set(input_data.items()).issubset(set(output_data.items()))

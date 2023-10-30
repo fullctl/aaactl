@@ -880,6 +880,19 @@ div.permissions.override .delete-override {
   display: inline;
 }
 
+div.permissions .validation-error {
+  margin-bottom: 0.125rem;
+  margin-top: 1rem;
+}
+
+div.permissions .options {
+  position: relative;
+}
+
+div.permissions .options .validation-error {
+  position: absolute;
+  margin-top: 1.5rem;
+}
 
 .dashboard-cards .accordion-item {
   border: none;

@@ -8,9 +8,9 @@
 
   <a class="nav-link active col-auto" id="tab-dashboard" data-bs-toggle="tab" role="tab" aria-controls="page-dashboard" aria-selected="true" data-second-tab="#dashboard-body" href="#page-dashboard">Dashboard</a>
 
-  <a class="nav-link col-auto" id="tab-billing" data-bs-toggle="tab" role="tab" aria-controls="page-billing" aria-selected="true" data-second-tab="#billing-body" href="#page-billing">Billing</a>
-
   <a class="nav-link col-auto" id="tab-account" data-bs-toggle="tab" role="tab" aria-controls="page-account" aria-selected="false" data-second-tab="#account-body" href="#page-account">Account</a>
+
+  <a class="nav-link col-auto" id="tab-billing" data-bs-toggle="tab" role="tab" aria-controls="page-billing" aria-selected="true" data-second-tab="#billing-body" href="#page-billing">Billing</a>
 
 </div>
 {% endblock %}
@@ -173,6 +173,18 @@
     </div>
   </div>
 
+
+  <div class="col tab-pane" id="page-account" role="tabpanel" aria-labelledby="tab-account" tabindex="0">
+    <div class="row">
+      <div class="col">
+        <h2>Account Settings</h2>
+        {% include "account/controlpanel/menu.html" %}
+      </div>
+
+      <div class="col-xs-12 col-md-4"></div>
+    </div>
+  </div>
+
   <div class="col tab-pane" id="page-billing" role="tabpanel" aria-labelledby="tab-billing" tabindex="0">
     <div class="row">
       <div class="col">
@@ -276,16 +288,6 @@
     </div>
   </div>
 
-  <div class="col tab-pane" id="page-account" role="tabpanel" aria-labelledby="tab-account" tabindex="0">
-    <div class="row">
-      <div class="col">
-        <h2>Account Settings</h2>
-        {% include "account/controlpanel/menu.html" %}
-      </div>
-
-      <div class="col-xs-12 col-md-4"></div>
-    </div>
-  </div>
 </div>
 
 {% endblock %}

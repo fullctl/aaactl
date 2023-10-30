@@ -1527,6 +1527,21 @@ class BillingContact(HandleRefModel):
                 return True
         return False
 
+    @property
+    def recent_payment_method(self):
+        if hasattr(self, "_recent_payment_method"):
+            return self._recent_payment_method
+        self._recent_payment_method = self.payment_method_set.last()
+        return self._recent_payment_method
+
+    def get_address(self):
+        if self.recent_payment_method:
+            return self.recent_payment_method.address
+
+    def set_address(self, address):
+        for payment_method in self.payment_method_set.all():
+            payment_method.set_address(address)
+
     def __str__(self):
         return self.name
 
@@ -1580,6 +1595,28 @@ class PaymentMethod(HandleRefModel):
             return f"{self.billing_contact.name}: {self.custom_name}"
 
         return f"{self.billing_contact.name}: {self.processor}-{self.id}"
+
+    @property
+    def address(self):
+        return {
+            "holder": self.holder,
+            "country": self.country,
+            "city": self.city,
+            "address1": self.address1,
+            "address2": self.address2,
+            "postal_code": self.postal_code,
+            "state": self.state,
+        }
+
+    def set_address(self, address):
+        self.holder = address["holder"]
+        self.country = address["country"]
+        self.city = address["city"]
+        self.address1 = address["address1"]
+        self.address2 = address["address2"]
+        self.postal_code = address["postal_code"]
+        self.state = address["state"]
+        self.save()
 
     @property
     def processor_instance(self):

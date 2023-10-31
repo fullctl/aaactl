@@ -17,7 +17,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @login_required
 def create_setup_intent(request):
     """Create a SetupIntent and return its client secret."""
-    setup_intent = stripe.SetupIntent.create(automatic_payment_methods={"enabled": True}, payment_method_options=None)
+    setup_intent = stripe.SetupIntent.create(
+        automatic_payment_methods={"enabled": True}, payment_method_options=None
+    )
 
     data = {
         "client_secret": setup_intent.client_secret,

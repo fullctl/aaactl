@@ -138,6 +138,7 @@ class Stripe(PaymentProcessor):
                 payment_method=self.source,
                 confirm=True,
                 automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+                payment_method_options=None,
                 api_key=self.api_key,
             )
             self.log.info(

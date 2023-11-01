@@ -86,48 +86,28 @@ class Organization(viewsets.ViewSet):
 
         return Response(serializer.data)
 
-    @action(detail=True, methods=["PUT", "DELETE", "GET"])
+    @action(detail=True, methods=["PUT", "DELETE"])
     @set_org
     @auditlog()
     @grainy_endpoint("billing.{org.id}", explicit=False)
     def billing_contact(self, request, pk, org, auditlog=None):
-        if request.method == "GET":
-            instance = org.billing_contact_set.get(id=request.GET.get("id"))
-            return self._retrieve_billing_contact(instance)
-
         instance = org.billing_contact_set.get(id=request.data.get("id"))
 
         if request.method == "PUT":
-            return self._create_billing_contact(request, instance)
+            serializer = Serializers.billing_contact(
+                instance=instance, data=request.data
+            )
+
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=400)
+            serializer.save()
 
         elif request.method == "DELETE":
-            return self._delete_billing_contact(instance, org)
-
-    def _retrieve_billing_contact(self, instance):
-        serializer = Serializers.billing_contact(instance=instance)
-
-        return Response(serializer.data)
-
-    def _create_billing_contact(self, request, instance):
-        serializer = Serializers.billing_contact(
-            instance=instance, data=request.data
-        )
-
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
-
-        # instance.set_address(address)
-        serializer.save()
+            serializer = Serializers.billing_contact(instance=instance)
+            instance.delete()
+            models.Subscription.set_payment_method(org)
 
         return Response(serializer.data)
-
-    def _delete_billing_contact(self, instance, org):
-        serializer = Serializers.billing_contact(instance=instance)
-        instance.delete()
-        models.Subscription.set_payment_method(org)
-
-        return Response(serializer.data)
-
 
     @action(detail=True, methods=["GET"])
     @set_org

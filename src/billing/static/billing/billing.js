@@ -42,7 +42,6 @@ billing.BillingSetup = twentyc.cls.define(
       this.initial_payopt = this.elements.select_payopt.val()
 
       this.rest_api_form = new twentyc.rest.Form(this.elements.form);
-      this.fill_address();
       this.track_form_changes();
       $(this.rest_api_form).on("api-post:success", function(e, endpoint, sent_data, response) {
         console.log("Got submit success", {e, endpoint, response, sent_data});
@@ -96,56 +95,7 @@ billing.BillingSetup = twentyc.cls.define(
       this.elements.select_payopt.val(this.inital_payopt);
       this.elements.section_create_payopt.collapse("hide");
       this.elements.section_select_payopt.collapse("show");
-    },
-
-    fill_address : function() {
-      const urlParams = new URLSearchParams(document.location.search);
-      const billing_contact_id = urlParams.get('billing_contact');
-      const billing_contact_api_url = twentyc.rest.url.url_join(
-        this.rest_api_form.base_url,
-        this.rest_api_form.element.data('api-action-autofill')
-      );
-
-      const form = this.rest_api_form.element;
-      $.ajax({
-        type: "GET",
-        url: billing_contact_api_url,
-        dataType: 'json',
-        data: $.param({"id": billing_contact_id}),
-        success: function(data, status){
-          if (!data.data[0]) {
-            return;
-          }
-
-          const address = data.data[0].address;
-          if (!address) {
-            return
-          }
-
-          if (address.country) {
-            form.find('[name="country"]').val(address.country);
-          }
-          if (address.city) {
-            form.find('[name="city"]').val(address.city);
-          }
-          if (address.state) {
-            form.find('[name="state"]').val(address.state);
-          }
-          if (address.postal_code) {
-            form.find('[name="postal_code"]').val(address.postal_code);
-          }
-          if (address.address1) {
-            form.find('[name="address1"]').val(address.address1);
-          }
-          if (address.address2) {
-            form.find('[name="address2"]').val(address.address2);
-          }
-
-        }
-      });
     }
   }
 );
-
-
 })();

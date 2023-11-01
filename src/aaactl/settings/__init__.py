@@ -89,7 +89,6 @@ INSTALLED_APPS += (
     "billing",
     "applications",
     "fullctl.django.apps.DjangoFullctlConfig",
-    "django_countries",
 )
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

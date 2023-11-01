@@ -84,27 +84,10 @@ class PaymentMethod(serializers.ModelSerializer):
 class BillingContact(FormValidationMixin, serializers.ModelSerializer):
     form = forms.BillingContactForm
     required_context = []
-    address = serializers.DictField(source="get_address")
 
     class Meta:
         model = models.BillingContact
-        fields = ["name", "email", "address"]
-
-    def validate_address(self, value):
-        field_errors = {}
-        for field in BillingSetup.required_billing_address_fields:
-            if not value.get(field):
-                field_errors[field] = _("Input required")
-        if field_errors:
-            raise serializers.ValidationError(field_errors)
-
-        return value
-
-    def update(self, instance, validated_data):
-        super().update(instance, validated_data)
-        instance.set_address(validated_data.get("get_address"))
-
-        return instance
+        fields = ["name", "email"]
 
 
 @register

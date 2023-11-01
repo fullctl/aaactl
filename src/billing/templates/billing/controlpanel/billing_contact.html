@@ -1,20 +1,15 @@
 {% extends "account/controlpanel/base.html" %}
-{% load i18n static crispy_forms_tags countries %}
+{% load i18n static crispy_forms_tags %}
 
-{% block javascript %}
-{{ block.super }}
-<script src="{% static "billing/aaactl.billing_contact.js" %}"></script>
-{% endblock %}
 
 {% block controlpanel %}
-<h4>{{ request.selected_org.label }} - {% trans "Billing Contact: " %} {{ billing_contact.name }}</h4>
+<h5>{{ request.selected_org.label }} - {% trans "Billing Contact: " %} {{ billing_contact.name }}</h5>
 
 <form
   class="billing_contact"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="billing_contact"
-  data-api-method="PUT"
->
+  data-api-method="PUT">
 
   <div style="display:hidden" data-api-submit="yes">
     <input type="hidden" name="id" value="{{ billing_contact.id }}">
@@ -40,11 +35,12 @@
     </div>
   </div>
 
+
 </form>
 
 <div class="space"></div>
 
-<h6>{% trans "Payment Methods" %}</h6>
+<h6>{% trans "Payment Methods" %}</h4>
 
 <div
   class="payment_method-listing"
@@ -91,112 +87,6 @@
     </tbody>
   </table>
 </div>
-
-<div class="space"></div>
-
-<h4 class="pt-5">{% trans "Address Details" %}</h4>
-
-<form
-  class="billing_address"
-  data-api-action="billing_contact"
-  data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
-  data-element="billing_contact_address"
-  data-api-method="put"
->
-  <div style="display:hidden" data-api-submit="yes">
-    <input type="hidden" name="id" value="{{ billing_contact.id }}">
-  </div>
-
-  <div style="display:hidden" data-api-submit="yes">
-    <input type="hidden" name="name" value="{{ billing_contact.name }}">
-  </div>
-
-  <div style="display:hidden" data-api-submit="yes">
-    <input type="hidden" name="email" value="{{ billing_contact.email }}">
-  </div>
-
-  <div data-api-submit="yes">
-
-    <div class="row">
-      <div class="col-12 input-container">
-        <div id="div_id_country" class="mb-3">
-          <label for="id_contact_country" class="form-label requiredField">
-            Country<span class="asteriskField">*</span>
-          </label>
-
-          {% get_countries as countries %}
-          <select name="country" class="lazyselect form-select" id="id_contact_country" value="US">
-            {% for country in countries %}
-              {% if country.code is "US" %}
-                <option value="{{ country.code }}" selected>{{ country.name }}</option>
-              {% else %}
-                <option value="{{ country.code }}">{{ country.name }}</option>
-              {% endif %}
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-4 input-container">
-        <div id="div_id_contact_city" class="mb-3">
-          <label for="id_contact_city" class="form-label requiredField">
-              City<span class="asteriskField">*</span>
-          </label>
-          <input type="text" name="city" class="textinput textInput form-control" data-field="city" id="id_contact_city">
-        </div>
-      </div>
-
-      <div class="col-4 input-container">
-        <div id="div_id_contact_state" class="mb-3">
-          <label for="id_contact_state" class="form-label">
-            State
-          </label>
-          <input type="text" name="state" class="textinput textInput form-control" data-field="state" id="id_contact_state">
-        </div>
-      </div>
-
-      <div class="col-4 input-container">
-        <div id="div_id_contact_postal_code" class="mb-3">
-          <label for="id_contact_postal_code" class="form-label requiredField">
-            Postal Code<span class="asteriskField">*</span>
-          </label>
-          <input type="text" name="postal_code" class="textinput textInput form-control" data-field="postal_code" id="id_contact_postal_code">
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-12 input-container">
-        <div id="div_id_contact_address1" class="mb-3">
-          <label for="id_contact_address1" class="form-label requiredField">
-              Address<span class="asteriskField">*</span>
-          </label>
-          <input type="text" name="address1" class="textinput textInput form-control" data-field="address1" id="id_contact_address1">
-        </div>
-      </div>
-
-      <div class="col-12 input-container">
-        <div id="div_id_contact_address2" class="mb-3">
-          <label for="id_contact_address2" class="form-label">
-            Address (2)
-          </label>
-          <input type="text" name="address2" class="textinput textInput form-control" data-field="address2" id="id_contact_address2">
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="row">
-    <div class="col-6">
-      <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
-    </div>
-  </div>
-
-</form>
-
 
 
 <script>

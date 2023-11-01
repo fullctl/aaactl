@@ -15,7 +15,6 @@
   class="billing-setup"
   data-api-base="{% url "billing_api:org-detail" pk=request.selected_org.slug %}"
   data-api-action="billing_setup"
-  data-api-action-autofill="billing_contact"
   data-api-redirect="{{ request.GET.redirect }}"
   data-api-method="POST">
 

@@ -423,6 +423,8 @@ class PaymentChargeAdmin(BaseAdmin):
     list_filter = ("status",)
 
     def billing_contact(self, obj):
+        if not obj.payment_method:
+            return None
         return obj.payment_method.billing_contact
 
 
@@ -537,6 +539,7 @@ class InvoiceAdmin(BaseAdmin):
         "order",
         "org",
         "status",
+        "created",
     )
 
     autocomplete_fields = ("order", "org", "charge_object")

@@ -197,6 +197,7 @@ class BillingSetup(serializers.Serializer):
     payment_method = serializers.CharField(
         required=False, allow_null=True, allow_blank=True
     )
+    payment_method_id = serializers.SerializerMethodField()
 
     # Billing address (forms.BillingAddressForm)
     # Only needed when a new payment option is being created
@@ -213,6 +214,10 @@ class BillingSetup(serializers.Serializer):
     # agreements
 
     agreement_tos = serializers.BooleanField(required=True)
+
+    def get_payment_method_id(self, data):
+        if data.get("payment_method"):
+            return data["payment_method"].id
 
     def validate_product(self, value):
         try:
@@ -254,6 +259,13 @@ class BillingSetup(serializers.Serializer):
             data["processor_data"] = form.cleaned_data
         else:
             data["processor_data"] = {}
+
+        # agreement_tos needs to be True
+
+        if not data.get("agreement_tos"):
+            raise serializers.ValidationError(
+                {"agreement_tos": _("You need to agree to the Terms of Service")}
+            )
 
         return data
 

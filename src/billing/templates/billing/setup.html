@@ -179,9 +179,18 @@
 {% block javascript %}
 {{ block.super }}
 <script>
-  $(document).ready(function() {
-    const billing_setup = new billing.BillingSetup();
-    window.billing.setup = billing_setup;
-  });
+$(document).ready(function() {
+  // prevent form submission if setup is not completed
+  $('#billing-setup-submit').click((e) => {
+    if($('#processor-data').data('setup-completed') !== "yes") {
+      // cancel event (this cancels the form submission)
+      e.stopImmediatePropagation();
+      alert("Please complete the payment form");
+    }
+  })
+  const billing_setup = new billing.BillingSetup();
+  window.billing.setup = billing_setup;
+});
+
 </script>
 {% endblock %}

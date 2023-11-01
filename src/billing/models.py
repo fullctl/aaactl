@@ -891,7 +891,7 @@ class SubscriptionCycle(HandleRefModel):
         if not self.end:
             return False
 
-        return self.end < datetime.date.today()
+        return self.end <= datetime.date.today()
 
     @property
     def charged(self):
@@ -1576,6 +1576,15 @@ class PaymentMethod(HandleRefModel):
     address2 = models.CharField(max_length=255, null=True, blank=True)
     postal_code = models.CharField(max_length=255)
     state = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(
+        max_length=32,
+        choices=(
+            ("unconfirmed", "Unconfirmed"),
+            ("ok", "Ok"),
+            ("inactive", "Inactive"),
+        ),
+        default="unconfirmed",
+    )
 
     class HandleRef:
         tag = "payment_method"
@@ -1587,7 +1596,10 @@ class PaymentMethod(HandleRefModel):
 
     @classmethod
     def get_for_org(cls, org, status="ok"):
-        return cls.objects.filter(billing_contact__org=org, status=status)
+        if status:
+            return cls.objects.filter(billing_contact__org=org, status=status)
+        else:
+            return cls.objects.filter(billing_contact__org=org)
 
     @property
     def name(self):
@@ -1630,7 +1642,10 @@ class PaymentMethod(HandleRefModel):
 @reversion.register()
 class PaymentCharge(HandleRefModel):
     payment_method = models.ForeignKey(
-        PaymentMethod, on_delete=models.CASCADE, related_name="payment_charge_set"
+        PaymentMethod,
+        on_delete=models.SET_NULL,
+        related_name="payment_charge_set",
+        null=True,
     )
     price = models.DecimalField(
         default=0.0,
@@ -1717,7 +1732,10 @@ class PaymentCharge(HandleRefModel):
         return InvoiceLine.objects.filter(invoice__invoice_number=invoice_number)
 
     def __str__(self):
-        return f"{self.payment_method.name} Charge {self.id}"
+        if self.payment_method:
+            return f"{self.payment_method.name} Charge {self.id}"
+        else:
+            return f"[Payment Method Removed] Charge {self.id}"
 
     @reversion.create_revision()
     def capture(self):
@@ -1784,19 +1802,17 @@ class PaymentCharge(HandleRefModel):
 
         self.failure_notified = timezone.now()
 
-        notification = (
-            render(
-                None,
-                "billing/email/payment-failure.txt",
-                {
-                    "payment_charge": self,
-                    "payment_method": self.payment_method,
-                    "billing_contact": self.payment_method.billing_contact,
-                    "org": self.org,
-                    "support_email": settings.SUPPORT_EMAIL,
-                },
-            ).content.decode("utf-8"),
-        )
+        notification = render(
+            None,
+            "billing/email/payment-failure.txt",
+            {
+                "payment_charge": self,
+                "payment_method": self.payment_method,
+                "billing_contact": self.payment_method.billing_contact,
+                "org": self.org,
+                "support_email": settings.SUPPORT_EMAIL,
+            },
+        ).content.decode("utf-8")
 
         # notification to the customer
 
@@ -1812,6 +1828,7 @@ class PaymentCharge(HandleRefModel):
             # TODO: send to billing specific email?
             [settings.SUPPORT_EMAIL],
             f"Payment Failure for {self.org.name}",
+            notification,
         )
 
         self.save()
@@ -2011,20 +2028,20 @@ class Invoice(HandleRefModel):
         """
 
         # TODO probably dont hardcode stripe?
-        stripe_charge = self.data.get("stripe_charge")
+        stripe_payment_intent = self.data.get("stripe_payment_intent")
 
         # no stipe charge exists for this invoice yet
         # meaning its still open
-        if not stripe_charge:
+        if not stripe_payment_intent:
             return
 
         # payment method on stripe's side
-        processor_payment_method = stripe_charge["payment_method"]
+        processor_payment_method = stripe_payment_intent["payment_method"]
 
         # payment method on our side
         payment_method = PaymentMethod.objects.filter(
             billing_contact__org=self.org,
-            data__stripe_card=processor_payment_method,
+            data__stripe_payment_method=processor_payment_method,
         ).first()
 
         if not payment_method:
@@ -2040,12 +2057,12 @@ class Invoice(HandleRefModel):
         # based on the stripe charge tied to the invoice
         charge = PaymentCharge.objects.create(
             payment_method=payment_method,
-            price=stripe_charge["amount"] / 100,
-            description=stripe_charge["description"],
+            price=stripe_payment_intent["amount"] / 100,
+            description=stripe_payment_intent["description"],
             data={
-                "stripe_charge": stripe_charge["id"],
-                "processor_txn_id": stripe_charge["id"],
-                "receipt_url": stripe_charge["receipt_url"],
+                "stripe_payment_intent": stripe_payment_intent["id"],
+                "processor_txn_id": stripe_payment_intent["id"],
+                "receipt_url": stripe_payment_intent["receipt_url"],
             },
         )
 

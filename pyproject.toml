@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aaactl"
 repository = "https://github.com/fullctl/aaactl"
-version = "1.2.1-rc.30"
+version = "1.2.1-rc.36"
 description = "authentication, authorization, and accounting for fullctl"
 authors = ["20C <code@20c.com>"]
 license = "Apache-2.0"
@@ -24,7 +24,7 @@ aaactl = "aaactl.cli:main"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
 
 # not in fullctl

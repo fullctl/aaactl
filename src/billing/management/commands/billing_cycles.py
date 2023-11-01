@@ -3,6 +3,21 @@ from django.utils import timezone
 from fullctl.django.management.commands.base import CommandInterface
 
 from billing.models import Invoice, OrganizationProduct, Subscription
+from billing.payment_processors.processor import InternalProcessorError
+
+
+def catch_internal_processor_error(fn):
+    """
+    decorator to catch internal processor errors and log them
+    """
+
+    def wrapper(self, *args, **kwargs):
+        try:
+            return fn(self, *args, **kwargs)
+        except InternalProcessorError as exc:
+            self.log_error(f"\n\n---- INTERNAL PROCESSING ERROR\n\n{exc}\n\n----\n\n")
+
+    return wrapper
 
 
 class Command(CommandInterface):
@@ -48,16 +63,23 @@ class Command(CommandInterface):
                     )
                     replacement_product.add_to_org(subscription.org)
 
+    @catch_internal_processor_error
     def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
         for subscription in qset:
-            self.log_info(f"checking subscription {subscription} ...")
+            self.log_info(
+                f"checking subscription {subscription} ({subscription.id}) ..."
+            )
 
             if not subscription.subscription_cycle:
                 subscription.start_subscription_cycle()
                 self.log_info(
                     f"-- started new billing subscription_cycle: {subscription.subscription_cycle}"
+                )
+            else:
+                self.log_info(
+                    f"-- subscription_cycle: {subscription.subscription_cycle}"
                 )
 
             for subscription_product in subscription.subscription_product_set.all():
@@ -83,7 +105,7 @@ class Command(CommandInterface):
                         self.log_info("-- retrying failed subscription cycle charge")
 
                     self.log_info(
-                        f"-- charging ${subscription_cycle.price} for subscriptionxcycle: {subscription_cycle}"
+                        f"-- charging ${subscription_cycle.price} for subscription cycle: {subscription_cycle}"
                     )
 
                     with reversion.create_revision():
@@ -96,6 +118,22 @@ class Command(CommandInterface):
                             subscription_cycle_charge.payment_charge.sync_status(
                                 commit=self.commit
                             )
+
+            for subscription_cycle in subscription.subscription_cycle_set.filter(
+                subscription_cycle_charge_set__payment_charge__status__in=["pending"]
+            ).distinct("id"):
+                subscription_cycle_charges = (
+                    subscription_cycle.subscription_cycle_charge_set.filter(
+                        payment_charge__status="pending"
+                    )
+                )
+                for subscription_cycle_charge in subscription_cycle_charges:
+                    self.log_info(
+                        f"-- syncing pending subscription cycle charge: {subscription_cycle_charge}"
+                    )
+                    subscription_cycle_charge.payment_charge.sync_status(
+                        commit=self.commit
+                    )
 
     def collect(self, subscription_product, subscription_cycle):
         org = subscription_cycle.subscription.org

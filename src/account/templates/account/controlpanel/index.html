@@ -2,6 +2,54 @@
 {% load i18n static %}
 
 {% block content %}
+  <div class="row">
+    <div class="col">
+      <div class="row justify-content-center">
+        <div class="col">
+
+        {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
+          <div class="alert alert-warning row">
+            <div class="col-6">
+            {% trans "Please confirm your email address." %}
+            </div>
+            <div class="col-6 right">
+              <form
+                class="resend-confirmation-email"
+                data-api-base="{% url "account_api:user-resend-confirmation-mail" %}"
+                data-api-method="POST">
+                <button type="button" class="btn btn-sm btn-warning submit">
+                  {% trans "Resend Email" %}
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if "peeringdb" in backends.not_associated %}
+          <div class="row alert alert-info">
+            <div class="col-2 ms-3 oauth-backend available-apps d-flex align-items-center" title="peeringdb">
+              <img alt="login with peeringdb" title="login with peeringdb" src="/s/Fg/account/oauth/peeringdb.png" class="img-light img-fluid login-peeringdb">
+              <img alt="login with peeringdb" title="login with peeringdb" src="/s/Fg/account/oauth/peeringdb-dark.png" class="img-dark img-fluid login-peeringdb">
+            </div>
+            <div class="col">
+              {% blocktrans %}
+                If you have a PeeringDB account it is highly beneficial to link it to your FullCtl account - it helps us relate your networks to your organizations.
+              {% endblocktrans %}
+            </div>
+            <div class="col-auto d-flex align-items-center">
+              <a type="button" class="btn btn-sm submit" href="{% url 'social:begin' "peeringdb" %}?next={{ request.GET.next }}">
+                {% trans "Authenticate" %}
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-12 col-md-4"></div>
+  </div>
 
 {% block navigation_tabs %}
 <div class="app-pages-nav nav h-100 row" data-component="pages" role="tablist">
@@ -60,32 +108,6 @@
           </div>
         </div>
 
-        
-
-        <div class="row">
-          <div class="col mt-4 mb-4">
-            {% if not user.user_settings.email_confirmed and enable_email_confirmation %}
-            <div class="alert alert-warning">
-              <div class="row">
-                <div class="col-6">
-                {% trans "Please confirm your email address." %}
-                </div>
-                <div class="col-6 right">
-                  <form
-                    class="resend-confirmation-email"
-                    data-api-base="{% url "account_api:user-resend-confirmation-mail" %}"
-                    data-api-method="POST">
-                    <button type="button" class="btn btn-sm btn-warning submit">{% trans "Resend Email" %}</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            {% else %}
-            <p>{% trans "No messages." %}</p>
-            {% endif %}
-          </div>
-        </div>
-
         <div class="accordion dashboard-cards">
 
           <!-- SERVICES -->
@@ -101,12 +123,12 @@
           {% if permissions.read_org_user %}
           <div class="accordion-item">
             <h5 class="accordion-header" id="heading-users">
-              <button 
-                class="accordion-button fs-5 collapsed" 
-                type="button" 
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#collapse-users" 
-                aria-expanded="false" 
+                data-bs-target="#collapse-users"
+                aria-expanded="false"
                 aria-controls="collapse-users">
                 {% trans "Users" %}
               </button>
@@ -133,12 +155,12 @@
           {% if permissions.read_org_org_key %}
           <div class="accordion-item">
             <h5 class="accordion-header" id="heading-api-keys">
-              <button 
-                class="accordion-button fs-5 collapsed" 
-                type="button" 
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapse-api-keys" 
-                aria-expanded="false" 
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-api-keys"
+                aria-expanded="false"
                 aria-controls="collapse-api-keys">
                 {% trans "API Keys" %}
               </button>
@@ -209,12 +231,12 @@
 
           <div class="accordion-item">
             <h5 class="accordion-header" id="heading-service-charges">
-              <button 
-                class="accordion-button fs-5 collapsed" 
-                type="button" 
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapse-service-charges" 
-                aria-expanded="false" 
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-service-charges"
+                aria-expanded="false"
                 aria-controls="collapse-service-charges">
                 {% trans "Service Charges" %}
               </button>
@@ -244,12 +266,12 @@
           {% if permissions.read_org_billing %}
           <div class="accordion-item">
             <h5 class="accordion-header" id="heading-order-history">
-              <button 
-                class="accordion-button fs-5 collapsed" 
-                type="button" 
-                data-bs-toggle="collapse" 
-                data-bs-target="#collapse-order-history" 
-                aria-expanded="false" 
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-order-history"
+                aria-expanded="false"
                 aria-controls="collapse-order-history">
                 {% trans "Order History" %}
               </button>

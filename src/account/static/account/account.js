@@ -13,8 +13,6 @@ $().ready(function() {
 
   if (!aaactl_user_info.has_org_setup) {
     url.searchParams.set("edit", "new-org");
-  } else if (!aaactl_user_info.has_asn) {
-    url.searchParams.set("edit", "linked-auth-pdb");
   }
 
   history.replaceState({}, null, url);
@@ -1021,28 +1019,6 @@ account.expand_user_info = () => {
   $('#userInformation').get(0).scrollIntoView();
 }
 
-account.prompt_link_to_pdb = () => {
-  // only run if the linked auth section is present
-  // TODO: don't load this file at places where this doesn't exist
-  if ($('#linkedAuthCollapse').length == 0) {
-    return
-  }
-
-  $('#linkedAuthCollapse').addClass('show');
-  $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
-  $('#linkedAuthCollapse').get(0).scrollIntoView();
-  $('#linkedAuthCollapse .peeringdb')[0].animate(
-    [
-      {"background": "var(--background)"},
-      {"background": "transparent"}
-    ],
-    {
-      duration: 750,
-      iterations: 3
-    }
-  );
-}
-
 /**
  * Expand account edit if account is the edit parameter in the URL
  *
@@ -1054,8 +1030,6 @@ account.handleEditUrlParameter = () => {
   if (editParameter) {
     if (editParameter == "account") {
       account.expand_user_info();
-    } else if (editParameter == "linked-auth-pdb") {
-      account.prompt_link_to_pdb();
     } else if (editParameter == "new-org") {
       $('#createOrgModal').modal('show');
     }

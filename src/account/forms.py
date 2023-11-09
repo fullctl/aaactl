@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
 
-from account.models import ContactMessage, Organization
+from account.models import ContactMessage, Organization, OrganizationRole
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service
@@ -55,6 +55,7 @@ class RegisterUser(UserInformationBase, forms.Form):
 
     def clean_password(self):
         password = self.cleaned_data["password"]
+
         return validate_password(password)
 
     def clean_email(self):
@@ -65,7 +66,9 @@ class RegisterUser(UserInformationBase, forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data["password"] != cleaned_data["password_confirmation"]:
+
+        password = cleaned_data.get("password")
+        if password and password != cleaned_data.get("password_confirmation"):
             raise forms.ValidationError(
                 {
                     "password_confirmation": _(

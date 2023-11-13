@@ -52,8 +52,8 @@ billing.BillingSetup = twentyc.cls.define(
       }.bind(this));
 
 
-      this.elements.return_to_dashbaord = $('a.return-to-dashbaord');
-      this.elements.return_to_dashbaord.on('click', (e) => {
+      this.elements.return_to_dashboard = $('a.return-to-dashbaord');
+      this.elements.return_to_dashboard.on('click', (e) => {
         if (this.elements.form.attr('data-submitted') == 'true') {
           this.elements.form.attr('data-submitted', 'false');
         } else if (this.changed) {

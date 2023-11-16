@@ -29,17 +29,18 @@
 <script src="{% static "common/20c/twentyc.core.min.js" %}"></script>
 <script src="{% static "common/20c/twentyc.rest.js" %}"></script>
 
+<script type="application/javascript" src="{% static "common/v2/app.js" %}"></script>
+
 <script>
   const aaactl_user_info = {};
   aaactl_user_info.has_asn = "{{ permissions.has_asn }}" == "True";
   aaactl_user_info.has_org_setup = "{{ has_org_setup }}" == "True";
 </script>
 
-<script src="{% static "common/aaactl.js" %}"></script>
-<script src="{% static "account/account.js" %}"></script>
-<script src="{% static "billing/billing.js" %}"></script>
+<script type="application/javascript" src="{% static "common/aaactl.js" %}"></script>
+<script type="application/javascript" src="{% static "account/account.js" %}"></script>
+<script type="application/javascript" src="{% static "billing/billing.js" %}"></script>
 
-<script src="{% static "common/v2/app.js" %}" type="text/javascript"></script>
 
 <script>
 twentyc.rest.config.csrf = "{{ csrf_token }}"

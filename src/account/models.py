@@ -840,6 +840,11 @@ class Invitation(HandleRefModel):
         on_delete=models.SET_NULL,
         related_name="invite_set",
     )
+    role = models.CharField(
+        choices=(("member", "Member"), ("admin", "Admin")),
+        default="member",
+        max_length=10,
+    )
 
     class Meta:
         db_table = "account_invitation"
@@ -863,7 +868,16 @@ class Invitation(HandleRefModel):
     def __str__(self):
         return f"{self.org.slug}:{self.email} ({self.id})"
 
+    def save(self, *args, **kwargs):
+        if self.role == "admin" and not self._is_inviter_admin():
+            raise PermissionError("Only admins can invite other admins")
+        super().save(*args, **kwargs)
+
     def send(self):
+        # check if the user is allowed to invite admins
+        if not self._is_inviter_admin() and self.role == "admin":
+            raise PermissionError("Only admins can invite other admins")
+
         if self.created_by:
             inviting_person = self.created_by.get_full_name()
         else:
@@ -886,8 +900,29 @@ class Invitation(HandleRefModel):
     @reversion.create_revision()
     def complete(self, user):
         if not self.expired and not self.org.org_user_set.filter(user=user).exists():
-            self.org.add_user(user, "r")
+            if self.role == "admin":
+                if self._is_inviter_admin():
+                    self.org.add_user(user, "crud")
+                    # TODO: think about how to add Admin role if roles are user defined
+                    role = Role.objects.get(name="Admin")
+                    OrganizationRole.objects.get_or_create(
+                        org=self.org, user=user, role=role
+                    )
+                else:
+                    raise PermissionError("Only admins can invite other admins")
+            else:
+                self.org.add_user(user, "r")
+
         Invitation.objects.filter(org=self.org, email=self.email).delete()
+
+    def _is_inviter_admin(self):
+        try:
+            OrganizationRole.objects.get(
+                org=self.org, user=self.created_by, role__name="Admin"
+            )
+            return True
+        except OrganizationRole.DoesNotExist:
+            return False
 
 
 class Impersonation(models.Model):

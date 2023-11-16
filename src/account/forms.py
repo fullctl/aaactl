@@ -201,6 +201,20 @@ class InviteToOrganization(forms.Form):
         label=_("Service redirect"),
         widget=forms.HiddenInput,
     )
+    is_admin_invite = forms.BooleanField(label=_("Invite as Org Admin"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        self.org = kwargs.pop("org", None)
+
+        super().__init__(*args, **kwargs)
+
+        try:
+            OrganizationRole.objects.get(
+                org=self.org, user=self.user, role__name="Admin"
+            )
+        except OrganizationRole.DoesNotExist:
+            del self.fields["is_admin_invite"]
 
 
 class CreateOrgAPIKey(forms.Form):

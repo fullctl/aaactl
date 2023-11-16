@@ -21,7 +21,9 @@ def index(request):
         },
     )
 
-    invitation_form = account.forms.InviteToOrganization(initial=request.GET)
+    invitation_form = account.forms.InviteToOrganization(
+        initial=request.GET, user=user, org=request.selected_org
+    )
     create_org_form = account.forms.CreateOrganization()
     create_org_key_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()

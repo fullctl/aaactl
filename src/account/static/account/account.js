@@ -936,16 +936,25 @@ account.PendingUsers = twentyc.cls.define(
       }
 
       this.rest_api_list.formatters.user_name = function(value, data){
+        let content = value;
+
         if ( value === '' ) {
-          return value + '<span class="user-badge ub-pending">Pending</span>';
+          content += '<span class="user-badge ub-pending">Pending</span>';
         } else {
-          return value + '<span class="user-badge ub-pending ms-2">Pending</span>';
+          content += '<span class="user-badge ub-pending ms-2">Pending</span>';
         }
+
+        if (data.role == "admin") {
+          content += '<span class="user-badge ub-admin">admin</span>';
+        }
+
+        return content
       }
 
       $(this.rest_api_list).on("insert:after", (e, row, data) => {
         var client = new twentyc.rest.Client("/api/account");
-        if ( row.find('.name-column').text() === 'Pending' ) {
+        const invite = row.data('apiobject');
+        if ( invite.user_name === '' ) {
           row.find('.name-column').addClass('text-center');
         }
 

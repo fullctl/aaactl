@@ -681,15 +681,11 @@ button.close[data-bs-dismiss="modal"] {
   border-radius: 4px;
 }
 
+.ub-admin,
 .ub-pending{
   background-color: var(--modal-bg);
   color: var(--foreground);
-}
-
-.ub-admin {
-  background-color: var(--dark-gray);
-  color: var(--lighter-gray);
-  border: 1px solid var(--dark-gray);
+  margin: 0 0.25rem;
 }
 
 .ub-billing {

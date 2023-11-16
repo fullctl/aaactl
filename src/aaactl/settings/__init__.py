@@ -81,6 +81,8 @@ INSTALLED_APPS += (
     # rendering
     "crispy_forms",
     "crispy_bootstrap5",
+    # phonenumbers
+    "phonenumber_field",
     # oauth
     "social_django",
     # aaactl apps

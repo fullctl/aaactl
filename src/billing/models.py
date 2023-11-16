@@ -17,6 +17,7 @@ from django_countries.fields import CountryField
 from django_grainy.decorators import grainy_model
 from fullctl.django.fields.service_bridge import ReferencedObjectField
 from fullctl.django.models.concrete import AuditLog
+from phonenumber_field.modelfields import PhoneNumberField
 
 import account.models
 import applications.models
@@ -1511,6 +1512,7 @@ class BillingContact(HandleRefModel):
 
     name = models.CharField(max_length=255)
     email = models.EmailField(max_length=255, null=True, blank=True)
+    phone_number = PhoneNumberField(null=True)
 
     class Meta:
         db_table = "billing_contact"

@@ -84,37 +84,13 @@
       <div class="col-6 input-container">
       {{ form.email|as_crispy_field }}
       </div>
-    </div>
-
-    <h5>{% trans "Billing Address" %}</h5>
-
-    <div class="row">
-      <div class="col-12 input-container">
-      {{ form.country|as_crispy_field }}
+      <div class="col-12 input-container mb-3">
+        <label for="id_phone_number_1">Phone Number*</label>
+        <div class="phonenumber-container">
+          {{ form.phone_number }}
+        </div>
       </div>
     </div>
-
-    <div class="row">
-      <div class="col-4 input-container">
-      {{ form.city|as_crispy_field }}
-      </div>
-      <div class="col-4 input-container">
-      {{ form.state|as_crispy_field }}
-      </div>
-      <div class="col-4 input-container">
-      {{ form.postal_code|as_crispy_field }}
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-12 input-container">
-      {{ form.address1|as_crispy_field }}
-      </div>
-      <div class="col-12 input-container">
-      {{ form.address2|as_crispy_field }}
-      </div>
-    </div>
-
 
   {% endwith %}
   {% include form_payopt_create.template with form=form_payopt_create stripe=payment_processor %}
@@ -169,7 +145,7 @@
 {% block menu %}
 <div class="row mt-4">
   <div class="col text-center">
-    <a class="return-to-dashbaord | btn btn-secondary" href="/">{% trans "Return to Account Dashboard" %}
+    <a class="return-to-dashbaord | btn btn-secondary" href="/#page-billing">{% trans "Return to Account Dashboard" %}
     </a>
   </div>
 </div>

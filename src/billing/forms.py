@@ -2,6 +2,8 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext as _
 from django_countries.fields import CountryField
+from phonenumber_field.formfields import PhoneNumberField
+from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
 import billing.payment_processors
 from billing.models import PaymentMethod, Product
@@ -49,15 +51,15 @@ class CreatePaymentMethodForm(forms.Form):
     )
 
 
-class BillingAddressForm(forms.Form):
-    holder = forms.CharField(label=_("Full Name"))
-    email = forms.EmailField(label=_("Email Address"))
-    country = CountryField().formfield(initial="US", label=_("Country"))
-    city = forms.CharField(label=_("City"))
-    address1 = forms.CharField(label=_("Address"))
-    address2 = forms.CharField(label=_("Address (2)"), required=False)
-    postal_code = forms.CharField(label=_("Postal Code"))
-    state = forms.CharField(label=_("State"), required=False)
+class BillingContactDetails(forms.Form):
+    holder = forms.CharField(label=_("Full Name"), required=True)
+    email = forms.EmailField(label=_("Email Address"), required=True)
+    phone_number = PhoneNumberField(
+        label=_("Phone Number"),
+        widget=PhoneNumberPrefixWidget(
+            initial="US", attrs={"class": "form-control w-auto d-inline-block"}
+        ),
+    )
 
 
 class BillingAgreementsForm(forms.Form):
@@ -69,3 +71,9 @@ class BillingContactForm(forms.Form):
         label=_("Name"), widget=forms.TextInput(attrs={"readonly": True})
     )
     email = forms.EmailField(label=_("Email Address"))
+    phone_number = PhoneNumberField(
+        label=_("Phone Number"),
+        widget=PhoneNumberPrefixWidget(
+            initial="US", attrs={"class": "form-control w-auto d-inline-block"}
+        ),
+    )

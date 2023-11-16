@@ -17,7 +17,18 @@
 
 
   <div data-api-submit="yes">
-  {{ form|crispy }}
+    <div class="col-6 input-container">
+    {{ form.name|as_crispy_field }}
+    </div>
+    <div class="col-6 input-container">
+    {{ form.email|as_crispy_field }}
+    </div>
+    <div class="col-12 input-container mb-3">
+      <label for="id_phone_number_1">Phone Number*</label>
+      <div class="phonenumber-container">
+        {{ form.phone_number }}
+      </div>
+    </div>
   </div>
 
   <div class="row">

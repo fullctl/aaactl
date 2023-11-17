@@ -4,22 +4,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
-    replaces = [('account', '0039_auto_20231106_1624'), ('account', '0040_delete_admininvitation')]
+    # replaces = [('account', '0039_auto_20231106_1624'), ('account', '0040_delete_admininvitation')]
 
     dependencies = [
-        ('account', '0038_alter_contactmessage_type'),
+        ("account", "0038_alter_contactmessage_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invitation',
-            name='role',
-            field=models.CharField(choices=[('member', 'Member'), ('admin', 'Admin')], default='member', max_length=10),
+            model_name="invitation",
+            name="role",
+            field=models.CharField(
+                choices=[("member", "Member"), ("admin", "Admin")],
+                default="member",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='contactmessage',
-            name='type',
-            field=models.CharField(choices=[('general', 'General'), ('support', 'Support'), ('feature-request', 'Feature Request'), ('demo-request', 'Demo Request'), ('netdevops-primer', 'NetDevOps Primer')], default='general', max_length=255),
+            model_name="contactmessage",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("general", "General"),
+                    ("support", "Support"),
+                    ("feature-request", "Feature Request"),
+                    ("demo-request", "Demo Request"),
+                    ("netdevops-primer", "NetDevOps Primer"),
+                ],
+                default="general",
+                max_length=255,
+            ),
         ),
     ]

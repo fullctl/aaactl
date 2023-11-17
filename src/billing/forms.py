@@ -1,7 +1,6 @@
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext as _
-from django_countries.fields import CountryField
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
 

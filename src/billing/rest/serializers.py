@@ -110,6 +110,15 @@ class BillingContact(FormValidationMixin, serializers.ModelSerializer):
                 {"phone_number": _("Invalid phone number")}
             )
 
+        # format data for FormValidationMixin
+        # PhoneField with PhoneNumberPrefixWidget expects phone_number_0 and phone_number_1
+        form_formatted_data = data.copy()
+        form_formatted_data["phone_number_0"] = form_formatted_data.pop(
+            "phone_number_country"
+        )
+        form_formatted_data["phone_number_1"] = form_formatted_data.pop("phone_number")
+        super().validate(form_formatted_data)
+
         return data
 
     def save(self):
@@ -197,7 +206,6 @@ class BillingSetup(serializers.Serializer):
 
     required_billing_address_fields = [
         "holder",
-        "email",
         "phone_number",
         "phone_number_country",
     ]
@@ -254,28 +262,32 @@ class BillingSetup(serializers.Serializer):
     def validate(self, data):
         org = self.context.get("org")
 
-        if not is_valid_phone_number(
-            data.get("phone_number"), data.get("phone_number_country")
-        ):
-            raise serializers.ValidationError(
-                {"phone_number": _("Invalid phone number")}
-            )
-        phone_number = PhoneNumber.from_string(
-            data["phone_number"], region=data["phone_number_country"]
-        )
-
         if not data.get("payment_method"):
+            if not is_valid_phone_number(
+                data.get("phone_number"), data.get("phone_number_country")
+            ):
+                raise serializers.ValidationError(
+                    {"phone_number": _("Invalid phone number")}
+                )
+            phone_number = PhoneNumber.from_string(
+                data["phone_number"], region=data["phone_number_country"]
+            )
+
             field_errors = {}
             for field in self.required_billing_address_fields:
                 if not data.get(field):
                     field_errors[field] = _("Input required")
             if field_errors:
                 raise serializers.ValidationError(field_errors)
+
+            data["phone_number"] = phone_number
+            data.pop("phone_number_country", None)
+
             billing_contact, created = models.BillingContact.objects.get_or_create(
                 org=org,
                 name=data.get("holder"),
                 email=data.get("email"),
-                phone_number=phone_number,
+                phone_number=data.get("phone_number"),
                 status="ok",
             )
             data["payment_method"] = models.PaymentMethod(

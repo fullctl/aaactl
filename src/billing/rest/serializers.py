@@ -260,6 +260,7 @@ class BillingSetup(serializers.Serializer):
             raise serializers.ValidationError("Payment method not found")
 
     def validate(self, data):
+        super().validate(data)
         org = self.context.get("org")
 
         if not data.get("payment_method"):

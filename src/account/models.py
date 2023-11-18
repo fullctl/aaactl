@@ -845,6 +845,7 @@ class Invitation(HandleRefModel):
         default="member",
         max_length=10,
     )
+    expiry = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "account_invitation"
@@ -854,10 +855,17 @@ class Invitation(HandleRefModel):
     class HandleRef:
         tag = "invite"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def update_expiry_date(self):
+        self.expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+            3
+        )
+
     @property
     def expired(self):
-        delta = datetime.datetime.now(datetime.timezone.utc) - self.created
-        return delta.days >= 3
+        return self.expiry < datetime.datetime.now(datetime.timezone.utc)
 
     @property
     def url(self):
@@ -871,6 +879,7 @@ class Invitation(HandleRefModel):
     def save(self, *args, **kwargs):
         if self.role == "admin" and not self._is_inviter_admin():
             raise PermissionError("Only admins can invite other admins")
+        self.update_expiry_date()
         super().save(*args, **kwargs)
 
     def send(self):
@@ -896,6 +905,7 @@ class Invitation(HandleRefModel):
                 },
             ).content.decode("utf-8"),
         )
+        self.update_expiry_date()
 
     @reversion.create_revision()
     def complete(self, user):

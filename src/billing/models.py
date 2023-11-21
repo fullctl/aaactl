@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 from django.db import models, transaction
 from django.shortcuts import render
 from django.utils import timezone
@@ -1511,7 +1512,14 @@ class BillingContact(HandleRefModel):
     )
 
     name = models.CharField(max_length=255)
-    email = models.EmailField(max_length=255, null=True, blank=True)
+    email = models.EmailField(
+        max_length=255,
+        null=True,
+        blank=True,
+        validators=[
+            EmailValidator(allowlist=[])
+        ],  # using allowlist to match stripe valid emails
+    )
     phone_number = PhoneNumberField(null=True)
 
     class Meta:

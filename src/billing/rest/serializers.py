@@ -291,6 +291,13 @@ class BillingSetup(serializers.Serializer):
                 phone_number=data.get("phone_number"),
                 status="ok",
             )
+            if created:
+                try:
+                    billing_contact.full_clean()
+                except models.ValidationError as e:
+                    billing_contact.delete()
+                    raise serializers.ValidationError(e.message_dict)
+
             data["payment_method"] = models.PaymentMethod(
                 billing_contact=billing_contact
             )

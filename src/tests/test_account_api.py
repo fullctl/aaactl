@@ -318,6 +318,18 @@ def test_org_invite(db, account_objects, data_account_api_org_invite):
     assert_expected(response, strip_api_fields(expected))
 
 
+def test_org_admininvite(db, account_objects, data_account_api_org_invite):
+    input = json.loads(data_account_api_org_invite.input)
+    expected = data_account_api_org_invite.expected
+    slug = input.get("slug", account_objects.org.slug)
+
+    response = getattr(account_objects, input["client"]).post(
+        reverse("account_api:org-invite", args=(slug,)), data=input["data"]
+    )
+
+    assert_expected(response, strip_api_fields(expected))
+
+
 def test_password_reset_start(
     db, account_objects, data_account_api_password_reset_start
 ):

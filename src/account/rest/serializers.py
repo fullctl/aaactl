@@ -440,12 +440,25 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
 
+    is_admin_invite = serializers.BooleanField(
+        default=False, required=False, write_only=True
+    )
+    role = serializers.CharField(read_only=True)
+
     form = forms.InviteToOrganization
     required_context = ["org", "user"]
 
     class Meta:
         model = models.Invitation
-        fields = ["org_id", "org_name", "slug", "email", "user_name"]
+        fields = [
+            "org_id",
+            "org_name",
+            "slug",
+            "email",
+            "user_name",
+            "is_admin_invite",
+            "role",
+        ]
 
     def get_org_name(self, obj):
         return obj.org.name
@@ -466,6 +479,13 @@ class Invitation(FormValidationMixin, serializers.ModelSerializer):
         data["created_by"] = self.context.get("user")
         data["org"] = self.context.get("org")
         data.pop("form_data", None)
+
+        if data["is_admin_invite"]:
+            data["role"] = "admin"
+        else:
+            data["role"] = "member"
+
+        data.pop("is_admin_invite", None)
 
         invite = models.Invitation.objects.filter(
             email=data["email"], org=data["org"]

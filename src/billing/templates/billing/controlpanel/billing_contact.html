@@ -1,4 +1,4 @@
-{% extends "account/controlpanel/index.html" %}
+{% extends "account/controlpanel/base.html" %}
 {% load i18n static crispy_forms_tags %}
 
 
@@ -17,7 +17,18 @@
 
 
   <div data-api-submit="yes">
-  {{ form|crispy }}
+    <div class="col-6 input-container">
+    {{ form.name|as_crispy_field }}
+    </div>
+    <div class="col-6 input-container">
+    {{ form.email|as_crispy_field }}
+    </div>
+    <div class="col-12 input-container mb-3">
+      <label for="id_phone_number_1">Phone Number*</label>
+      <div class="phonenumber-container">
+        {{ form.phone_number }}
+      </div>
+    </div>
   </div>
 
   <div class="row">
@@ -54,7 +65,7 @@
 
     <table>
     <tr data-template="row">
-      <td scope="col" data-field="custom_name"></td>
+      <td scope="col"><span data-field="custom_name"></span> <span class="light-grey">(Last Updated: <span data-field="updated"></span>)</span></td>
       <td scope="col" class="right">
         {% if permissions.update_org_billing %}
         <button
@@ -78,7 +89,7 @@
     </thead>
     <tbody class="list-static-body">
       <tr>
-        <td>{% trans "Add new payment method ..." %}</td>
+        <td>{% trans "Add new payment method..." %}</td>
         <td class="right"><a href="{% url "billing:setup" %}?billing_contact={{ billing_contact.id }}" class="btn btn-sm btn-primary">{% trans "Add" %}</a>
         </td>
       </tr>

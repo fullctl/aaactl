@@ -1,4 +1,4 @@
-(function() {
+(function($, $tc) {
 
 window.billing = {}
 
@@ -17,9 +17,10 @@ billing.BillingContact = twentyc.cls.define(
         let billing_contact_id = this.elements.payment_method_list.data('billing-contact-id');
         return `${url}?billing_contact=${billing_contact_id}`
       }
+      this.rest_api_payment_method_list.formatters.updated = fullctl.formatters.datetime;
       this.rest_api_payment_method_list.load()
 
-      this.rest_api_billing_contact_form = new twentyc.rest.Form(this.elements.billing_contact_form);
+      this.rest_api_billing_contact_form = new billing.BillingForm(this.elements.billing_contact_form);;
       $(this.rest_api_billing_contact_form).on('api-delete:success', function() {
         document.location.href = "/billing/billing-contacts/";
       });
@@ -40,7 +41,7 @@ billing.BillingSetup = twentyc.cls.define(
 
       this.initial_payopt = this.elements.select_payopt.val()
 
-      this.rest_api_form = new twentyc.rest.Form(this.elements.form);
+      this.rest_api_form = new billing.BillingForm(this.elements.form);
       this.track_form_changes();
       $(this.rest_api_form).on("api-post:success", function(e, endpoint, sent_data, response) {
         console.log("Got submit success", {e, endpoint, response, sent_data});
@@ -51,8 +52,8 @@ billing.BillingSetup = twentyc.cls.define(
       }.bind(this));
 
 
-      this.elements.return_to_dashbaord = $('a.return-to-dashbaord');
-      this.elements.return_to_dashbaord.on('click', (e) => {
+      this.elements.return_to_dashboard = $('a.return-to-dashbaord');
+      this.elements.return_to_dashboard.on('click', (e) => {
         if (this.elements.form.attr('data-submitted') == 'true') {
           this.elements.form.attr('data-submitted', 'false');
         } else if (this.changed) {
@@ -97,4 +98,33 @@ billing.BillingSetup = twentyc.cls.define(
     }
   }
 );
-})();
+
+billing.BillingForm = $tc.extend(
+  "BillingSetupForm",
+  {
+    BillingSetupForm : function(jq) {
+      this.Form(jq);
+    },
+
+    payload : function() {
+      const payload = this.Form_payload();
+      payload["phone_number_country"] = payload["phone_number_0"]
+      payload["phone_number"] = payload["phone_number_1"]
+      delete payload["phone_number_0"]
+      delete payload["phone_number_1"]
+
+      return payload;
+    },
+
+
+    render_error : function(key, errors) {
+      if (key == "phone_number") {
+        key = "phone_number_1";
+      }
+      this.Form_render_error(key, errors);
+    }
+  },
+  twentyc.rest.Form
+);
+
+})(jQuery, twentyc.cls);

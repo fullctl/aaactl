@@ -13,8 +13,6 @@ $().ready(function() {
 
   if (!aaactl_user_info.has_org_setup) {
     url.searchParams.set("edit", "new-org");
-  } else if (!aaactl_user_info.has_asn) {
-    url.searchParams.set("edit", "linked-auth-pdb");
   }
 
   history.replaceState({}, null, url);
@@ -692,32 +690,37 @@ account.Services = twentyc.cls.define(
         data.items.forEach((item, idx, array) => {
           var ihf = new this.itemHtmlFormatter(item);
           item_table.append(
-              $('<tr>').append([
-                ihf.formattedDescription(),
-                ihf.formattedUsageType(),
-                ihf.formattedUsageAmount(),
-                ihf.formattedLink().hide(),
-                ihf.formatted_expiration_date(),
-                ihf.formattedCost()
-              ])
-            )
-          total_cost += parseFloat(item.cost);
-        });
-        item_heading.children().addClass('px-0').append(
-          $('<div>').addClass('container-fluid').append(
-            $('<div>').addClass("row align-items-center").append([
-             $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
-             $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
-             $('<div>').addClass('col'),
-             $('<div>').html(
-              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
-              ).addClass('ms-auto col-auto pe-0')
+            $('<tr>').append([
+              ihf.formattedDescription(),
+              ihf.formattedUsageType(),
+              ihf.formattedUsageAmount(),
+              ihf.formattedLink().hide(),
+              ihf.formatted_expiration_date(),
+              ihf.formattedCost()
             ])
           )
-        );
+          total_cost += parseFloat(item.cost);
+        });
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
         item_table.after($('<tr>').addClass('blank-row'));
+
+        const item_cost_summary = $('<div>').addClass("row align-items-center").append([
+          $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
+          $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
+          $('<div>').addClass('col'),
+        ]);
+        if (data.subscription_cycle) {
+          item_cost_summary.append(
+            $('<div>').html(
+              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
+            ).addClass('ms-auto col-auto pe-0')
+          );
+        }
+
+        item_heading.children().addClass('px-0').append(
+          $('<div>').addClass('container-fluid').append(item_cost_summary)
+        );
       });
 
       $(this.rest_api_list).on("load:after", () => {
@@ -933,16 +936,25 @@ account.PendingUsers = twentyc.cls.define(
       }
 
       this.rest_api_list.formatters.user_name = function(value, data){
+        let content = value;
+
         if ( value === '' ) {
-          return value + '<span class="user-badge ub-pending">Pending</span>';
+          content += '<span class="user-badge ub-pending">Pending</span>';
         } else {
-          return value + '<span class="user-badge ub-pending ms-2">Pending</span>';
+          content += '<span class="user-badge ub-pending ms-2">Pending</span>';
         }
+
+        if (data.role == "admin") {
+          content += '<span class="user-badge ub-admin">admin</span>';
+        }
+
+        return content
       }
 
       $(this.rest_api_list).on("insert:after", (e, row, data) => {
         var client = new twentyc.rest.Client("/api/account");
-        if ( row.find('.name-column').text() === 'Pending' ) {
+        const invite = row.data('apiobject');
+        if ( invite.user_name === '' ) {
           row.find('.name-column').addClass('text-center');
         }
 
@@ -1016,28 +1028,6 @@ account.expand_user_info = () => {
   $('#userInformation').get(0).scrollIntoView();
 }
 
-account.prompt_link_to_pdb = () => {
-  // only run if the linked auth section is present
-  // TODO: don't load this file at places where this doesn't exist
-  if ($('#linkedAuthCollapse').length == 0) {
-    return
-  }
-
-  $('#linkedAuthCollapse').addClass('show');
-  $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
-  $('#linkedAuthCollapse').get(0).scrollIntoView();
-  $('#linkedAuthCollapse .peeringdb')[0].animate(
-    [
-      {"background": "var(--background)"},
-      {"background": "transparent"}
-    ],
-    {
-      duration: 750,
-      iterations: 3
-    }
-  );
-}
-
 /**
  * Expand account edit if account is the edit parameter in the URL
  *
@@ -1049,8 +1039,6 @@ account.handleEditUrlParameter = () => {
   if (editParameter) {
     if (editParameter == "account") {
       account.expand_user_info();
-    } else if (editParameter == "linked-auth-pdb") {
-      account.prompt_link_to_pdb();
     } else if (editParameter == "new-org") {
       $('#createOrgModal').modal('show');
     }

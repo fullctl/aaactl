@@ -21,11 +21,8 @@ def test_post_billing_setup(billing_objects, mocker):
     data = {
         "agreement_tos": True,
         "holder": "George Contact",
-        "country": "US",
-        "city": "Chicago",
-        "address1": "123 Test Ave",
-        "postal_code": "60660",
-        "state": "IL",
+        "phone_number_country": "US",
+        "phone_number": "604 401 1234",
         "client_secret": "test_secret",
         "setup_intent_id": "test_id",
     }
@@ -34,11 +31,7 @@ def test_post_billing_setup(billing_objects, mocker):
         "payment_method": "George Contact: stripe-3",
         "payment_method_id": 3,
         "holder": "George Contact",
-        "country": "US",
-        "city": "Chicago",
-        "address1": "123 Test Ave",
-        "postal_code": "60660",
-        "state": "IL",
+        "phone_number": "+16044011234",
     }
     mocker.patch(
         "billing.payment_processors.stripe.stripe.Customer.create",
@@ -135,11 +128,13 @@ def test_update_billing_contact(billing_objects):
         "id": billing_objects.billing_contact.id,
         "org": billing_objects.billing_contact.org,
         "name": billing_objects.billing_contact.name,
-        "email": "newemail@localhost",
+        "email": "newemail@fullctl.com",
+        "phone_number": "+16044011234",
+        "phone_number_country": "US",
     }
     response = billing_objects.api_client.put(url, data=data)
     assert response.status_code == 200
-    assert models.BillingContact.objects.first().email == "newemail@localhost"
+    assert models.BillingContact.objects.first().email == "newemail@fullctl.com"
 
     # Test incomplete information
     del data["email"]

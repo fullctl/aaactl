@@ -38,6 +38,9 @@ python-jose = "^3.3"
 
 stripe = "^5.5.0"
 crispy-bootstrap5 = "^0.6"
+django-phonenumber-field = ">=7.2.0"
+phonenumbers = ">=8.13.24"
+babel = ">=2.13.0"
 
 [tool.poetry.dev-dependencies]
 # testing

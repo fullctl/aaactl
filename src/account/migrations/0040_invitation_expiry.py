@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('account', '0039_auto_20231106_1624'),
+        ("account", "0039_auto_20231106_1624"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invitation',
-            name='expiry',
+            model_name="invitation",
+            name="expiry",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

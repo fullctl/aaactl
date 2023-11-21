@@ -5,15 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('billing', '0030_billingcontact_phone_number'),
+        ("billing", "0030_billingcontact_phone_number"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='billingcontact',
-            name='email',
-            field=models.EmailField(blank=True, max_length=255, null=True, validators=[django.core.validators.EmailValidator(allowlist=[])]),
+            model_name="billingcontact",
+            name="email",
+            field=models.EmailField(
+                blank=True,
+                max_length=255,
+                null=True,
+                validators=[django.core.validators.EmailValidator(allowlist=[])],
+            ),
         ),
     ]

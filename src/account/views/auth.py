@@ -147,8 +147,7 @@ def accept_invite(request, secret):
 
     if not request.user.is_authenticated:
         return redirect(
-            reverse("account:auth-login")
-            + f"?next={request.get_full_path()}"
+            reverse("account:auth-login") + f"?next={request.get_full_path()}"
         )
 
     invite.complete(request.user)

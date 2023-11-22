@@ -134,7 +134,6 @@ def reset_password(request, secret):
     return render(request, "account/auth/reset-password.html", env)
 
 
-@login_required
 def accept_invite(request, secret):
     try:
         invite = Invitation.objects.get(secret=secret)
@@ -145,6 +144,12 @@ def accept_invite(request, secret):
     if invite.expired:
         messages.error(request, _("The invite has expired"))
         return redirect("/")
+
+    if not request.user.is_authenticated:
+        return redirect(
+            reverse("account:auth-login")
+            + f"?next={request.get_full_path()}"
+        )
 
     invite.complete(request.user)
     messages.info(request, _("You have joined {}").format(invite.org.label))

@@ -603,6 +603,20 @@ files = [
 ]
 
 [[package]]
+name = "django-filter"
+version = "23.4"
+description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-filter-23.4.tar.gz", hash = "sha256:bed070b38359dce7d2dbe057b165d59773057986356cb809ded983b36c77a976"},
+    {file = "django_filter-23.4-py3-none-any.whl", hash = "sha256:526954f18bd7d6423f232a9a7974f58fbc6863908b9fc160de075e01adcc2a5f"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-grainy"
 version = "1.9.1"
 description = "granular permissions for django"
@@ -640,14 +654,17 @@ files = [
 
 [[package]]
 name = "django-ipware"
-version = "5.0.2"
+version = "6.0.0"
 description = "A Django application to retrieve user's IP address"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "django-ipware-5.0.2.tar.gz", hash = "sha256:ab3ab7645e674df682c1146a5bddfa5151b1b7be7be9210872c3156bd836aad4"},
-    {file = "django_ipware-5.0.2-py2.py3-none-any.whl", hash = "sha256:838b7aede77734603bd32ebd08ad7957304266580b646f8cbe982c4833b71c84"},
+    {file = "django-ipware-6.0.0.tar.gz", hash = "sha256:c656805c824449b5171e6f851f6369000fe204ec03ac9977110a9b0aff4825b6"},
+    {file = "django_ipware-6.0.0-py2.py3-none-any.whl", hash = "sha256:5595aa3819d6c82c2a09a307dfe58f3d40bff3e098c2e8508118195ac3270465"},
 ]
+
+[package.dependencies]
+python-ipware = ">=2.0.0"
 
 [[package]]
 name = "django-netfields"
@@ -852,6 +869,7 @@ confu = "^1.5"
 Django = "~3.2"
 django-autocomplete-light = "3.5.1"
 django-crispy-forms = "^1.8"
+django-filter = ">=23.4"
 django-grainy = "^1.9"
 django-handleref = "^1"
 django-inet = "^1"
@@ -874,7 +892,7 @@ whitenoise = ">=6"
 type = "git"
 url = "https://github.com/fullctl/fullctl.git"
 reference = "prep-release"
-resolved_reference = "059192fff5ab9ce93dc4f416c430249cd88a8e50"
+resolved_reference = "2ef9235010b8e009b53102742c9206239a1e10ac"
 
 [[package]]
 name = "future"
@@ -1300,13 +1318,13 @@ files = [
 
 [[package]]
 name = "phonenumbers"
-version = "8.13.25"
+version = "8.13.26"
 description = "Python version of Google's common library for parsing, formatting, storing and validating international phone numbers."
 optional = false
 python-versions = "*"
 files = [
-    {file = "phonenumbers-8.13.25-py2.py3-none-any.whl", hash = "sha256:7a57cceb8145d3099a0cda7a1f2581b6829936069224790be5de0adf14b39f13"},
-    {file = "phonenumbers-8.13.25.tar.gz", hash = "sha256:4ae2d2e253a4752a269ae1147822b9aa500f14b2506a91f884e68b136901f128"},
+    {file = "phonenumbers-8.13.26-py2.py3-none-any.whl", hash = "sha256:b2308c9c5750b8f10dd30d94547afd66bce60ac5e93aff227f95740557f32752"},
+    {file = "phonenumbers-8.13.26.tar.gz", hash = "sha256:937d70aeceb317f5831dfec28de855a60260ef4a9d551964bec8e7a7d0cf81cd"},
 ]
 
 [[package]]
@@ -1628,6 +1646,20 @@ files = [
 
 [package.dependencies]
 six = ">=1.5"
+
+[[package]]
+name = "python-ipware"
+version = "2.0.0"
+description = "A Python package to retrieve user's IP address"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-ipware-2.0.0.tar.gz", hash = "sha256:a52757123c718342f74b16ab2d9d4a531888d69d10b8197c073164635df0a13b"},
+    {file = "python_ipware-2.0.0-py3-none-any.whl", hash = "sha256:802858aa13308d572876d1883edae0eae380fe70a51fdefcb46c8a2099240862"},
+]
+
+[package.extras]
+dev = ["coverage[toml]", "coveralls (>=3.3,<4.0)", "ruff", "twine"]
 
 [[package]]
 name = "python-jose"

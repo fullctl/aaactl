@@ -93,6 +93,8 @@
     </div>
 
   {% endwith %}
+
+  <h5>{% trans "Billing Method" %}</h5>
   {% include form_payopt_create.template with form=form_payopt_create stripe=payment_processor %}
   </div>
   <div class="col-6">

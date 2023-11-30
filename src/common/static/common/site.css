@@ -471,8 +471,9 @@ h6 {
 }
 
 .alert-error {
-  color: darkred;
   background-color: rgba(255,0,0,0.1);
+  border-color: var(--clr-accent-600);
+  border-width: 1px;
 }
 
 .alert.error {

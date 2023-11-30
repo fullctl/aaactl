@@ -76,7 +76,7 @@ twentyc.rest.config.csrf = "{{ csrf_token }}"
 <div class="container-fluid content-outer">
   <div class="container content">
   {% if messages %}
-  <div class="messages">
+  <div class="messages row">
     {% for message in messages %}
     <div {% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</div>
     {% endfor %}

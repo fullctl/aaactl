@@ -868,7 +868,7 @@ class Invitation(HandleRefModel):
         if not self.expiry:
             # invitations that don't have expiry set are from before
             # we introduced the expiry feature, so we assume they are
-            # not expired
+            # expired
             return True
         return self.expiry < datetime.datetime.now(datetime.timezone.utc)
 

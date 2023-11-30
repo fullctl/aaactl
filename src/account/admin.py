@@ -150,7 +150,7 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("org", "email", "created_by", "created", "status", "role")
+    list_display = ("org", "email", "created_by", "created", "status", "role", "expiry")
     readonly_fields = GrainyUserAdmin.readonly_fields + ("expiry",)
     search_fields = ("org__name", "org__slug", "email")
 

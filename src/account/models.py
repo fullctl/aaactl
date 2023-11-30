@@ -860,11 +860,16 @@ class Invitation(HandleRefModel):
 
     def update_expiry_date(self):
         self.expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-            3
+            days=settings.INVITE_EXPIRY
         )
 
     @property
     def expired(self):
+        if not self.expiry:
+            # invitations that don't have expiry set are from before
+            # we introduced the expiry feature, so we assume they are
+            # not expired
+            return True
         return self.expiry < datetime.datetime.now(datetime.timezone.utc)
 
     @property

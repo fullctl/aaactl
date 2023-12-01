@@ -594,7 +594,7 @@ class Subscription(HandleRefModel):
 
     def get_subscription_cycle(self, date):
         return self.subscription_cycle_set.filter(
-            start__lte=date, end__gte=date
+            start__lte=date, end__gt=date
         ).first()
 
     @reversion.create_revision()

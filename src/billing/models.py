@@ -593,9 +593,7 @@ class Subscription(HandleRefModel):
         return f"{self.group.name} : {self.org}"
 
     def get_subscription_cycle(self, date):
-        return self.subscription_cycle_set.filter(
-            start__lte=date, end__gt=date
-        ).first()
+        return self.subscription_cycle_set.filter(start__lte=date, end__gt=date).first()
 
     @reversion.create_revision()
     def add_product(self, product):

@@ -3,7 +3,7 @@
 
 {% block javascript %}
 {{ block.super }}
-<script type="text/javascript" src="{% static "account/aaactl.account_dashboard.js" %}"></script>
+<script type="text/javascript" src="{% static "account/aaactl.org_dashboard.js" %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -71,7 +71,7 @@
 <div class="row tab-content" id="nav-tabContent">
 
   <div class="col tab-pane active" id="page-org-dashboard" role="tabpanel" aria-labelledby="tab-org-dashboard" tabindex="0">
-    <div class="row controlpanel">
+    <div class="row controlpanel" data-component="org_dashboard">
       <div class="col-xs-12 col">
         {% block controlpanel %}
         <div class="row justify-content-between mb-4">
@@ -230,10 +230,35 @@
           </div>
           {% endif %}
 
+          <div class="accordion-item">
+            <h5 class="accordion-header" id="heading-danger-zone">
+              <button
+                class="accordion-button fs-5 collapsed"
+                data-btn-type="danger"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-danger-zone"
+                aria-expanded="false"
+                aria-controls="collapse-danger-zone">
+                {% trans "Danger Zone" %}
+                <span class="icon icon-warning mx-1"></span>
+              </button>
+            </h5>
+            <div id="collapse-danger-zone" class="accordion-collapse collapse" aria-labelledby="heading-danger-zone">
+              <div class="row justify-content-center">
+                {% include "account/controlpanel/org-dashboard/danger-zone.html" %}
+              </div>
+            </div>
+          </div>
+
 
         </div>
 
         {% endblock %}
+        <div class="templates" style="display: none;">
+          {% include "account/controlpanel/org-dashboard/delete-org-message.html" %}
+          {% include "account/controlpanel/org-dashboard/leave-org-only-admin-message.html" %}
+        </div>
       </div>
       <div class="col-xs-12 col-md-4">
         {% block menu %}

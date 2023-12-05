@@ -1,5 +1,5 @@
 {% extends "account/controlpanel/base.html" %}
-{% load i18n static %}
+{% load i18n static crispy_forms_tags %}
 
 {% block javascript %}
 {{ block.super }}
@@ -59,34 +59,45 @@
 {% block navigation_tabs %}
 <div class="app-pages-nav nav h-100 row" data-component="pages" role="tablist">
 
-  <a class="nav-link active col-auto" id="tab-dashboard" data-bs-toggle="tab" role="tab" aria-controls="page-dashboard" aria-selected="true" data-second-tab="#dashboard-body" href="#page-dashboard">Dashboard</a>
+  <a class="nav-link active col-auto" id="tab-org-dashboard" data-bs-toggle="tab" role="tab" aria-controls="page-org-dashboard" aria-selected="true" href="#page-org-dashboard">{% trans "Organization Dashboard" %}</a>
 
-  <a class="nav-link col-auto" id="tab-account" data-bs-toggle="tab" role="tab" aria-controls="page-account" aria-selected="false" data-second-tab="#account-body" href="#page-account">Account</a>
+  <a class="nav-link col-auto" id="tab-account" data-bs-toggle="tab" role="tab" aria-controls="page-account" aria-selected="false" href="#page-account">{% trans "User Account" %}</a>
 
-  <a class="nav-link col-auto" id="tab-billing" data-bs-toggle="tab" role="tab" aria-controls="page-billing" aria-selected="true" data-second-tab="#billing-body" href="#page-billing">Billing</a>
+  <a class="nav-link col-auto" id="tab-billing" data-bs-toggle="tab" role="tab" aria-controls="page-billing" aria-selected="true" href="#page-billing">{% trans "Billing" %}</a>
 
 </div>
 {% endblock %}
 
 <div class="row tab-content" id="nav-tabContent">
 
-  <div class="col tab-pane active" id="page-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" tabindex="0">
+  <div class="col tab-pane active" id="page-org-dashboard" role="tabpanel" aria-labelledby="tab-org-dashboard" tabindex="0">
     <div class="row controlpanel">
       <div class="col-xs-12 col">
         {% block controlpanel %}
         <div class="row justify-content-between mb-4">
           <div class="col-xs-12 col-sm-auto">
-            <h2>Account Dashboard</h2>
+            <h2>{% trans "Organization Dashboard" %}</h2>
           </div>
           <div class="col-xs-12 col-sm-auto ps-0">
             <div
               class="dropdown org-select"
               data-api-base="{% url "account_api:org-list" %}">
               <div class="custom-divider">
-                <a class="btn org-select-dropdown-header clearfix text-start"
-                    href="#" id="dropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></a>
-                <div class="dropdown-menu org-select-menu dd-box-shadow list-body"
-                    aria-labelledby="dropdownMenuLink"></div>
+                <a
+                  class="btn org-select-dropdown-header clearfix text-start"
+                  href="#"
+                  id="dropdownMenuLink"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                </a>
+                <div
+                  class="dropdown-menu org-select-menu dd-box-shadow list-body"
+                  aria-labelledby="dropdownMenuLink"
+                >
+                </div>
                 {% include "account/controlpanel/create-org-modal.html" %}
               </div>
               <div class="templates" style="display:none">
@@ -97,23 +108,54 @@
                     <span>{% trans "Set as primary organization" %}</span>
                   </a>
               </div>
-          </div>
-          <div class="ms-2 small-links">
-              {% if permissions.update_org_org %}
-              <a href="javascript:void(0)" role="button" data-bs-toggle="modal" data-bs-target="#editOrgModal">Organization Settings</a>
-              {% endif %}
-              {% if permissions.update_org_org and permissions.read_org_billing %}
-              <span> | </span>
-              {% endif %}
-              {% if permissions.read_org_billing %}
-              <a href="{% url "billing:billing-contacts" %}">Billing</a>
-              {% endif %}
-          </div>
-          {% include "account/controlpanel/edit-organization-modal.html" %}
+            </div>
           </div>
         </div>
 
         <div class="accordion dashboard-cards">
+
+          <!-- ORGANIZATION SETTINGS -->
+
+          {% if permissions.update_org_org %}
+          <div class="accordion-item">
+            <h5 class="accordion-header" id="heading-org-settings">
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-org-settings"
+                aria-expanded="false"
+                aria-controls="collapse-org-settings">
+                {% trans "Organization Settings" %}
+              </button>
+            </h5>
+            <div id="collapse-org-settings" class="accordion-collapse collapse" aria-labelledby="heading-org-settings">
+              <form
+                class="edit-organization"
+                data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+                data-api-redirect="{% url "account:controlpanel" %}"
+                data-api-method="PUT"
+              >
+                <div data-api-submit="yes">
+                {{ edit_org_form|crispy }}
+                </div>
+                {% if request.selected_org.user %}
+                <div class="center">
+                  <div class="alert alert-info">
+                    {% blocktrans %}
+                    Personal organizations cannot be edited.
+                    {% endblocktrans %}
+                  </div>
+                </div>
+                {% else %}
+                <div class="right">
+                  <button type="button" class="btn btn-primary submit">{% trans "Save" %}</button>
+                </div>
+                {% endif %}
+              </form>
+            </div>
+          </div>
+          {% endif %}
 
           <!-- SERVICES -->
 
@@ -167,7 +209,7 @@
                 data-bs-target="#collapse-api-keys"
                 aria-expanded="false"
                 aria-controls="collapse-api-keys">
-                {% trans "API Keys" %}
+                {% trans "Organization API Keys" %}
               </button>
             </h5>
             <div id="collapse-api-keys" class="accordion-collapse collapse" aria-labelledby="heading-api-keys">
@@ -204,11 +246,12 @@
   <div class="col tab-pane" id="page-account" role="tabpanel" aria-labelledby="tab-account" tabindex="0">
     <div class="row">
       <div class="col">
-        <h2>Account Settings</h2>
+        <h2>{% trans "User Account Settings" %}</h2>
         {% include "account/controlpanel/menu.html" %}
       </div>
 
-      <div class="col-xs-12 col-md-4"></div>
+      <div class="col-xs-12 col-md-4">
+      </div>
     </div>
   </div>
 

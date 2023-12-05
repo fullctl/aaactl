@@ -2117,7 +2117,7 @@ class OrderLine(Transaction):
     )
     subscription_cycle_product = models.ForeignKey(
         "billing.SubscriptionCycleProduct",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="order_set",
         null=True,
         blank=True,
@@ -2165,7 +2165,7 @@ class InvoiceLine(Transaction):
     )
     subscription_cycle_product = models.ForeignKey(
         "billing.SubscriptionCycleProduct",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="invoice_set",
         blank=True,
         null=True,

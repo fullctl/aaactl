@@ -1520,6 +1520,15 @@ class BillingContact(HandleRefModel):
     )
     phone_number = PhoneNumberField(null=True)
 
+    status = models.CharField(
+        max_length=32,
+        choices=(
+            ("ok", "Ok"),
+            ("deleted", "Deleted"),
+        ),
+        default="ok"
+    )
+
     class Meta:
         db_table = "billing_contact"
         verbose_name = _("Billing Contact")
@@ -1590,7 +1599,7 @@ class PaymentMethod(HandleRefModel):
     @classmethod
     def get_for_org(cls, org, status="ok"):
         if status:
-            return cls.objects.filter(billing_contact__org=org, status=status)
+            return cls.objects.filter(billing_contact__org=org, status=status, billing_contact__status=status)
         else:
             return cls.objects.filter(billing_contact__org=org)
 

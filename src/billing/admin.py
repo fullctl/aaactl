@@ -441,8 +441,9 @@ class ProductGroupAdmin(BaseAdmin):
 
 @admin.register(BillingContact)
 class BillingContactAdmin(BaseAdmin):
-    list_display = ("id", "org", "name", "email", "created")
+    list_display = ("id", "org", "name", "email", "created", "status")
     search_fields = ("org__name", "name", "email")
+    list_filter = ("status",)
 
 
 @admin.register(Ledger)

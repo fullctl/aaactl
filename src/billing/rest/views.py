@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 import applications.models as application_models
 import billing.models as models
+from django.db.models import ProtectedError
 from account.rest.decorators import set_org
 from billing.rest.route import route
 from billing.rest.serializers import Serializers
@@ -97,7 +98,7 @@ class Organization(viewsets.ViewSet):
 
         if request.method == "PUT":
             serializer = Serializers.billing_contact(
-                instance=instance, data=request.data
+                instance=instance, data=request.data, status="ok"
             )
 
             if not serializer.is_valid():
@@ -106,7 +107,17 @@ class Organization(viewsets.ViewSet):
 
         elif request.method == "DELETE":
             serializer = Serializers.billing_contact(instance=instance)
-            instance.delete()
+
+            try:
+                # attempt to delete billing contact
+                # a constraint will prevent this if there are any transactions
+                # tied to the account
+                instance.delete()
+            except ProtectedError:
+                instance.status = "deleted"
+                instance.save()
+                
+            
             models.Subscription.set_payment_method(org)
 
         return Response(serializer.data)

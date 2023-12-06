@@ -328,6 +328,32 @@ class Organization(viewsets.ViewSet):
 
         return Response(Serializers.org_user(instance=org_user, many=False).data)
 
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @auditlog()
+    @user_endpoint()
+    def leave_org(self, request, pk, org, auditlog=None):
+        role = models.Role.objects.get(name="Admin")
+        org_admins = models.OrganizationRole.objects.filter(org=org, role=role)
+        # check if user is the only admin
+        if len(org_admins) == 1 and org_admins.first().user == request.user:
+            return Response(
+                {
+                    "non_field_errors": [
+                        _(
+                            "Cannot remove yourself as you are the only admin for the org."
+                        )
+                    ]
+                },
+                status=400,
+            )
+
+        org_user = models.OrganizationUser.objects.get(user=request.user, org=org)
+
+        org.remove_user(request.user)
+
+        return Response(Serializers.org_user(instance=org_user, many=False).data)
+
     @action(detail=True, methods=["POST"])
     @set_org
     @auditlog()

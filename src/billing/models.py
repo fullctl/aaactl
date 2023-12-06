@@ -1556,6 +1556,13 @@ class BillingContact(HandleRefModel):
                 message,
             )
 
+    def delete(self):
+        try:
+            super().delete()
+        except models.ProtectedError:
+            self.status = "deleted"
+            self.save()
+
 
 @reversion.register()
 class PaymentMethod(HandleRefModel):

@@ -98,7 +98,8 @@ class Organization(viewsets.ViewSet):
 
         if request.method == "PUT":
             serializer = Serializers.billing_contact(
-                instance=instance, data=request.data, status="ok"
+                instance=instance,
+                data=request.data,
             )
 
             if not serializer.is_valid():
@@ -107,16 +108,7 @@ class Organization(viewsets.ViewSet):
 
         elif request.method == "DELETE":
             serializer = Serializers.billing_contact(instance=instance)
-
-            try:
-                # attempt to delete billing contact
-                # a constraint will prevent this if there are any transactions
-                # tied to the account
-                instance.delete()
-            except ProtectedError:
-                instance.status = "deleted"
-                instance.save()
-
+            instance.delete()
             models.Subscription.set_payment_method(org)
 
         return Response(serializer.data)

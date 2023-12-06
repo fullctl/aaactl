@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import ProtectedError
 
 from billing.models import (
     InvoiceLine,
@@ -349,3 +350,21 @@ def test_ledger_init(ledger):
         ).count()
         == 1
     )
+
+
+@pytest.mark.django_db
+def test_billing_contact_hard_delete(billing_objects):
+    # not tied to any transactions so this should run without error
+    billing_objects.billing_contact.delete()
+
+    # test that object is deleted
+    assert billing_objects.billing_contact.id is None
+
+
+@pytest.mark.django_db
+def test_billing_contact_hard_delete_failure(billing_objects, ledger):
+    billing_objects.billing_contact.delete()
+
+    # test that object is soft-deleted
+    assert billing_objects.billing_contact.id is not None
+    assert billing_objects.billing_contact.status == "deleted"

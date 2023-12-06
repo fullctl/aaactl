@@ -28,6 +28,9 @@
       <td scope="col" data-field="name" class="name-column table-text-bold dark-grey"></td>
       <td scope="col" data-field="email" class="light-grey"></td>
       <td scope="col" class="manage-column right">
+        <button class="btn btn-slim btn-manage" data-action="edit">
+          <span class="icon ixctl icon-edit"></span> {% trans "Edit" %}
+        </button>
         <button class="btn btn-slim btn-manage manage">{% trans "Manage" %}</button>
       </td>
     </tr>
@@ -80,10 +83,3 @@
     </tbody>
   </table>
 </div>
-
-
-<script>
-$(document).ready(function() {
-  var org_key_list = new account.OrgKeysList();
-});
-</script>

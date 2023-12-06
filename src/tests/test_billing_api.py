@@ -160,7 +160,7 @@ def test_delete_billing_contact(billing_objects):
     assert models.BillingContact.objects.count() == 0
 
 
-@pytest.mark.db
+@pytest.mark.django_db
 def test_delete_billing_contact_soft(billing_objects, ledger):
     """
     Billing contact tied to transactions, soft delete only

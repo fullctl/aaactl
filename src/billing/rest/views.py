@@ -1,4 +1,5 @@
 import reversion
+from django.db.models import ProtectedError
 from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -6,7 +7,6 @@ from rest_framework.response import Response
 
 import applications.models as application_models
 import billing.models as models
-from django.db.models import ProtectedError
 from account.rest.decorators import set_org
 from billing.rest.route import route
 from billing.rest.serializers import Serializers
@@ -116,8 +116,7 @@ class Organization(viewsets.ViewSet):
             except ProtectedError:
                 instance.status = "deleted"
                 instance.save()
-                
-            
+
             models.Subscription.set_payment_method(org)
 
         return Response(serializer.data)

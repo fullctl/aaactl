@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('billing', '0032_auto_20231130_1758'),
+        ("billing", "0032_auto_20231130_1758"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='billingcontact',
-            name='status',
-            field=models.CharField(choices=[('ok', 'Ok'), ('deleted', 'Deleted')], default='ok', max_length=32),
+            model_name="billingcontact",
+            name="status",
+            field=models.CharField(
+                choices=[("ok", "Ok"), ("deleted", "Deleted")],
+                default="ok",
+                max_length=32,
+            ),
         ),
     ]

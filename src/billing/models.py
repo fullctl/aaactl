@@ -1526,7 +1526,7 @@ class BillingContact(HandleRefModel):
             ("ok", "Ok"),
             ("deleted", "Deleted"),
         ),
-        default="ok"
+        default="ok",
     )
 
     class Meta:
@@ -1599,7 +1599,9 @@ class PaymentMethod(HandleRefModel):
     @classmethod
     def get_for_org(cls, org, status="ok"):
         if status:
-            return cls.objects.filter(billing_contact__org=org, status=status, billing_contact__status=status)
+            return cls.objects.filter(
+                billing_contact__org=org, status=status, billing_contact__status=status
+            )
         else:
             return cls.objects.filter(billing_contact__org=org)
 

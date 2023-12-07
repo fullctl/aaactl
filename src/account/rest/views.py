@@ -453,6 +453,36 @@ class Organization(viewsets.ViewSet):
     @set_org
     @auditlog()
     @grainy_endpoint("org_key.{org.id}", explicit=False)
+    def set_key_details(self, request, pk, org, auditlog=None):
+        """
+        Edit the name and email of an OrganizationAPIKey
+        """
+        org_key = models.OrganizationAPIKey.objects.get(
+            id=request.data.get("id"), org=org
+        )
+        serializer = Serializers.org_key(
+            instance=org_key,
+            many=False,
+        )
+
+        data = serializer.data
+        data.update(request.data)
+
+        context = {"user": request.user, "org": org}
+        serializer = Serializers.org_key(
+            instance=org_key, data=data, many=False, context=context
+        )
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["PUT"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def set_key_permissions(self, request, pk, org, auditlog=None):
         serializer = Serializers.org_key_permission(
             data={

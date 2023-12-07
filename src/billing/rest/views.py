@@ -1,4 +1,5 @@
 import reversion
+from django.db.models import ProtectedError
 from fullctl.django.auditlog import auditlog
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -97,7 +98,8 @@ class Organization(viewsets.ViewSet):
 
         if request.method == "PUT":
             serializer = Serializers.billing_contact(
-                instance=instance, data=request.data
+                instance=instance,
+                data=request.data,
             )
 
             if not serializer.is_valid():

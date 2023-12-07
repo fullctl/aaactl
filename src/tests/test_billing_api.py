@@ -144,6 +144,10 @@ def test_update_billing_contact(billing_objects):
 
 @pytest.mark.django_db
 def test_delete_billing_contact(billing_objects):
+    """
+    Billing contact not tied to any transactions, hard delete possible
+    """
+
     url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])
     data = {
         "id": billing_objects.billing_contact.id,
@@ -154,6 +158,24 @@ def test_delete_billing_contact(billing_objects):
     response = billing_objects.api_client.delete(url, data=data)
     assert response.status_code == 200
     assert models.BillingContact.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_delete_billing_contact_soft(billing_objects, ledger):
+    """
+    Billing contact tied to transactions, soft delete only
+    """
+    url = reverse("billing_api:org-billing-contact", args=[billing_objects.org.slug])
+    data = {
+        "id": billing_objects.billing_contact.id,
+        "org": billing_objects.billing_contact.org,
+        "name": billing_objects.billing_contact.name,
+        "email": "newemail@localhost",
+    }
+    response = billing_objects.api_client.delete(url, data=data)
+    assert response.status_code == 200
+    assert models.BillingContact.objects.count() == 1
+    assert models.BillingContact.objects.first().status == "deleted"
 
 
 @pytest.mark.django_db

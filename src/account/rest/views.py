@@ -454,6 +454,9 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("org_key.{org.id}", explicit=False)
     def set_key_details(self, request, pk, org, auditlog=None):
+        """
+        Edit the name and email of an OrganizationAPIKey
+        """
         org_key = models.OrganizationAPIKey.objects.get(
             id=request.data.get("id"), org=org
         )

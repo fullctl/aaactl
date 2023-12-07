@@ -67,6 +67,13 @@ $ctl.application.OrgDashboard = $tc.extend(
   $ctl.application.Tool
 );
 
+/**
+ * List of API Keys for an organization with controls to manage perms
+ * for each key
+ * 
+ * @class OrgKeysList
+ * @constructor
+ */
 
 $ctl.application.OrgKeysList = twentyc.cls.define(
   "OrgKeysList",
@@ -102,17 +109,17 @@ $ctl.application.OrgKeysList = twentyc.cls.define(
         });
 
         if(data.you) {
-          row.find('.btn.manage').attr('disabled', true);
-          row.find('.btn.manage')
+          row.find('.manage').attr('disabled', true);
+          row.find('.manage')
             .text('You')
             .removeClass('btn-manage')
             .addClass('btn-disabled')
         }
         else if(!data.manageable.match(/[ud]/)) {
-          row.find('.btn.manage').hide();
+          row.find('.manage').hide();
         }
         else {
-          row.find('.btn.manage').click(function() {
+          row.find('.manage').click(function() {
             if(manage_container.is(':visible'))
               manage_container.hide();
             else
@@ -180,6 +187,15 @@ $ctl.application.OrgKeysList = twentyc.cls.define(
     }
   }
 );
+
+/**
+ * Modal that can be used to edit API Key details
+ *
+ * @class ModalEditOrgAPIKeyDetails
+ * @extends fullctl.application.Modal
+ * @constructor
+ * @param {Object} data OrganizationAPIKey api object which is being edited.
+ */
 
 $ctl.application.ModalEditOrgAPIKeyDetails = $tc.extend(
   "ModalEditOrgAPIKeyDetails",

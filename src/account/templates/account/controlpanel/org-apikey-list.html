@@ -27,16 +27,20 @@
     <tr data-template="row" class="large-table-row">
       <td scope="col" class="name-column table-text-bold dark-grey">
         <span data-field="name"></span>
+        {% if  permissions.update_org_org_key %}
         <a class="button btn m-1" data-action="edit">
           <span class="icon icon-edit">Edit</span>
         </a>
+        {% endif %}
       </td>
       <td scope="col" class="light-grey">
         <div class="d-flex align-items-center">
           <span data-field="email"></span>
+          {% if  permissions.update_org_org_key %}
           <a class="button btn m-1" data-action="edit">
             <span class="icon icon-edit">Edit</span>
           </a>
+          {% endif %}
         </div>
       </td>
       <td scope="col" class="manage-column right">

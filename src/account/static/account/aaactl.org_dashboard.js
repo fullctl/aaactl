@@ -70,7 +70,7 @@ $ctl.application.OrgDashboard = $tc.extend(
 /**
  * List of API Keys for an organization with controls to manage perms
  * for each key
- * 
+ *
  * @class OrgKeysList
  * @constructor
  */

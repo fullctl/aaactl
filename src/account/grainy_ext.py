@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django_grainy.remote import Authenticator
+from rest_framework import exceptions
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.rest.authentication import (
     APIKey,
@@ -9,10 +11,16 @@ from account.rest.authentication import (
     Permissions,
 )
 
+JWT_authenticator = JWTAuthentication()
+
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):
-        permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
+        try:
+            permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
+        except exceptions.AuthenticationFailed:
+            permission_holder, _ = JWT_authenticator.authenticate(request)
+
         User = get_user_model()
 
         # personal api key, grab permissions for owning user

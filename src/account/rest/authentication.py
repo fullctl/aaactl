@@ -1,12 +1,29 @@
 from django_grainy.util import Permissions
 from fullctl.django.rest.authentication import key_from_request
 from rest_framework import authentication, exceptions
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.models import APIKey, InternalAPIKey, OrganizationAPIKey
 
 
-class APIKeyAuthentication(authentication.BaseAuthentication):
+class TokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
+        try:
+            auth = self.authenticate_api_keys(request)
+        except exceptions.AuthenticationFailed:
+            auth = self.authenticate_jwt(request)
+
+        if auth:
+            return (auth[0], None)
+
+    def authenticate_jwt(self, request):
+        JWT_authenticator = JWTAuthentication()
+        auth = JWT_authenticator.authenticate(request)
+        if auth:
+            request.perms = Permissions(auth[0])
+            return auth
+
+    def authenticate_api_keys(self, request):
         key = key_from_request(request)
 
         api_key = None

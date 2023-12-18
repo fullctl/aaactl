@@ -11,8 +11,6 @@ from account.rest.authentication import (
     TokenAuthentication,
 )
 
-TokenAuthenticator = TokenAuthentication()
-
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):

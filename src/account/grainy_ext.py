@@ -5,21 +5,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.rest.authentication import (
     APIKey,
-    APIKeyAuthentication,
     InternalAPIKey,
     OrganizationAPIKey,
     Permissions,
+    TokenAuthentication,
 )
 
-JWT_authenticator = JWTAuthentication()
+TokenAuthenticator = TokenAuthentication()
 
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):
-        try:
-            permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
-        except exceptions.AuthenticationFailed:
-            permission_holder, _ = JWT_authenticator.authenticate(request)
+        permission_holder, _ = TokenAuthentication().authenticate(request)
 
         User = get_user_model()
 

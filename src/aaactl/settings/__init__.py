@@ -218,8 +218,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["common.rest.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         #        'rest_framework.authentication.BasicAuthentication',
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "account.rest.authentication.APIKeyAuthentication",
+        "account.rest.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     # Use hyperlinked styles by default.

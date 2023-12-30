@@ -75,7 +75,7 @@ INSTALLED_APPS += (
     "django.contrib.sites",
     "django_grainy",
     "reversion",
-    "captcha",
+    "django_recaptcha",
     "django_handleref",
     "rest_framework",
     # rendering
@@ -93,6 +93,7 @@ INSTALLED_APPS += (
     "fullctl.django.apps.DjangoFullctlConfig",
 )
 
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 

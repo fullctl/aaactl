@@ -25,12 +25,12 @@ aaactl = "aaactl.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
+fullctl = { git = "https://github.com/gablooge/fullctl.git", branch = "update-dependencies-202312" }
 
 # not in fullctl
 python-dateutil = "*"
 django-countries = "*"
-django-cors-middleware = "*"
+django-cors-headers = "*"
 django-oauth-toolkit = "*"
 
 # open-id support social auth

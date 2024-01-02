@@ -114,7 +114,7 @@ class Product(HandleRefModel):
 
     price = models.DecimalField(
         default=0.00,
-        max_digits=6,
+        max_digits=8,
         decimal_places=2,
         help_text=_(
             "Price charge on initial setup / purchase. For recurring_product pricing this could specify a setup fee. For non-recurring_product pricing, this is the product price."
@@ -406,7 +406,7 @@ class RecurringProduct(HandleRefModel):
 
     price = models.DecimalField(
         default=0.00,
-        max_digits=6,
+        max_digits=8,
         decimal_places=2,
         help_text=_(
             "Price for recurring product charges. For fixed pricing this is the total price charged each subscription cycle. For metered unit this would be the usage price per unit."
@@ -1469,7 +1469,7 @@ class OrderHistoryItem(HandleRefModel):
     description = models.CharField(max_length=255)
 
     price = models.DecimalField(
-        default=0.0, max_digits=6, decimal_places=2, help_text=_("Price charged")
+        default=0.0, max_digits=8, decimal_places=2, help_text=_("Price charged")
     )
 
     class HandleRef:
@@ -1638,7 +1638,7 @@ class PaymentCharge(HandleRefModel):
     )
     price = models.DecimalField(
         default=0.0,
-        max_digits=6,
+        max_digits=8,
         decimal_places=2,
         help_text=_("Price attributed to subscription_cycle for this product"),
     )

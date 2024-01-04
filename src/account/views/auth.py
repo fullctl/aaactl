@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -15,6 +15,7 @@ from oauth2_provider.oauth2_backends import get_oauthlib_core
 import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
 from account.session import set_selected_org
+from applications.models import Service
 
 # Create your views here.
 
@@ -49,7 +50,7 @@ def login(request):
         if form.is_valid():
             user = authenticate(
                 request,
-                username=form.cleaned_data["username"],
+                username=form.cleaned_data["username_or_email"],
                 password=form.cleaned_data["password"],
             )
 
@@ -60,7 +61,9 @@ def login(request):
                 # through valid_redirect at this point
                 return redirect(redirect_next)  # lgtm[py/url-redirection]
             else:
-                messages.error(request, _("Login failed: Wrong username / password"))
+                messages.error(
+                    request, _("Login failed: Wrong username / email / password")
+                )
 
     else:
         form = account.forms.Login()
@@ -73,7 +76,14 @@ def login(request):
 def logout(request):
     fn_logout(request)
 
-    return redirect(reverse("account:auth-login"))
+    response = redirect(reverse("account:auth-login"))
+
+    # loop through all services and unset session cookies
+    for svc in Service.objects.all():
+        # invlaidate coookies with name {service_slug}sid on response
+        response.delete_cookie(f"{svc.slug}sid")
+
+    return response
 
 
 def register(request):
@@ -124,7 +134,6 @@ def reset_password(request, secret):
     return render(request, "account/auth/reset-password.html", env)
 
 
-@login_required
 def accept_invite(request, secret):
     try:
         invite = Invitation.objects.get(secret=secret)
@@ -135,6 +144,11 @@ def accept_invite(request, secret):
     if invite.expired:
         messages.error(request, _("The invite has expired"))
         return redirect("/")
+
+    if not request.user.is_authenticated:
+        return redirect(
+            reverse("account:auth-login") + f"?next={request.get_full_path()}"
+        )
 
     invite.complete(request.user)
     messages.info(request, _("You have joined {}").format(invite.org.label))

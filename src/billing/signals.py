@@ -2,7 +2,17 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from fullctl.django import auditlog
 
-from billing.models import OrganizationProduct, SubscriptionProduct
+from billing.models import (
+    Deposit,
+    InvoiceLine,
+    Ledger,
+    OrderLine,
+    OrganizationProduct,
+    OrganizationProductHistory,
+    Payment,
+    SubscriptionProduct,
+    Withdrawal,
+)
 
 
 @receiver(post_save, sender=OrganizationProduct)
@@ -23,6 +33,8 @@ def handle_orgproduct_save(sender, **kwargs):
         with auditlog.Context() as log:
             log.set("org", org_product.org)
             log.log("product_added_to_org", log_object=org_product.product)
+
+        org_product.add_to_history()
 
 
 @receiver(post_delete, sender=OrganizationProduct)
@@ -46,13 +58,29 @@ def handle_subscription_product_save(sender, **kwargs):
     the necessary OrganizationProduct instances
     """
 
+    if not kwargs.get("created"):
+        return
+
     sub_product = kwargs.get("instance")
+
+    component_object_id = sub_product.component_object_id
+    component_object_name = sub_product.component_object_name
+    sub_product.update_expires()
 
     OrganizationProduct.objects.get_or_create(
         subscription=sub_product.subscription,
+        subscription_product=sub_product,
         product=sub_product.product,
         org=sub_product.subscription.org,
+        component_object_id=component_object_id,
+        component_object_name=component_object_name,
+        expires=sub_product.expires,
     )
+
+    if sub_product.subscription.subscription_cycle:
+        sub_product.subscription.subscription_cycle.add_subscription_product(
+            sub_product
+        )
 
 
 @receiver(post_delete, sender=SubscriptionProduct)
@@ -66,8 +94,25 @@ def handle_subscription_product_delete(sender, **kwargs):
 
     qset = OrganizationProduct.objects.filter(
         subscription=sub_product.subscription,
+        subscription_product=sub_product,
         product=sub_product.product,
     )
 
     for org_product in qset:
         org_product.delete()
+
+
+for TransactionModel in [InvoiceLine, OrderLine, Payment, Deposit, Withdrawal]:
+
+    @receiver(post_save, sender=TransactionModel)
+    def handle_billing_object_save(sender, **kwargs):
+        created = kwargs.get("created")
+        if not created:
+            return
+        txn = kwargs.get("instance")
+        Ledger.objects.create(
+            content_object=txn,
+            invoice_number=getattr(txn, "invoice_number", None),
+            order_number=getattr(txn, "order_number", None),
+            org=txn.org,
+        )

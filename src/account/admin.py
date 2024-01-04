@@ -135,8 +135,8 @@ class OrganizationRoleInline(admin.TabularInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "user")
-    search_fields = ("org_user_set__last_name", "name")
+    list_display = ("name", "user", "slug")
+    search_fields = ("name",)
 
     def get_inlines(self, request, obj=None):
         if obj is not None:
@@ -150,7 +150,8 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("org", "email", "created_by", "created", "status")
+    list_display = ("org", "email", "created_by", "created", "status", "role", "expiry")
+    readonly_fields = GrainyUserAdmin.readonly_fields + ("expiry",)
     search_fields = ("org__name", "org__slug", "email")
 
 

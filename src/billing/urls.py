@@ -1,5 +1,6 @@
 from django.urls import path
 
+import billing.stripe_views as stripe_views
 import billing.views
 
 urlpatterns = [
@@ -18,4 +19,19 @@ urlpatterns = [
         name="order-history-details",
     ),
     path("order-history/", billing.views.order_history, name="order-history"),
+    path(
+        "create-setup-intent/",
+        stripe_views.create_setup_intent,
+        name="create_setup_intent",
+    ),
+    path(
+        "check-setup-intent/<str:id>/",
+        stripe_views.check_setup_intent,
+        name="check_setup_intent",
+    ),
+    path(
+        "save-payment-method/<int:payment_method_id>/",
+        stripe_views.save_payment_method,
+        name="save_payment_method",
+    ),
 ]

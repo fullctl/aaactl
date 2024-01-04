@@ -13,8 +13,6 @@ $().ready(function() {
 
   if (!aaactl_user_info.has_org_setup) {
     url.searchParams.set("edit", "new-org");
-  } else if (!aaactl_user_info.has_asn) {
-    url.searchParams.set("edit", "linked-auth-pdb");
   }
 
   history.replaceState({}, null, url);
@@ -27,8 +25,11 @@ account.ControlPanel = twentyc.cls.define(
       this.elements = {};
       this.forms = {};
 
-      this.loadDropDown();
-      this.styleDropDown();
+      if ($('.org-select').length > 0) {
+        this.loadDropDown();
+        this.styleDropDown();
+      }
+
 
       this.createOrganization();
       this.editOrganization();
@@ -56,7 +57,9 @@ account.ControlPanel = twentyc.cls.define(
         console.log(response.content);
       }.bind(this));
 
-      this.personal_invites = new account.PersonalInvites();
+      if($('.personal-keys').length > 0) {
+        this.personal_invites = new account.PersonalInvites();
+      }
 
     },
 
@@ -158,6 +161,10 @@ account.ControlPanel = twentyc.cls.define(
 
     createOrganization: function(){
       this.initializeForm('create-organization', '/');
+      if ( !this.forms['create_organization'] ){
+        return
+      }
+
       this.forms['create_organization'].post_success = function(response){
         var slug = response.content.data[0].slug;
         document.location.href = `/?org=${slug}`
@@ -166,6 +173,10 @@ account.ControlPanel = twentyc.cls.define(
 
     editOrganization: function(){
       this.initializeForm('edit-organization');
+      if (!this.forms['edit_organization']) {
+        return
+      }
+
       $(this.forms['edit_organization']).on("api-write:success", function() {
         document.location.href = '/';
       });
@@ -196,7 +207,12 @@ account.ControlPanel = twentyc.cls.define(
 
     initializeForm: function(form_class){
       var form_name = form_class.replace('-','_');
-      this.elements[form_name] = $(`form.${form_class}`);
+      const form = $(`form.${form_class}`);
+      if (form.length == 0) {
+        return
+      }
+
+      this.elements[form_name] = form;
       this.forms[form_name] = new twentyc.rest.Form(this.elements[form_name]);
     },
 
@@ -486,114 +502,6 @@ account.UsersList = twentyc.cls.define(
   }
 );
 
-account.OrgKeysList = twentyc.cls.define(
-  "OrgKeysList",
-  {
-    OrgKeysList : function() {
-      this.elements = {}
-      this.elements.org_key_listing = $('.org_key-listing')
-
-      this.rest_api_list = new twentyc.rest.List(this.elements.org_key_listing);
-
-      this.rest_api_list.formatters.permissions = function(value, data) {
-        if(!data.manageable.match(/ud/))
-          return;
-        var component, editor, widget, container = $('<div>');
-        for(component in value) {
-          editor = this.template("permissions")
-          var label = value[component].label
-          widget = new twentyc.rest.PermissionsForm(editor);
-          widget.fill(data);
-          widget.fill({component:component});
-          widget.set_flag_values(value[component]);
-          editor.find('[data-field="component"]').text(label);
-          container.append(editor)
-        }
-        return container;
-      }.bind(this.rest_api_list)
-
-      this.rest_api_list.formatters.row = function(row,data) {
-        var manage_container = row.filter('.manage')
-        if(data.you) {
-          row.find('.btn.manage').attr('disabled', true);
-          row.find('.btn.manage')
-            .text('You')
-            .removeClass('btn-manage')
-            .addClass('btn-disabled')
-        }
-        else if(!data.manageable.match(/[ud]/)) {
-          row.find('.btn.manage').hide();
-        }
-        else {
-          row.find('.btn.manage').click(function() {
-            if(manage_container.is(':visible'))
-              manage_container.hide();
-            else
-              manage_container.show();
-          });
-        }
-        manage_container.hide();
-      }
-
-      $(this.rest_api_list).on("insert:after", (e, row, data) => {
-        this.enableShowButton(row, data);
-        this.enableCopyButton(row);
-      })
-
-      // Modal
-      this.elements.org_key_form = $('form.create_org_key');
-      if ( this.elements.org_key_form.length ){
-        this.rest_org_key_form = new twentyc.rest.Form(this.elements.org_key_form);
-        $(this.rest_org_key_form).on("api-write:success", function() {
-          $('#orgApiKeyModal').modal('toggle');
-          this.rest_api_list.load();
-        }.bind(this));
-      }
-
-
-      this.rest_api_list.load();
-    },
-    enableShowButton: function(row, data) {
-      var key = data.key;
-      var redacted_key = key.replace(key.slice(2,-2), '*'.repeat(key.length-4));
-      var keybox_redacted = row.find('.org-key-box-redacted');
-      var keybox_display = row.find('.org-key-box');
-      var show_button = row.find('.show-button');
-
-      keybox_redacted.val(redacted_key);
-      keybox_display.val(key);
-
-      show_button.click(() => {
-        keybox_redacted.toggleClass('d-none');
-        keybox_display.toggleClass('d-none');
-      })
-    },
-    enableCopyButton: function(row) {
-      var copy_button = row.find('.copy-button');
-      var keybox_redacted = row.find('.org-key-box-redacted');
-      var keybox_display = row.find('.org-key-box');
-      copy_button.click(() => {
-          if ( keybox_display.hasClass('d-none') ){
-            keybox_redacted.addClass('d-none');
-            keybox_display.removeClass('d-none');
-            keybox_display.select();
-            document.execCommand("copy");
-            keybox_redacted.removeClass('d-none');
-            keybox_display.addClass('d-none');
-            keybox_redacted.select();
-          } else {
-            keybox_display.select();
-            document.execCommand("copy");
-          }
-      })
-    }
-
-  }
-
-);
-
-
-
 account.PasswordReset = twentyc.cls.define(
   "PasswordReset",
   {
@@ -623,12 +531,15 @@ account.ServiceApplications = twentyc.cls.define(
       this.rest_api_list = new twentyc.rest.List(this.element);
 
       this.rest_api_list.formatters.row = (row, data) => {
+
         const redirect_url = data.service_url.replace("{org.slug}", account.org.slug)
         const img =  row.find("img.logo")
 
         row.attr("href", redirect_url);
         if(!data.logo) {
-          img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+          img.each(function() {
+            $(this).attr("src", $(this).data("logo-url").replace("svc_slug", data.slug));
+          })
         } else {
           img.attr("src", data.logo);
         }
@@ -636,7 +547,7 @@ account.ServiceApplications = twentyc.cls.define(
 
       // order services
       $(this.rest_api_list).on("load:after", () => {
-        const service_list_order = ["ixctl", "peerctl", "aclctl", "prefixctl", "devicectl", "pdbctl"];
+        const service_list_order = ["ixctl", "peerctl", "devicectl", "prefixctl", "pdbctl", "aclctl", "aaactl"];
         const service_list = {};
         this.rest_api_list.list_body.find(".row").each(function() {
           service_list[$(this).data("apiobject").slug] = $(this);
@@ -671,25 +582,37 @@ account.Services = twentyc.cls.define(
         data.items.forEach((item, idx, array) => {
           var ihf = new this.itemHtmlFormatter(item);
           item_table.append(
-              $('<tr>').append([
-                ihf.formattedDescription(),
-                ihf.formattedUsageType(),
-                ihf.formattedUsageAmount(),,
-                ihf.formattedLink().hide(),
-                ihf.formattedCost()
-              ])
-            )
+            $('<tr>').append([
+              ihf.formattedDescription(),
+              ihf.formattedUsageType(),
+              ihf.formattedUsageAmount(),
+              ihf.formattedLink().hide(),
+              ihf.formatted_expiration_date(),
+              ihf.formattedCost()
+            ])
+          )
           total_cost += parseFloat(item.cost);
         });
-        item_heading.children().append(
-          $('<span>').addClass('float-right').append([
-             $('<span>').text('Total Monthly Cost: ').addClass('lighter-grey'),
-             $('<span>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white')
-          ])
-        );
         item_table.children().first().children().addClass('pt-2');
         item_table.children().last().children().addClass('pb-2');
         item_table.after($('<tr>').addClass('blank-row'));
+
+        const item_cost_summary = $('<div>').addClass("row align-items-center").append([
+          $('<div>').text('Total Monthly Cost: ').addClass('light-grey col-auto px-0'),
+          $('<div>').text('$' + Number(total_cost).toFixed(2)).addClass('table-text-bold white col-auto ps-1'),
+          $('<div>').addClass('col'),
+        ]);
+        if (data.subscription_cycle) {
+          item_cost_summary.append(
+            $('<div>').html(
+              `${data.subscription_cycle.start} <span class="light-grey">to</span> ${data.subscription_cycle.end}`
+            ).addClass('ms-auto col-auto pe-0')
+          );
+        }
+
+        item_heading.children().addClass('px-0').append(
+          $('<div>').addClass('container-fluid').append(item_cost_summary)
+        );
       });
 
       $(this.rest_api_list).on("load:after", () => {
@@ -701,6 +624,7 @@ account.Services = twentyc.cls.define(
 
       this.rest_api_list.load();
     },
+
     itemHtmlFormatter: function(item) {
       this.description = item.description;
       this.type = item.type;
@@ -708,10 +632,12 @@ account.Services = twentyc.cls.define(
       this.cost = item.cost;
       this.unit_name_plural = item.unit_name_plural;
       this.unit_name = item.unit_name;
+      this.expiration_date = item.expiration_date;
 
       this.formattedDescription = () => {
         return $('<td>').text(this.description).addClass('dark-grey table-text-bold')
       }
+
       this.formattedUsageType = () => {
         if(this.type == "Fixed Price") {
           return $('<td>');
@@ -722,6 +648,7 @@ account.Services = twentyc.cls.define(
           ])
         }
       }
+
       this.editedUsageType = () => {
         if ( this.type == 'Metered Usage') {
           return 'metered'
@@ -753,6 +680,12 @@ account.Services = twentyc.cls.define(
       this.formattedLink = () => {
         return $('<td>').addClass('small-links').append(
           $('<a>').attr('href','/').text('Details')
+        )
+      }
+
+      this.formatted_expiration_date = () => {
+        return $('<td>').addClass('light-grey').text(
+          this.expiration_date ? 'Expires at ' + window.fullctl.formatters.datetime(this.expiration_date) : ''
         )
       }
 
@@ -895,16 +828,25 @@ account.PendingUsers = twentyc.cls.define(
       }
 
       this.rest_api_list.formatters.user_name = function(value, data){
+        let content = value;
+
         if ( value === '' ) {
-          return value + '<span class="user-badge ub-pending">Pending</span>';
+          content += '<span class="user-badge ub-pending">Pending</span>';
         } else {
-          return value + '<span class="user-badge ub-pending ms-2">Pending</span>';
+          content += '<span class="user-badge ub-pending ms-2">Pending</span>';
         }
+
+        if (data.role == "admin") {
+          content += '<span class="user-badge ub-admin">admin</span>';
+        }
+
+        return content
       }
 
       $(this.rest_api_list).on("insert:after", (e, row, data) => {
         var client = new twentyc.rest.Client("/api/account");
-        if ( row.find('.name-column').text() === 'Pending' ) {
+        const invite = row.data('apiobject');
+        if ( invite.user_name === '' ) {
           row.find('.name-column').addClass('text-center');
         }
 
@@ -912,6 +854,9 @@ account.PendingUsers = twentyc.cls.define(
           email: data.email,
           service: "",
         }
+
+        // wire resend invite button
+
         var a = row.find('.resend-invite');
         if ( a.length ){
           var endpoint = `org/${data.slug}/invite`;
@@ -944,6 +889,7 @@ account.PendingUsers = twentyc.cls.define(
 
           });
         }
+
       })
 
       // Modal
@@ -951,6 +897,7 @@ account.PendingUsers = twentyc.cls.define(
       if ( this.elements.invitation_form.length ){
         this.rest_invite_form = new twentyc.rest.Form(this.elements.invitation_form);
         $(this.rest_invite_form).on("api-write:success", function() {
+          this.rest_invite_form.reset();
           $('#inviteModal').modal('toggle');
           this.rest_api_list.load();
         }.bind(this));
@@ -962,25 +909,15 @@ account.PendingUsers = twentyc.cls.define(
 
 
 account.expand_user_info = () => {
+  // only run if the user info section is present
+  // TODO: don't load this file at places where this doesn't exist
+  if ($('#userInfoCollapse').length == 0) {
+    return
+  }
+
   $('#userInfoCollapse').addClass('show');
   $('#userInfoCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
   $('#userInformation').get(0).scrollIntoView();
-}
-
-account.prompt_link_to_pdb = () => {
-  $('#linkedAuthCollapse').addClass('show');
-  $('#linkedAuthCollapse').parent(".accordion-item").find(".collapsed").removeClass("collapsed");
-  $('#linkedAuthCollapse').get(0).scrollIntoView();
-  $('#linkedAuthCollapse .peeringdb')[0].animate(
-    [
-      {"background": "var(--background)"},
-      {"background": "transparent"}
-    ],
-    {
-      duration: 750,
-      iterations: 3
-    }
-  );
 }
 
 /**
@@ -994,8 +931,6 @@ account.handleEditUrlParameter = () => {
   if (editParameter) {
     if (editParameter == "account") {
       account.expand_user_info();
-    } else if (editParameter == "linked-auth-pdb") {
-      account.prompt_link_to_pdb();
     } else if (editParameter == "new-org") {
       $('#createOrgModal').modal('show');
     }

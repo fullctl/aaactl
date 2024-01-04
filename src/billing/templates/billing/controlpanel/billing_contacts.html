@@ -1,4 +1,4 @@
-{% extends "account/controlpanel/index.html" %}
+{% extends "account/controlpanel/base.html" %}
 {% load i18n static %}
 
 
@@ -17,7 +17,7 @@
     <tbody>
     {% if permissions.create_org_billing %}
       <tr>
-        <td>{% trans "Add a new billing contact ..." %}</td>
+        <td>{% trans "Add a new billing contact/method ..." %}</td>
         <td class="right">
           <a class="btn btn-primary btn-sm" href="{% url "billing:setup" %}">{% trans "Add" %}</a>
         </td>
@@ -25,7 +25,7 @@
     {% endif %}
     {% for billing_contact in billing_contacts %}
       <tr>
-        <td>{{ billing_contact.name }}</td>
+        <td>{{ billing_contact.name }}</br><span class="small secondary-text">Contact information and payment method</span></td>
         <td class="right">
           {% if permissions.update_org_billing %}
           <a href="{% url "billing:billing-contact" billing_contact.id %}" class="btn btn-secondary btn-sm">{% trans "Edit" %}</a>
@@ -41,7 +41,7 @@
 {% block menu %}
 <div class="row mt-4">
   <div class="col text-center">
-    <a class="btn btn-secondary" href="/">{% trans "Return to Account Dashboard" %}</a>
+    <a class="btn btn-secondary" href="/#page-billing">{% trans "Return to Account Dashboard" %}</a>
   </div>
 </div>
 {% endblock %}

@@ -1,8 +1,8 @@
 {% load static i18n %}
 {% block header %}
-<div class="row">
-  <div class="col-xs-12">
-    <a href="/"><img src="{% static "common/Logo20C.png" %}" class="logo"></a>
-  </div>
+<div class="col-xs-12">
+  <a class="logo-container" href="/">
+    <img class="fullctl logo" src="{% static "common/fullctl.svg" %}" alt="{{ service_tag }}">
+  </a>
 </div>
 {% endblock %}

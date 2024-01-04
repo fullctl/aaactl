@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aaactl"
 repository = "https://github.com/fullctl/aaactl"
-version = "1.2.0"
+version = "1.3.0"
 description = "authentication, authorization, and accounting for fullctl"
 authors = ["20C <code@20c.com>"]
 license = "Apache-2.0"
@@ -24,7 +24,7 @@ aaactl = "aaactl.cli:main"
 
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
 
 # not in fullctl
@@ -36,8 +36,11 @@ django-oauth-toolkit = "*"
 # open-id support social auth
 python-jose = "^3.3"
 
-stripe = "^2.55.2"
+stripe = "^5.5.0"
 crispy-bootstrap5 = "^0.6"
+django-phonenumber-field = ">=7.2.0"
+phonenumbers = ">=8.13.24"
+babel = ">=2.13.0"
 
 [tool.poetry.dev-dependencies]
 # testing

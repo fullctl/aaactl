@@ -7,19 +7,19 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
 
-from account.models import ContactMessage, Organization
+from account.models import ContactMessage, Organization, OrganizationRole
 from account.models import PasswordReset as PasswordResetModel
 from account.validators import validate_password
 from applications.models import Service
 
 
 class Login(forms.Form):
-    username = forms.CharField()
+    username_or_email = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
 
     def clean_username(self):
-        username = self.cleaned_data["username"].lower()
-        return username
+        username_or_email = self.cleaned_data["username_or_email"].lower()
+        return username_or_email
 
 
 class UserInformationBase(forms.Form):
@@ -55,6 +55,7 @@ class RegisterUser(UserInformationBase, forms.Form):
 
     def clean_password(self):
         password = self.cleaned_data["password"]
+
         return validate_password(password)
 
     def clean_email(self):
@@ -65,7 +66,9 @@ class RegisterUser(UserInformationBase, forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data["password"] != cleaned_data["password_confirmation"]:
+
+        password = cleaned_data.get("password")
+        if password and password != cleaned_data.get("password_confirmation"):
             raise forms.ValidationError(
                 {
                     "password_confirmation": _(
@@ -182,7 +185,8 @@ class EditOrganization(CreateOrganization):
 
         if org.user_id:
             self.fields["name"].widget.attrs["readonly"] = True
-            self.initial["name"] = _("Your Personal Organization")
+            self.fields["slug"].widget.attrs["readonly"] = True
+            self.initial["name"] = org.user.username + " (Personal)"
 
 
 class EditOrganizationPasswordProtected(PasswordProtectedForm, EditOrganization):
@@ -197,6 +201,20 @@ class InviteToOrganization(forms.Form):
         label=_("Service redirect"),
         widget=forms.HiddenInput,
     )
+    is_admin_invite = forms.BooleanField(label=_("Invite as Org Admin"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        self.org = kwargs.pop("org", None)
+
+        super().__init__(*args, **kwargs)
+
+        try:
+            OrganizationRole.objects.get(
+                org=self.org, user=self.user, role__name="Admin"
+            )
+        except OrganizationRole.DoesNotExist:
+            del self.fields["is_admin_invite"]
 
 
 class CreateOrgAPIKey(forms.Form):

@@ -3,12 +3,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import ProtectedError
 
 from billing.models import (
-    Invoice,
+    InvoiceLine,
     Ledger,
-    Order,
     OrderHistory,
+    OrderLine,
     Payment,
     SubscriptionCycle,
     SubscriptionCycleProduct,
@@ -99,8 +100,8 @@ def test_subscription_cycle(db, billing_objects):
 def test_end_subscription_cycle(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
-        "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        "billing.payment_processors.stripe.stripe.PaymentIntent.create",
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
 
     subscription = billing_objects.monthly_subscription
@@ -116,79 +117,64 @@ def test_end_subscription_cycle(db, billing_objects, mocker):
         subscription.end_subscription_cycle()
 
 
-def test_subscriptionsubscription_cycle_charge(db, billing_objects, mocker):
+def test_subscription_cycle_charge(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
-        "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        "billing.payment_processors.stripe.stripe.PaymentIntent.create",
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
-    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
+    subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
-    assert subscriptionsubscription_cycle.price > 0
+    assert subscription_cycle.price > 0
 
-    subscriptionsubscription_cycle.charge()
-    subscriptionsubscription_cycle_charge = (
-        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    )
-    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
+    subscription_cycle.charge()
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
+    payment_charge = subscription_cycle_charge.payment_charge
 
-    assert (
-        subscriptionsubscription_cycle_charge.subscription_cycle
-        == subscriptionsubscription_cycle
-    )
-    assert payment_charge.price == subscriptionsubscription_cycle.price
+    assert subscription_cycle_charge.subscription_cycle == subscription_cycle
+    assert payment_charge.price == subscription_cycle.price
     assert payment_charge.description == subscription.charge_description
 
 
-def test_subscriptionsubscription_cycle_charge_exists(db, billing_objects, mocker):
+def test_subscription_cycle_charge_exists(db, billing_objects, mocker):
     # Overrides creating the charge on Stripe's end.
     mocker.patch(
-        "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        "billing.payment_processors.stripe.stripe.PaymentIntent.create",
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
-    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
+    subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
-    assert subscriptionsubscription_cycle.price > 0
+    assert subscription_cycle.price > 0
 
-    subscriptionsubscription_cycle.charge()
+    subscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = (
-        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    )
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
 
     # Returns charge if charge is still "pending"
-    assert (
-        subscriptionsubscription_cycle.charge() == subscriptionsubscription_cycle_charge
-    )
+    assert subscription_cycle.charge() == subscription_cycle_charge
 
     # Now we set status of payment charge from ok to pending
-    subscriptionsubscription_cycle_charge = (
-        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    )
-    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
+    payment_charge = subscription_cycle_charge.payment_charge
     payment_charge.status = "ok"
     payment_charge.save()
-    subscriptionsubscription_cycle.refresh_from_db()
+    subscription_cycle.refresh_from_db()
 
     # Raises error if we retry an "ok" charge
     with pytest.raises(OSError, match="Cycle was already charged successfully"):
-        subscriptionsubscription_cycle.charge()
+        subscription_cycle.charge()
 
 
 def test_calc_subscription_charge(db, billing_objects):
@@ -244,27 +230,23 @@ def test_calc_subscription_charge(db, billing_objects):
 
 def test_order_history(db, billing_objects, mocker):
     mocker.patch(
-        "billing.payment_processors.stripe.stripe.Charge.create",
-        return_value={"id": 1234},
+        "billing.payment_processors.stripe.stripe.PaymentIntent.create",
+        return_value={"id": 1234, "receipt_url": "https://example.com"},
     )
     subscription = billing_objects.monthly_subscription
     subscription.payment_method = billing_objects.payment_method
     two_weeks_ago = (datetime.now(timezone.utc) - timedelta(days=14)).date()
     subscription.start_subscription_cycle(two_weeks_ago)
-    subscriptionsubscription_cycle = subscription.subscription_cycle_set.first()
+    subscription_cycle = subscription.subscription_cycle_set.first()
 
-    subscriptionsubscription_cycle.update_usage(
-        subscription.subscription_product_set.first(), 1
-    )
+    subscription_cycle.update_usage(subscription.subscription_product_set.first(), 1)
 
-    assert subscriptionsubscription_cycle.price > 0
+    assert subscription_cycle.price > 0
 
-    subscriptionsubscription_cycle.charge()
+    subscription_cycle.charge()
 
-    subscriptionsubscription_cycle_charge = (
-        subscriptionsubscription_cycle.subscription_cycle_charge_set.first()
-    )
-    payment_charge = subscriptionsubscription_cycle_charge.payment_charge
+    subscription_cycle_charge = subscription_cycle.subscription_cycle_charge_set.first()
+    payment_charge = subscription_cycle_charge.payment_charge
 
     order_history = OrderHistory.create_from_payment_charge(payment_charge)
     assert order_history
@@ -276,27 +258,27 @@ def test_billing_contact(db, billing_objects):
 
 
 @pytest.mark.django_db
-def test_create_transactions_from_subscriptionsubscription_cycle(
-    charge_objects, billing_objects
-):
-    subscription_cycle = charge_objects["subscriptionsubscription_cycle"]
+def test_create_transactions_from_subscription_cycle(charge_objects, billing_objects):
+    subscription_cycle = charge_objects["subscription_cycle"]
     charge_objects["subscription"]
 
-    subscription_cycle.create_transactions(billing_objects.user)
-
-    assert Order.objects.count() == 2
-
-    assert Invoice.objects.count() == 2
-    assert Payment.objects.count() == 1
+    assert (
+        OrderLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
+    assert (
+        InvoiceLine.objects.count()
+        == subscription_cycle.subscription_cycle_product_set.count()
+    )
 
 
 @pytest.mark.django_db
 def test_create_transactions_from_product(billing_objects):
     product = billing_objects.product
-    product.create_transactions(billing_objects.user)
+    product.create_transactions(billing_objects.org)
 
-    assert Invoice.objects.count() == 1
-    assert Order.objects.count() == 1
+    assert InvoiceLine.objects.count() == 1
+    assert OrderLine.objects.count() == 1
     assert Payment.objects.count() == 1
 
 
@@ -305,7 +287,7 @@ def test_create_transactions_from_product(billing_objects):
 
 @pytest.mark.django_db
 def test_order_init(order, billing_objects):
-    assert order.user == billing_objects.user
+    assert order.org == billing_objects.org
     assert order.amount == 1200.99
     assert order.currency == "USD"
     assert type(order.transaction_id) == uuid.UUID
@@ -317,7 +299,7 @@ def test_order_init(order, billing_objects):
 
 @pytest.mark.django_db
 def test_invoice_init(invoice, billing_objects):
-    assert invoice.user == billing_objects.user
+    assert invoice.org == billing_objects.org
     assert invoice.amount == 1200.99
     assert invoice.currency == "USD"
     assert type(invoice.transaction_id) == uuid.UUID
@@ -357,14 +339,32 @@ def test_ledger_init(ledger):
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Order)
+            content_type=ContentType.objects.get_for_model(OrderLine)
         ).count()
         == 1
     )
 
     assert (
         Ledger.objects.filter(
-            content_type=ContentType.objects.get_for_model(Invoice)
+            content_type=ContentType.objects.get_for_model(InvoiceLine)
         ).count()
         == 1
     )
+
+
+@pytest.mark.django_db
+def test_billing_contact_hard_delete(billing_objects):
+    # not tied to any transactions so this should run without error
+    billing_objects.billing_contact.delete()
+
+    # test that object is deleted
+    assert billing_objects.billing_contact.id is None
+
+
+@pytest.mark.django_db
+def test_billing_contact_hard_delete_failure(billing_objects, ledger):
+    billing_objects.billing_contact.delete()
+
+    # test that object is soft-deleted
+    assert billing_objects.billing_contact.id is not None
+    assert billing_objects.billing_contact.status == "deleted"

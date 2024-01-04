@@ -7,8 +7,8 @@ from django.utils.translation import gettext as _
 from account.decorators import org_view
 from account.forms import ChangeInformation
 from billing.forms import (
-    BillingAddressForm,
     BillingAgreementsForm,
+    BillingContactDetails,
     BillingContactForm,
     BillingSetupInitForm,
     SelectPaymentMethodForm,
@@ -73,7 +73,11 @@ def billing_contact(request, id):
     env = dict(
         billing_contact=billing_contact,
         form=BillingContactForm(
-            initial={"name": billing_contact.name, "email": billing_contact.email}
+            initial={
+                "name": billing_contact.name,
+                "email": billing_contact.email,
+                "phone_number": billing_contact.phone_number,
+            }
         ),
     )
     return render(request, "billing/controlpanel/billing_contact.html", env)
@@ -134,7 +138,9 @@ def setup(request, **kwargs):
         try:
             billing_contact = BillingContact.objects.get(id=billing_contact, org=org)
             billing_address_init.update(
-                holder=billing_contact.name, email=billing_contact.email
+                holder=billing_contact.name,
+                email=billing_contact.email,
+                phone_number=billing_contact.phone_number,
             )
         except BillingContact.DoesNotExist:
             pass
@@ -184,7 +190,7 @@ def setup(request, **kwargs):
         ),
         form_payopt_create=payment_processor.Form(),
         from_payopt_create_template=payment_processor.Form().template,
-        form_billing_address=BillingAddressForm(initial=billing_address_init),
+        form_billing_address=BillingContactDetails(initial=billing_address_init),
         form_agreements=BillingAgreementsForm(),
     )
 

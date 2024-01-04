@@ -21,7 +21,9 @@ def index(request):
         },
     )
 
-    invitation_form = account.forms.InviteToOrganization(initial=request.GET)
+    invitation_form = account.forms.InviteToOrganization(
+        initial=request.GET, user=user, org=request.selected_org
+    )
     create_org_form = account.forms.CreateOrganization()
     create_org_key_form = account.forms.CreateOrgAPIKey()
     create_key_form = account.forms.CreateAPIKey()
@@ -31,6 +33,11 @@ def index(request):
 
     if user.has_usable_password():
         change_pwd_form = account.forms.ChangePassword(user)
+    else:
+        change_pwd_form = account.forms.ChangePasswordBase()
+        env.update(initial_password=True)
+
+    if user.has_usable_password() and not request.selected_org.is_personal:
         edit_org_form = account.forms.EditOrganizationPasswordProtected(
             user,
             request.selected_org,
@@ -40,8 +47,6 @@ def index(request):
             },
         )
     else:
-        change_pwd_form = account.forms.ChangePasswordBase()
-        env.update(initial_password=True)
         edit_org_form = account.forms.EditOrganization(
             request.selected_org,
             initial={
@@ -49,6 +54,7 @@ def index(request):
                 "slug": request.selected_org.slug,
             },
         )
+
     env.update(
         change_user_info_form=form,
         change_pwd_form=change_pwd_form,

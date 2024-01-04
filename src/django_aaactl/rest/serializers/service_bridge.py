@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from fullctl.django.rest.decorators import serializer_registry
 from fullctl.django.rest.serializers import ModelSerializer
+from oauth2_provider.models import AccessToken
 from rest_framework import serializers
 
 import account.models as account_models
@@ -69,6 +70,48 @@ class Service(ModelSerializer):
 
 
 @register
+class OrganizationCanTrialForObject(serializers.Serializer):
+    org_slug = serializers.CharField()
+    service_slug = serializers.CharField()
+    object_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+    can_trial = serializers.SerializerMethodField()
+
+    ref_tag = "organization_can_trial_for_object"
+
+    class Meta:
+        fields = ["org_slug", "service_slug", "object_id", "can_trial"]
+
+    def validate_org_slug(self, value):
+        org = account_models.Organization.objects.get(slug=value)
+        self.context.update(org=org)
+        return value
+
+    def validate_service_slug(self, value):
+        service = application_models.Service.objects.get(slug=value)
+        self.context.update(service=service)
+        return value
+
+    def validate(self, validated_data):
+        service = self.context.get("service")
+        try:
+            trial_product = service.trial_product
+        except application_models.Service.trial_product.RelatedObjectDoesNotExist:
+            raise serializers.ValidationError("Service does not have a trial product")
+
+        self.context.update(trial_product=trial_product)
+
+        return validated_data
+
+    def get_can_trial(self, obj):
+        org = self.context.get("org")
+        trial_product = self.context.get("trial_product")
+        if not org or not trial_product:
+            return False
+
+        return trial_product.can_add_to_org(org, component_object_id=obj["object_id"])
+
+
+@register
 class User(ModelSerializer):
     ref_tag = "user"
 
@@ -115,6 +158,7 @@ class OrgnaizationProduct(ModelSerializer):
     name = serializers.SerializerMethodField()
     component = serializers.SerializerMethodField()
     product_data = serializers.SerializerMethodField()
+    component_object_id = serializers.SerializerMethodField()
 
     class Meta:
         model = billing_models.OrganizationProduct
@@ -123,13 +167,21 @@ class OrgnaizationProduct(ModelSerializer):
             "product",
             "name",
             "component",
+            "component_object_id",
             "expires",
             "subscription",
+            "subscription_product",
             "product_data",
         ]
 
     def get_component(self, org_product):
         return org_product.product.component.name.lower()
+
+    def get_component_object_id(self, org_product):
+        try:
+            return org_product.subscription_product.component_object_id
+        except billing_models.SubscriptionProduct.DoesNotExist:
+            return None
 
     def get_name(self, org_product):
         return org_product.product.name
@@ -165,3 +217,17 @@ class ContactMessage(ModelSerializer):
         instance = super().save()
         instance.notify()
         return instance
+
+
+@register
+class OauthAccessToken(ModelSerializer):
+    expired = serializers.SerializerMethodField()
+
+    ref_tag = "oauth_access_token"
+
+    class Meta:
+        model = AccessToken
+        fields = ["expires", "expired"]
+
+    def get_expired(self, obj):
+        return obj.is_expired()

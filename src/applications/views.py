@@ -9,6 +9,10 @@ def status(request):
     all_good = True
 
     for service in Service.objects.filter(status="ok"):
+        if service.slug == "aaactl":
+            # aaactl doesn't need to check on aaactl
+            continue
+
         bridge = service.bridge(None)
         service_checks[service.name] = {}
         try:

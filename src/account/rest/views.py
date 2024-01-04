@@ -256,6 +256,14 @@ class Organization(viewsets.ViewSet):
     @grainy_endpoint("org.{org.id}.manage", explicit=False)
     def update(self, request, pk, org, auditlog=None):
         user = request.user
+
+        # personal organizations cannot be edited
+        if org.is_personal:
+            return Response(
+                {"non_field_errors": [_("Personal organizations cannot be changed.")]},
+                status=403,
+            )
+
         if user.has_usable_password():
             serializer = Serializers.orgeditpwdprotected(
                 instance=org,
@@ -317,6 +325,32 @@ class Organization(viewsets.ViewSet):
             )
 
         org.remove_user(org_user.user)
+
+        return Response(Serializers.org_user(instance=org_user, many=False).data)
+
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @auditlog()
+    @user_endpoint()
+    def leave_org(self, request, pk, org, auditlog=None):
+        role = models.Role.objects.get(name="Admin")
+        org_admins = models.OrganizationRole.objects.filter(org=org, role=role)
+        # check if user is the only admin
+        if len(org_admins) == 1 and org_admins.first().user == request.user:
+            return Response(
+                {
+                    "non_field_errors": [
+                        _(
+                            "Cannot remove yourself as you are the only admin for the org."
+                        )
+                    ]
+                },
+                status=400,
+            )
+
+        org_user = models.OrganizationUser.objects.get(user=request.user, org=org)
+
+        org.remove_user(request.user)
 
         return Response(Serializers.org_user(instance=org_user, many=False).data)
 
@@ -419,6 +453,36 @@ class Organization(viewsets.ViewSet):
     @set_org
     @auditlog()
     @grainy_endpoint("org_key.{org.id}", explicit=False)
+    def set_key_details(self, request, pk, org, auditlog=None):
+        """
+        Edit the name and email of an OrganizationAPIKey
+        """
+        org_key = models.OrganizationAPIKey.objects.get(
+            id=request.data.get("id"), org=org
+        )
+        serializer = Serializers.org_key(
+            instance=org_key,
+            many=False,
+        )
+
+        data = serializer.data
+        data.update(request.data)
+
+        context = {"user": request.user, "org": org}
+        serializer = Serializers.org_key(
+            instance=org_key, data=data, many=False, context=context
+        )
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["PUT"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org_key.{org.id}", explicit=False)
     def set_key_permissions(self, request, pk, org, auditlog=None):
         serializer = Serializers.org_key_permission(
             data={
@@ -489,17 +553,45 @@ class Organization(viewsets.ViewSet):
         serializer = Serializers.invite(invitations, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST", "DELETE"])
     @set_org
     @auditlog()
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invite(self, request, pk, org, auditlog=None):
+        """
+        Will either create or resend an invite, or delete an invite based on email
+        passed in request.data
+        """
+
+        if request.method == "POST":
+            return self._create_or_resend_invite(request, org)
+        elif request.method == "DELETE":
+            return self._delete_invite(request, org)
+
+    def _create_or_resend_invite(self, request, org):
+        """
+        Will create an invite if one does not exist, or resend an invite if one does exist.
+
+        Invite will be created for `email` passed in request.data
+        """
         context = {"user": request.user, "org": org}
         serializer = Serializers.invite(data=request.data, many=False, context=context)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
         invite = serializer.save()
         return Response(Serializers.invite(invite, many=False).data)
+
+    def _delete_invite(self, request, org):
+        """
+        Deletes an invitation.
+
+        Invite will be deleted for `email` passed in request.data
+        """
+        email = request.data.get("email")
+        invites = models.Invitation.objects.filter(email=email, org=org)
+        response_data = Serializers.invite(invites, many=True).data
+        invites.delete()
+        return Response(response_data)
 
     def get_throttles(self):
         if self.action in ["invite"]:

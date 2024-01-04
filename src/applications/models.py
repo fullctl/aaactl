@@ -3,7 +3,7 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 
 from account.models import Organization
-from applications.service_bridge import Bridge
+from applications.service_bridge import Bridge, get_client_bridge
 from common.models import HandleRefModel
 
 # Create your models here.

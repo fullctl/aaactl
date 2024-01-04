@@ -35,7 +35,8 @@
 {% if backends.not_associated %}
 <div class="row">
   <div class="col">
-    <span class="small-label pb-2">{% trans "Available providers" %}:</span>    {% for backend in backends.not_associated %}
+    <span class="small-label pb-2">{% trans "Available providers" %}:</span>
+    {% for backend in backends.not_associated %}
     <div class="pt-2 pb-2 row justify-content-between align-items-center {{ backend }}">
         <div class="col ms-3 oauth-backend available-apps" title="{{ backend }}">
           {% include "account/auth/oauth-badge.html" with backend=backend %}

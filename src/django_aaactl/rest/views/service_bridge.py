@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
+from fullctl.django.rest.core import BadRequest
 from fullctl.django.rest.route.service_bridge import route
 from fullctl.django.rest.views.service_bridge import DataViewSet, SystemViewSet
+from oauth2_provider.models import AccessToken
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 import account.models as account_models
@@ -67,6 +70,21 @@ class Service(AaactlDataViewSet):
 
         return context
 
+    @action(
+        detail=False,
+        methods=["GET"],
+        serializer_class=Serializers.organization_can_trial_for_object,
+    )
+    def trial_available(self, request, *args, **kwargs):
+        serializer = Serializers.organization_can_trial_for_object(
+            data=request.GET,
+        )
+
+        if not serializer.is_valid():
+            return BadRequest(serializer.errors)
+
+        return Response(serializer.data)
+
 
 @route
 class Product(AaactlDataViewSet):
@@ -89,6 +107,7 @@ class OrganizationProduct(AaactlDataViewSet):
     allowed_http_methods = ["GET"]
     valid_filters = [
         ("component", "product__component__name__iexact"),
+        ("component_object_id", "subscription_product__component_object_id"),
         ("name", "product__name__iexact"),
         ("org", "org__slug"),
     ]
@@ -113,6 +132,28 @@ class User(AaactlDataViewSet):
 
     queryset = get_user_model().objects.all()
     serializer_class = Serializers.user
+
+
+@route
+class OauthAccessToken(AaactlDataViewSet):
+
+    """
+    Used to check if a given access token is still valid
+    """
+
+    path_prefix = "/data"
+    allowed_http_methods = ["GET"]
+    valid_filters = [
+        ("token", "token__iexact"),
+    ]
+
+    # do not allow unfiltered access to this endpoint
+    # so the request needs to provide both the token
+    # and an api key with appropriate service bridge permissions
+    allow_unfiltered = False
+
+    queryset = AccessToken.objects.all()
+    serializer_class = Serializers.oauth_access_token
 
 
 @route

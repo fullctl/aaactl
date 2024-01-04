@@ -81,6 +81,8 @@ INSTALLED_APPS += (
     # rendering
     "crispy_forms",
     "crispy_bootstrap5",
+    # phonenumbers
+    "phonenumber_field",
     # oauth
     "social_django",
     # aaactl apps
@@ -117,7 +119,10 @@ BILLING_DEFAULT_CURRENCY = "USD"
 
 # Auth
 
-AUTHENTICATION_BACKENDS = ["django_grainy.backends.GrainyBackend"]
+AUTHENTICATION_BACKENDS = [
+    "account.backends.EmailOrUsernameModelBackend",
+    "django_grainy.backends.GrainyBackend",
+]
 VALIDATE_PASSWORD_LENGTH = 8
 
 # OAUTH PROVIDER
@@ -237,6 +242,8 @@ REST_FRAMEWORK = {
 settings_manager.set_default_append()
 
 settings_manager.set_from_env("AAACTL_URL")
+settings_manager.set_from_env("IXCTL_URL")
+
 
 if "AAACTL_URL" not in globals():
     raise ValueError(
@@ -255,6 +262,9 @@ settings_manager.set_option("CONFIRM_EMAIL_ON_OAUTH", True)
 
 # add new users to this org (needs to be org slug)
 settings_manager.set_option("AUTO_USER_TO_ORG", None, str)
+
+# expiry for invite links (days)
+settings_manager.set_option("INVITE_EXPIRY", 3)
 
 # look for mainsite/settings/${RELEASE_ENV}_append.py and load if it exists
 env_file = os.path.join(os.path.dirname(__file__), f"{RELEASE_ENV}_append.py")

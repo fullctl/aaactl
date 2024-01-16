@@ -25,12 +25,12 @@ aaactl = "aaactl.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "prep-release" }
+fullctl = { git = "https://github.com/fullctl/fullctl.git", branch = "django4" }
 
 # not in fullctl
 python-dateutil = "*"
 django-countries = "*"
-django-cors-middleware = "*"
+django-cors-headers = "*"
 django-oauth-toolkit = "*"
 
 # open-id support social auth
@@ -41,6 +41,7 @@ crispy-bootstrap5 = "^0.6"
 django-phonenumber-field = ">=7.2.0"
 phonenumbers = ">=8.13.24"
 babel = ">=2.13.0"
+captcha = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 # testing

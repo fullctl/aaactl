@@ -75,7 +75,7 @@ INSTALLED_APPS += (
     "django.contrib.sites",
     "django_grainy",
     "reversion",
-    "captcha",
+    "django_recaptcha",
     "django_handleref",
     "rest_framework",
     # rendering

@@ -1,7 +1,7 @@
 import re
 
 import fullctl.django.enum as enum
-from captcha.fields import ReCaptchaField
+from django_recaptcha.fields import ReCaptchaField
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator

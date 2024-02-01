@@ -242,9 +242,7 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
 
     readonly_fields = GrainyUserAdmin.readonly_fields + ("impersonate",)
 
-    actions = GrainyUserAdmin.actions + [
-        "start_impersonation",
-    ]
+    actions = GrainyUserAdmin.actions + ("start_impersonation",)
 
     def get_queryset(self, request):
         if is_impersonating(request):

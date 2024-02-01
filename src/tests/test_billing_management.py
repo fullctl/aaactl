@@ -71,6 +71,15 @@ def assert_retrying_charge():
     assert "-- retrying failed subscription cycle charge" in output
 
 
+def assert_no_retrying_charge():
+    out = io.StringIO()
+    call_command("billing_cycles", commit=True, stdout=out)
+
+    output = out.getvalue()
+
+    assert "-- retrying failed subscription cycle charge" not in output
+
+
 def run_billing_cycle_with_cutover(_billing_objects) -> dict:
     """
     Run the billing cycle command twice
@@ -183,3 +192,38 @@ def test_billing_cycle_progression_stripe_failure(billing_objects_w_pay, mock_st
 
     # assert that next time will retry charge
     assert_retrying_charge()
+
+
+@pytest.mark.django_db
+def test_billing_cycle_critical_errors(billing_objects_w_pay, mock_stripe):
+    """
+    Test proper handling of Stripe failure when billing cycle is progressed
+    """
+
+    # we need to patch subscription_cycle_charge.payment_charge.sync_status
+    # to raise an exception
+
+    with patch("billing.models.PaymentCharge.sync_status") as mock_sync_status:
+        mock_sync_status.side_effect = Exception("Critical error")
+
+        with pytest.raises(Exception) as excinfo:
+            result = run_billing_cycle_with_cutover(billing_objects_w_pay)
+
+            # assert "Critical errors occurred" in str(excinfo.value)
+            assert excinfo.match("Critical error")
+
+            billing_cycle = result["billing_cycle"]
+            new_billing_cycle = result["new_billing_cycle"]
+            cycle_charge = billing_cycle.subscription_cycle_charge_set.first()
+            payment_charge = cycle_charge.payment_charge
+
+            assert not new_billing_cycle.ended
+            assert not new_billing_cycle.charged
+            assert not billing_cycle.charged
+            assert billing_cycle.ended
+
+            assert billing_cycle.status == "error"
+            assert new_billing_cycle.status == "open"
+
+            # assert that next time will not retry charge
+            assert_no_retrying_charge()

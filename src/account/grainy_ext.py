@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django_grainy.remote import Authenticator
 from rest_framework import exceptions
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.rest.authentication import (
     APIKey,

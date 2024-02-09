@@ -7,6 +7,11 @@ from account.models import APIKey, InternalAPIKey, OrganizationAPIKey
 
 
 class TokenAuthentication(authentication.BaseAuthentication):
+    """
+    Both JWT and API Keys are passed in the Authorization header therefore we
+    need to check both and return the one that is valid.
+    """
+
     def authenticate(self, request):
         try:
             auth = self.authenticate_api_keys(request)

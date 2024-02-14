@@ -53,6 +53,7 @@ class UserPermissionOverrideAdmin(BaseAdmin):
         "org__name",
         "org__slug",
     )
+    autocomplete_fields = ("user", "org")
 
 
 @admin.register(Role)
@@ -72,6 +73,7 @@ class RoleAdmin(BaseAdmin):
 @admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):
     list_display = ("user", "email_confirmed")
+    autocomplete_fields = ("user",)
 
 
 class InlineAPIKeyPermission(admin.TabularInline):
@@ -111,18 +113,21 @@ class OrganizationAPIKeyAdmin(admin.ModelAdmin):
     list_display = ("key", "org", "name", "managed", "created")
     search_fields = ("org__name", "org__slug", "email", "key")
     inlines = (InlineOrganizationAPIKeyPermission,)
+    autocomplete_fields = ("org",)
 
 
 class OrganizationUserInline(admin.TabularInline):
     model = OrganizationUser
     extra = 1
     fields = ("user", "is_default")
+    autocomplete_fields = ("user",)
 
 
 class OrganizationRoleInline(admin.TabularInline):
     model = OrganizationRole
     extra = 1
     fields = ("user", "role")
+    autocomplete_fields = ("user",)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj=obj, **kwargs)
@@ -136,7 +141,8 @@ class OrganizationRoleInline(admin.TabularInline):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "slug")
-    search_fields = ("name",)
+    search_fields = ("name", "slug", "user__username")
+    ordering = ("-user", "name")
 
     def get_inlines(self, request, obj=None):
         if obj is not None:
@@ -216,6 +222,7 @@ class OrganizationManagedPermissionAdmin(admin.ModelAdmin):
         "product",
         "created",
     )
+    autocomplete_fields = ("org",)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj=obj, **kwargs)
@@ -241,6 +248,7 @@ class UserAdmin(UrlActionMixin, GrainyUserAdmin):
     list_display = GrainyUserAdmin.list_display + ("impersonate",)
 
     readonly_fields = GrainyUserAdmin.readonly_fields + ("impersonate",)
+    search_fields = ("email", "first_name", "last_name", "username")
 
     actions = GrainyUserAdmin.actions + ("start_impersonation",)
 

@@ -24,3 +24,4 @@ class ServiceAdmin(BaseAdmin):
     search_fields = ("name",)
     readonly_fields = ("products_that_grant_access",)
     inlines = (ServiceAPIEndpointInline,)
+    autocomplete_fields = ("org",)

@@ -137,6 +137,11 @@ AUTHENTICATION_BACKENDS = [
 
 DEFAULT_SCOPES = ["email", "profile", "peeringdb"]
 
+CORS_ALLOW_CREDENTIALS = True
+settings_manager.set_option(
+    "CORS_ALLOWED_ORIGINS", []
+)
+
 OAUTH2_PROVIDER = {
     "SCOPES": {
         "profile": "user profile",
@@ -216,6 +221,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         #        'rest_framework.authentication.BasicAuthentication',
         "account.rest.authentication.TokenAuthentication",
+        "account.rest.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     # Use hyperlinked styles by default.

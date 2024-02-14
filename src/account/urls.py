@@ -37,5 +37,15 @@ urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path(
+        "token/cookie/",
+        account.views.auth.JWTCookieLoginView.as_view(),
+        name="token_cookie_login",
+    ),
+    path(
+        "token/refreshcookie/",
+        account.views.auth.JWTCookieRefreshView.as_view(),
+        name="token_cookie_refresh",
+    ),
     path("", account.views.controlpanel.index, name="controlpanel"),
 ]

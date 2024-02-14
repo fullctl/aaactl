@@ -76,6 +76,10 @@ class TokenAuthentication(authentication.BaseAuthentication):
 
 
 class CustomJWTAuthentication(JWTAuthentication):
+    '''
+    Authenticate user with JWT access token set in cookies.
+    '''
+
     def authenticate(self, request):
 
         raw_token = request.COOKIES.get("jwt_access_token", None)

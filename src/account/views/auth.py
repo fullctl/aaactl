@@ -293,7 +293,6 @@ class JWTCookieLoginView(APIView):
 
 
 class JWTCookieRefreshView(TokenRefreshView):
-
     def post(self, request, format=None):
         raw_token = request.COOKIES.get("jwt_refresh_token", None)
         request.data["refresh"] = raw_token

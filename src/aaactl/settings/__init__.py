@@ -138,9 +138,7 @@ AUTHENTICATION_BACKENDS = [
 DEFAULT_SCOPES = ["email", "profile", "peeringdb"]
 
 CORS_ALLOW_CREDENTIALS = True
-settings_manager.set_option(
-    "CORS_ALLOWED_ORIGINS", []
-)
+settings_manager.set_option("CORS_ALLOWED_ORIGINS", [])
 
 OAUTH2_PROVIDER = {
     "SCOPES": {

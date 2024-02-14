@@ -11,6 +11,11 @@ from django.shortcuts import redirect, render
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
 from oauth2_provider.oauth2_backends import get_oauthlib_core
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
 import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
@@ -239,3 +244,67 @@ def oauth_profile(request):
             del data[provider]["token_type"]
 
     return JsonResponse(data, json_dumps_params=json_params)
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }
+
+
+class JWTCookieLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, format=None):
+        data = request.data
+        response = Response()
+        username = data.get("username", None)
+        password = data.get("password", None)
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if user.is_active:
+                data = get_tokens_for_user(user)
+                response.set_cookie(
+                    key="jwt_access_token",
+                    value=data["access"],
+                    secure=True,
+                    httponly=True,
+                )
+                response.set_cookie(
+                    key="jwt_refresh_token",
+                    value=data["refresh"],
+                    secure=True,
+                    httponly=True,
+                )
+                response.data = data
+
+                return response
+            else:
+                return Response(
+                    {"Not active": "This account is not active"}, status=401
+                )
+        else:
+            return Response(
+                {"Invalid credentials": "Invalid username or password"}, status=401
+            )
+
+
+class JWTCookieRefreshView(TokenRefreshView):
+
+    def post(self, request, format=None):
+        raw_token = request.COOKIES.get("jwt_refresh_token", None)
+        request.data["refresh"] = raw_token
+
+        response = super().post(request, format=None)
+
+        response.set_cookie(
+            key="jwt_access_token",
+            value=response.data["access"],
+            secure=True,
+            httponly=True,
+        )
+
+        return response

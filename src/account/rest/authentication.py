@@ -73,3 +73,19 @@ class TokenAuthentication(authentication.BaseAuthentication):
 
         if not api_key:
             raise exceptions.AuthenticationFailed("Invalid api key")
+
+
+class CustomJWTAuthentication(JWTAuthentication):
+    def authenticate(self, request):
+
+        raw_token = request.COOKIES.get("jwt_access_token", None)
+        if raw_token is None:
+            return None
+
+        try:
+            validated_token = self.get_validated_token(raw_token)
+        except exceptions.AuthenticationFailed:
+            return None
+
+        request.perms = Permissions(self.get_user(validated_token))
+        return self.get_user(validated_token), validated_token

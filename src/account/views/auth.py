@@ -256,10 +256,10 @@ def get_tokens_for_user(user):
 
 
 class JWTCookieLoginView(APIView):
-    '''
+    """
     If user succesfully authenticates, set cookies for access and refresh JWT
     tokens.
-    '''
+    """
 
     permission_classes = [AllowAny]
 
@@ -298,10 +298,10 @@ class JWTCookieLoginView(APIView):
 
 
 class JWTCookieRefreshView(TokenRefreshView):
-    '''
+    """
     On post request check for refresh token in cookies and set new access token
     cookie.
-    '''
+    """
 
     def post(self, request, format=None):
         raw_token = request.COOKIES.get("jwt_refresh_token", None)

@@ -11,14 +11,15 @@ from django.shortcuts import redirect, render
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
 from oauth2_provider.oauth2_backends import get_oauthlib_core
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
+from account.rest import serializers
 from account.session import set_selected_org
 from applications.models import Service
 
@@ -255,20 +256,31 @@ def get_tokens_for_user(user):
     }
 
 
-class JWTCookieLoginView(APIView):
+class JWTCookieLoginView(GenericAPIView):
     """
     If user succesfully authenticates, set cookies for access and refresh JWT
     tokens.
     """
 
     permission_classes = [AllowAny]
+    serializer_class = serializers.JWTTokenUserAuth
 
-    def post(self, request, format=None):
+    def post(self, request):
         data = request.data
         response = Response()
         username = data.get("username", None)
         password = data.get("password", None)
-        user = authenticate(request, username=username, password=password)
+        serializer = self.serializer_class(
+            data=request.data,
+            many=False,
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        if not username and not password and request.user.is_authenticated:
+            user = request.user
+        else:
+            user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.is_active:
                 data = get_tokens_for_user(user)
@@ -288,13 +300,9 @@ class JWTCookieLoginView(APIView):
 
                 return response
             else:
-                return Response(
-                    {"Not active": "This account is not active"}, status=401
-                )
+                return Response("This account is not active", status=401)
         else:
-            return Response(
-                {"Invalid credentials": "Invalid username or password"}, status=401
-            )
+            return Response("Invalid username or password", status=401)
 
 
 class JWTCookieRefreshView(TokenRefreshView):

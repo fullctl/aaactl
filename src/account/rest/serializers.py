@@ -399,6 +399,23 @@ class UserSettings(FormValidationMixin, serializers.ModelSerializer):
         fields = ["opt_promotions"]
 
 
+class JWTTokenUserAuth(serializers.Serializer):
+
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(required=False)
+
+    def validate(self, data):
+        username = data.get("username")
+        password = data.get("password")
+
+        if username and not password:
+            raise serializers.ValidationError({"password": "This field is required"})
+        elif password and not username:
+            raise serializers.ValidationError({"username": "This field is required"})
+
+        return data
+
+
 @register
 class ChangePassword(serializers.Serializer):
     ref_tag = "pwd"

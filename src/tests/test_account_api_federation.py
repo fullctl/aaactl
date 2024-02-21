@@ -22,17 +22,22 @@ def test_federated_service_urls_list(db, account_objects):
     # Create a test federated service URL for the organization
     test_url = "https://example.com/federated-service"
     account_objects.api_client.post(
-        reverse("account_api:org-add-federated-service-url", args=(account_objects.org.slug,)),
+        reverse(
+            "account_api:org-add-federated-service-url",
+            args=(account_objects.org.slug,),
+        ),
         data=json.dumps({"url": test_url, "service": service_id}),
-        content_type='application/json'
+        content_type="application/json",
     )
 
     response = account_objects.api_client.get(
-        reverse("account_api:org-federated-service-urls", args=(account_objects.org.slug,))
+        reverse(
+            "account_api:org-federated-service-urls", args=(account_objects.org.slug,)
+        )
     )
 
     assert response.status_code == 200
-    
+
     result = response.json()["data"]
 
     assert len(result) == 1
@@ -49,10 +54,13 @@ def test_federated_service_urls_list(db, account_objects):
 
     # test unauthenticated user
     response = account_objects.api_client_anon.get(
-        reverse("account_api:org-federated-service-urls", args=(account_objects.org.slug,))
+        reverse(
+            "account_api:org-federated-service-urls", args=(account_objects.org.slug,)
+        )
     )
 
     assert response.status_code == 403
+
 
 def test_federated_service_url_create(db, account_objects):
     """
@@ -67,9 +75,12 @@ def test_federated_service_url_create(db, account_objects):
 
     test_url = "https://example.com/new-federated-service"
     response = account_objects.api_client.post(
-        reverse("account_api:org-add-federated-service-url", args=(account_objects.org.slug,)),
+        reverse(
+            "account_api:org-add-federated-service-url",
+            args=(account_objects.org.slug,),
+        ),
         data=json.dumps({"url": test_url, "service": service_id}),
-        content_type='application/json'
+        content_type="application/json",
     )
 
     assert response.status_code == 200
@@ -83,12 +94,16 @@ def test_federated_service_url_create(db, account_objects):
 
     # test unauthenticated user
     response = account_objects.api_client_anon.post(
-        reverse("account_api:org-add-federated-service-url", args=(account_objects.org.slug,)),
+        reverse(
+            "account_api:org-add-federated-service-url",
+            args=(account_objects.org.slug,),
+        ),
         data=json.dumps({"url": test_url, "service": service_id}),
-        content_type='application/json'
+        content_type="application/json",
     )
 
     assert response.status_code == 403
+
 
 def test_federated_auth_retrieve(db, account_objects):
     """
@@ -128,7 +143,9 @@ def test_federated_auth_create(db, account_objects):
     """
 
     response = account_objects.api_client.post(
-        reverse("account_api:org-create-federated-auth", args=(account_objects.org.slug,))
+        reverse(
+            "account_api:org-create-federated-auth", args=(account_objects.org.slug,)
+        )
     )
 
     assert response.status_code == 200
@@ -143,8 +160,9 @@ def test_federated_auth_create(db, account_objects):
 
     # test unauthenticated user
     response = account_objects.api_client_anon.post(
-        reverse("account_api:org-create-federated-auth", args=(account_objects.org.slug,))
+        reverse(
+            "account_api:org-create-federated-auth", args=(account_objects.org.slug,)
+        )
     )
 
     assert response.status_code == 403
-

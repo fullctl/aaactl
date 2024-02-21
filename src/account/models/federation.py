@@ -2,17 +2,17 @@ import dataclasses
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
+from fullctl.django.models.abstract import HandleRefModel
 from oauth2_provider.generators import generate_client_id, generate_client_secret
 from oauth2_provider.models import Application
 
-from fullctl.django.models.abstract import HandleRefModel
 
 @dataclasses.dataclass
 class AuthFederationInfo:
     client_id: str
     client_secret: str
     auth: "AuthFederation"
+
 
 class AuthFederation(HandleRefModel):
     """
@@ -41,7 +41,6 @@ class AuthFederation(HandleRefModel):
 
     class HandleRef:
         tag = "auth_federation"
-
 
     @classmethod
     def require_for_org(cls, org, user) -> AuthFederationInfo:
@@ -93,7 +92,6 @@ class AuthFederation(HandleRefModel):
 
         return AuthFederationInfo(client_id, client_secret, auth)
 
-
     def set_redirect_urls(self):
 
         """
@@ -117,6 +115,7 @@ class AuthFederation(HandleRefModel):
         self.application.save()
         return AuthFederationInfo(self.application.client_id, secret, self)
 
+
 class ServiceFederationSupport(HandleRefModel):
     slug = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255, unique=True)
@@ -129,6 +128,7 @@ class ServiceFederationSupport(HandleRefModel):
         ),
         default="auth",
     )
+
     class Meta:
         verbose_name = _("Federation Support for Service")
         verbose_name_plural = _("Federation Support for Service")
@@ -140,10 +140,12 @@ class ServiceFederationSupport(HandleRefModel):
     def __str__(self):
         return self.name
 
+
 class FederatedServiceURL(HandleRefModel):
     """
     Represents a URL for a service that integrates with the organization's OAuth application.
     """
+
     url = models.URLField(verbose_name=_("Service URL"))
     auth = models.ForeignKey(
         AuthFederation,

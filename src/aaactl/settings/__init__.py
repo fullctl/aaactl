@@ -148,7 +148,9 @@ OAUTH2_PROVIDER = {
     "PKCE_REQUIRED": False,
 }
 
-settings_manager.set_option("OAUTH2_PROVIDER_APPLICATION_MODEL", "oauth2_provider.Application")
+settings_manager.set_option(
+    "OAUTH2_PROVIDER_APPLICATION_MODEL", "oauth2_provider.Application"
+)
 
 # SOCIAL AUTH
 

@@ -547,7 +547,6 @@ class Organization(viewsets.ViewSet):
 
         return Response(Serializers.org_key(org_key, many=False).data)
 
-
     @action(detail=True, methods=["GET"])
     @set_org
     @grainy_endpoint("org.{org.id}")
@@ -653,7 +652,6 @@ class Organization(viewsets.ViewSet):
         if self.action in ["invite"]:
             self.throttle_scope = "invite"
         return super().get_throttles()
-
 
 
 @route

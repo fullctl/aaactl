@@ -19,10 +19,10 @@ from django_grainy.models import (
 from django_grainy.util import Permissions
 from fullctl.django.enum import CONTACT_MESSAGE_TYPE
 
+import account.models.federation  # noqa F401
+
 # imports needed for initialization
 from account.tasks import UpdatePermissions  # noqa F401
-import account.models.federation # noqa F401
-
 from common.email import email_contact_us, email_noreply
 from common.models import HandleRefModel
 

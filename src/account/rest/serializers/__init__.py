@@ -9,7 +9,6 @@ from rest_framework import serializers
 
 import account.forms as forms
 import account.models as models
-
 from common.rest import HANDLEREF_FIELDS
 
 

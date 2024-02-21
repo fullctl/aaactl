@@ -15,7 +15,6 @@ class BillingObjects:
             OrganizationRole,
             Role,
         )
-
         from billing.models import (
             BillingContact,
             PaymentMethod,
@@ -211,15 +210,13 @@ class AccountObjects:
             Role,
         )
         from account.models.federation import (
-            AuthFederation,
-            FederatedServiceURL,
-            ServiceFederationSupport,            
+            ServiceFederationSupport,
         )
+
         self.federated_service_support = ServiceFederationSupport.objects.create(
             name="Test Service",
             slug="test_service",
         )
-
 
         self.user = user = get_user_model().objects.create_user(
             username=f"user_{handle}",

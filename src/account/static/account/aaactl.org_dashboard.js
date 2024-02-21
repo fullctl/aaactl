@@ -40,6 +40,10 @@ $ctl.application.OrgDashboard = $tc.extend(
         return new $ctl.application.OrgKeysList();
       });
 
+      this.widget("federated_service_urls", () => {
+        return new $ctl.application.FederatedServiceURLsList();
+      });
+
       this.widget("leave_org_button", () => {
         return new $ctl.application.LeaveOrgButton(this.$e.leave_org_button)
       });
@@ -245,6 +249,24 @@ $ctl.application.LeaveOrgButton = $tc.extend(
   },
   twentyc.rest.Button
 );
+
+
+$ctl.application.FederatedServiceURLsList = twentyc.cls.define(
+  "FederatedServiceURLsList",
+  {
+    FederatedServiceURLsList : function() {
+      this.elements = {}
+      this.elements.listing = $('.federated_service_urls-listing')
+      this.rest_api_list = new twentyc.rest.List(this.elements.listing);
+      this.sync();
+    },
+
+    sync : function() {
+      this.rest_api_list.load();
+    }
+  }
+);
+
 
 $(document).ready(function() {
   $ctl.aaactl_dashboard = new $ctl.application.AaactlDashboard();

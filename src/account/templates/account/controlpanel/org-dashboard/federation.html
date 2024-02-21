@@ -1,0 +1,28 @@
+{% load i18n static %}
+<div
+  class="federated_service_urls-listing"
+  data-api-base="{% url "account_api:org-detail" pk=request.selected_org.slug %}"
+  data-api-action="federated_service_urls">
+  <div class="templates" style="display:none">
+    <table>
+    <tr data-template="row" class="large-table-row">
+      <td scope="col" class="name-column table-text-bold dark-grey">
+        <span data-field="service_name"></span>
+      </td>
+      <td scope="col" class="light-grey">
+        <div class="d-flex align-items-center">
+          <span data-field="url"></span>
+        </div>
+      </td>
+      <td scope="col" class="manage-column right">
+        <button class="btn btn-slim btn-manage manage no-hover">{% trans "Delete" %}</button>
+      </td>
+    </tr>
+    </table>
+  </div>
+
+  <table class="table table-sm list-table">
+    <tbody class="list-body">
+    </tbody>
+  </table>
+</div>

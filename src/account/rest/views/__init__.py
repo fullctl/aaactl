@@ -16,6 +16,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 import account.models as models
+import account.models.federation as federation_models
+import account.rest.serializers.federation
 from account.rest.decorators import disable_api_key, set_org
 from account.rest.route import route
 from account.rest.serializers import Serializers
@@ -545,6 +547,60 @@ class Organization(viewsets.ViewSet):
 
         return Response(Serializers.org_key(org_key, many=False).data)
 
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("org.{org.id}")
+    def federated_auth(self, request, pk, org):
+        auth = federation_models.AuthFederation.objects.get(org=org)
+        serializer = Serializers.auth_federation(auth, many=False)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def create_federated_auth(self, request, pk, org, auditlog=None):
+        auth = federation_models.AuthFederation.create_for_org(org, request.user)
+        ctx = {"client_secret": auth.client_secret}
+        serializer = Serializers.auth_federation(auth.auth, many=False, context=ctx)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("org.{org.id}")
+    def federated_service_urls(self, request, pk, org):
+        urls = federation_models.FederatedServiceURL.objects.filter(auth__org=org)
+        serializer = Serializers.federated_service_url(urls, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def add_federated_service_url(self, request, pk, org, auditlog=None):
+        auth = federation_models.AuthFederation.objects.get(org=org)
+        serializer = Serializers.add_federated_service_url(
+            data=request.data, many=False, context={"auth": auth}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def remove_federated_service_url(self, request, pk, org, auditlog=None):
+        url = federation_models.FederatedServiceURL.objects.get(
+            id=request.data.get("id"), auth__org=org
+        )
+        serializer = Serializers.federated_service_url(url)
+        response = Response(serializer.data)
+        url.delete()
+        return response
+
     @action(detail=True, methods=["GET"])
     @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
@@ -597,6 +653,7 @@ class Organization(viewsets.ViewSet):
         if self.action in ["invite"]:
             self.throttle_scope = "invite"
         return super().get_throttles()
+
 
 
 @route

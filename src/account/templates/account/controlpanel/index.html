@@ -183,13 +183,6 @@
               <div class="row key-container">
                 {% block federated_service_urls %}
                 {% include "account/controlpanel/org-dashboard/federation.html" %}
-                {% if permissions.create_org_org_key %}
-                  <div class="text-center">
-                    <button type="button" class="btn btn-manage btn-slim" data-bs-toggle="modal" data-bs-target="#orgApiKeyModal">
-                      {% trans "+ Add service url" %}
-                    </button>
-                  </div>
-                {% endif %}
                 {% endblock %}
               </div>
             </div>

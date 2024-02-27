@@ -602,6 +602,17 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def federated_services(self, request, pk, org, auditlog=None):
+        services = federation_models.ServiceFederationSupport.objects.all()
+        serializer = Serializers.federated_service(services, many=True)
+        response = Response(serializer.data)
+
+        return response
+
+    @action(detail=True, methods=["GET"])
+    @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)

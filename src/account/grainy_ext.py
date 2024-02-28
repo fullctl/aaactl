@@ -1,18 +1,20 @@
 from django.contrib.auth import get_user_model
 from django_grainy.remote import Authenticator
+from rest_framework import exceptions
 
 from account.rest.authentication import (
     APIKey,
-    APIKeyAuthentication,
     InternalAPIKey,
     OrganizationAPIKey,
     Permissions,
+    TokenAuthentication,
 )
 
 
 class APIKeyAuthenticator(Authenticator):
     def authenticate(self, request):
-        permission_holder, _ = APIKeyAuthentication.authenticate(self, request)
+        permission_holder, _ = TokenAuthentication().authenticate(request)
+
         User = get_user_model()
 
         # personal api key, grab permissions for owning user

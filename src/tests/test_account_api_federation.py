@@ -87,10 +87,24 @@ def test_federated_service_url_create(db, account_objects):
 
     result = response.json()["data"][0]
 
-    print("RESULT", result)
-
     assert result["url"] == test_url
     assert result["service"] == service_id
+    
+    # test that calling create again with the same service errors with 400 Bad request
+
+    response = account_objects.api_client.post(
+        reverse(
+            "account_api:org-add-federated-service-url",
+            args=(account_objects.org.slug,),
+        ),
+        data=json.dumps({"url": test_url, "service": service_id}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["errors"]["non_field_errors"] == [
+        "Service URL for this service already exists."
+    ]
 
     # test unauthenticated user
     response = account_objects.api_client_anon.post(
@@ -157,6 +171,21 @@ def test_federated_auth_create(db, account_objects):
 
     # assert client secret is not hashed
     assert not result["client_secret"].startswith("pbkdf2_sha256")
+
+    # test that second call errors with 400 Bad request 
+    # "An OAuth application already exists for this organization"
+
+    response = account_objects.api_client.post(
+        reverse(
+            "account_api:org-create-federated-auth", args=(account_objects.org.slug,)
+        )
+    )
+
+    assert response.status_code == 400
+    print(response.json())
+    assert response.json()["errors"]["non_field_errors"] == [
+        "An OAuth application already exists for this organization."
+    ]
 
     # test unauthenticated user
     response = account_objects.api_client_anon.post(

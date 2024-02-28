@@ -560,6 +560,14 @@ class Organization(viewsets.ViewSet):
     @auditlog()
     @grainy_endpoint("org.{org.id}")
     def create_federated_auth(self, request, pk, org, auditlog=None):
+
+        # only one application per organization
+        if federation_models.AuthFederation.objects.filter(org=org).exists():
+            return Response(
+                {"non_field_errors": [_("An OAuth application already exists for this organization.")]},
+                status=400,
+            )
+
         auth = federation_models.AuthFederation.create_for_org(org, request.user)
         ctx = {"client_secret": auth.client_secret}
         serializer = Serializers.auth_federation(auth.auth, many=False, context=ctx)

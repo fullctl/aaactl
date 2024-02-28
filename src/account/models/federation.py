@@ -1,5 +1,6 @@
 import dataclasses
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from fullctl.django.models.abstract import HandleRefModel
@@ -73,6 +74,13 @@ class AuthFederation(HandleRefModel):
 
         The client secret will be hashed in the database and this is the only time it will be available
         """
+
+        # only one application per organization
+
+        if cls.objects.filter(org=org).exists():
+            raise ValidationError(
+                _("An OAuth application already exists for this organization.")
+            )
 
         client_id = generate_client_id()
         client_secret = generate_client_secret()

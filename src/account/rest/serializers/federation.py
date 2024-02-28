@@ -41,6 +41,20 @@ class AddServiceURLSerializer(serializers.Serializer):
     class Meta(ServiceURLSerializer.Meta):
         fields = ["url", "service"]
 
+    def validate(self, data):
+        # we only allow one service url per service
+        auth = self.context["auth"]
+
+        if federation_models.FederatedServiceURL.objects.filter(
+            service=data["service"], auth=auth
+        ).exists():
+            raise serializers.ValidationError(
+                "Service URL for this service already exists."
+            )
+        
+
+        return data
+
     def save(self, **kwargs):
         validated_data = self.validated_data
         auth = validated_data["auth"] = self.context["auth"]

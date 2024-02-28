@@ -209,9 +209,7 @@ class AccountObjects:
             OrganizationRole,
             Role,
         )
-        from account.models.federation import (
-            ServiceFederationSupport,
-        )
+        from account.models.federation import ServiceFederationSupport
 
         self.federated_service_support = ServiceFederationSupport.objects.create(
             name="Test Service",

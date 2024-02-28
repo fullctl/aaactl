@@ -73,6 +73,7 @@ def login(request):
 
     return render(request, "account/auth/login.html", env)
 
+
 def get_jwt_tokens(user):
     """
     Generate JWT tokens for the given user.
@@ -86,6 +87,7 @@ def get_jwt_tokens(user):
         "access": str(refresh.access_token),
     }
 
+
 def valid_frontend_redirect(path, fallback, user):
     """
     Validates the redirect path to a frontend service and returns a valid redirect URL
@@ -95,8 +97,8 @@ def valid_frontend_redirect(path, fallback, user):
         return fallback
 
     parts = urlparse(path)
-    origin = f'{parts.scheme}://{parts.netloc}'
-    if (origin not in settings.FRONTEND_ORIGINS):
+    origin = f"{parts.scheme}://{parts.netloc}"
+    if origin not in settings.FRONTEND_ORIGINS:
         return fallback
 
     tokens = get_jwt_tokens(user)
@@ -132,8 +134,6 @@ def login_frontend(request):
 
             if user is not None:
                 fn_login(request, user)
-                print('\n'*3)
-                print(request.POST.get("next"))
                 redirect_next = valid_frontend_redirect(
                     request.POST.get("next"), reverse("account:controlpanel"), user
                 )
@@ -150,7 +150,11 @@ def login_frontend(request):
     else:
         form = account.forms.Login()
 
-    env.update(login_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED, login_form_action="account:auth-login-frontend")
+    env.update(
+        login_form=form,
+        password_login_enabled=settings.PASSWORD_LOGIN_ENABLED,
+        login_form_action="account:auth-login-frontend",
+    )
 
     return render(request, "account/auth/login.html", env)
 

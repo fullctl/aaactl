@@ -33,14 +33,14 @@
 {% if permissions.create_org_org_key %}
   <div data-element="federation_auth_setup" style="display: none;">
     <div class="mb-2 text-center light-grey">
-      Allow your self-hosted fullctl services to use us for authentication.
+      Allow your self-hosted fullctl services to use <code>{{ request.META.HTTP_HOST }}</code> for authentication.
     </div>
     <div class="mb-2 text-center">
-      To add service URL you need to set-up the organization's oauth first.
+      To add a service URL you need to set-up the organization's OAuth first.
     </div>
     <div class="text-center">
       <button type="button" class="btn btn-manage btn-slim" data-element="federation_auth_setup_btn">
-        {% trans "Set-up Org Oauth" %}
+        {% trans "Set-up OAuth" %}
       </button>
     </div>
   </div>

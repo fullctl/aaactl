@@ -925,7 +925,7 @@ whitenoise = ">=6"
 type = "git"
 url = "https://github.com/fullctl/fullctl.git"
 reference = "prep-release"
-resolved_reference = "e39bb5ba18b4a1bb8736932886fee3b02f913e9a"
+resolved_reference = "c11521de4772957edeaafcaa4475c040edd19cdb"
 
 [[package]]
 name = "future"

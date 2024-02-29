@@ -47,7 +47,6 @@ def login(request):
         redirect_next = valid_redirect(
             request.POST.get("next"), reverse("account:controlpanel")
         )
-        print("redirecting", redirect_next)
         if form.is_valid():
             user = authenticate(
                 request,
@@ -140,8 +139,6 @@ def login_frontend(request):
 
                 # redirect_next is already cleaned and validated
                 # through valid_frontend_redirect at this point
-                print("redirecting", redirect_next)
-                print("HERE")
                 return HttpResponseRedirect(redirect_next)
             else:
                 messages.error(

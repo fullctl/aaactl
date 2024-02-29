@@ -141,6 +141,7 @@ def login_frontend(request):
                 # redirect_next is already cleaned and validated
                 # through valid_frontend_redirect at this point
                 print("redirecting", redirect_next)
+                print("HERE")
                 return HttpResponseRedirect(redirect_next)
             else:
                 messages.error(

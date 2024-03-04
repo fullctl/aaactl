@@ -1,6 +1,5 @@
 import io
 
-import structlog
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from fullctl.django.models import Task
@@ -11,8 +10,6 @@ import account.models
 import billing.models
 
 __all__ = ["UpdateSubscriptionProductInfo"]
-
-log = structlog.get_logger("django")
 
 
 @register
@@ -73,7 +70,4 @@ class BillingCycles(Task):
         stdout = io.StringIO()
         call_command("billing_cycles", stdout=stdout, commit=True)
         output = stdout.getvalue()
-
-        log.debug("billing_cycles", output=output)
-
         return output

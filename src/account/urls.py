@@ -1,15 +1,16 @@
 from django.urls import path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 
 import account.views.auth
 import account.views.controlpanel
 
 urlpatterns = [
     path("auth/o/profile/", account.views.auth.oauth_profile, name="oauth-profile"),
+    path(
+        "auth/login/frontend/",
+        account.views.auth.login_frontend,
+        name="auth-login-frontend",
+    ),
     path("auth/login/", account.views.auth.login, name="auth-login"),
     path("auth/logout/", account.views.auth.logout, name="auth-logout"),
     path("auth/register/", account.views.auth.register, name="auth-register"),
@@ -33,9 +34,6 @@ urlpatterns = [
         account.views.auth.accept_invite,
         name="accept-invite",
     ),
-    # TODO: set as cookie instead to help security
-    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("", account.views.controlpanel.index, name="controlpanel"),
 ]

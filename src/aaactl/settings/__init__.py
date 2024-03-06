@@ -55,6 +55,7 @@ LOGIN_REDIRECT_URL = "/account"
 # hard overwrite MIDDLEWARE, since ordering here is important
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",
@@ -136,6 +137,9 @@ AUTHENTICATION_BACKENDS = [
 ] + AUTHENTICATION_BACKENDS
 
 DEFAULT_SCOPES = ["email", "profile", "peeringdb"]
+
+settings_manager.set_list("CORS_ALLOWED_ORIGINS", [], envvar_element_type=str)
+settings_manager.set_list("FRONTEND_ORIGINS", [], envvar_element_type=str)
 
 OAUTH2_PROVIDER = {
     "SCOPES": {

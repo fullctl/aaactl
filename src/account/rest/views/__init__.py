@@ -18,12 +18,12 @@ from rest_framework.response import Response
 import account.models as models
 import account.models.federation as federation_models
 import account.rest.serializers.federation
+import applications.rest.serializers as application_serializers
 from account.rest.decorators import disable_api_key, set_org
 from account.rest.route import route
 from account.rest.serializers import Serializers
 from account.session import set_selected_org
 from applications.models import Service
-import applications.rest.serializers as application_serializers
 from common.rest.decorators import grainy_endpoint, user_endpoint
 
 
@@ -660,14 +660,15 @@ class Organization(viewsets.ViewSet):
         for fed_svc_url in federation_models.FederatedServiceURL.objects.filter(
             auth__org=org
         ):
-            services[
-                fed_svc_url.service.slug
-            ] = Service.from_federated_service_url(fed_svc_url)
+            services[fed_svc_url.service.slug] = Service.from_federated_service_url(
+                fed_svc_url
+            )
 
         services = list(services.values())
-        serializer = application_serializers.Serializers.service_application(services, many=True)
+        serializer = application_serializers.Serializers.service_application(
+            services, many=True
+        )
         return Response(serializer.data)
-
 
     def _create_or_resend_invite(self, request, org):
         """

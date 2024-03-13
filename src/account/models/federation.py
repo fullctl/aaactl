@@ -1,5 +1,6 @@
 import dataclasses
 
+from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -166,6 +167,11 @@ class FederatedServiceURL(HandleRefModel):
         on_delete=models.CASCADE,
         related_name="urls",
         verbose_name=_("Service"),
+    )
+    config = models.JSONField(
+        verbose_name=_("Service Configuration"),
+        help_text=_("Service specific configuration for this URL."),
+        default=dict,
     )
 
     class Meta:

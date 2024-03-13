@@ -11,7 +11,6 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug"]
         read_only_fields = ["id"]
 
-
 @register
 class ServiceURLSerializer(serializers.ModelSerializer):
 
@@ -19,8 +18,8 @@ class ServiceURLSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = federation_models.FederatedServiceURL
-        fields = ["id", "url", "auth", "service", "service_name"]
-        read_only_fields = ["id", "auth"]
+        fields = ["id", "url", "auth", "service", "service_name", "config"]
+        read_only_fields = ["id", "auth", "config"]
 
     def get_service_name(self, obj):
         return obj.service.name

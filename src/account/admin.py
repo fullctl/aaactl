@@ -335,7 +335,7 @@ class ServiceFederationAdmin(admin.ModelAdmin):
 class ServiceURLInline(admin.TabularInline):
     model = FederatedServiceURL
     extra = 1
-    fields = ("url", "service")
+    fields = ("url", "service", "config")
     autocomplete_fields = ("service",)
 
 

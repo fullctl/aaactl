@@ -11,8 +11,8 @@ class PeeringDBOAuth2(BaseOAuth2):
 
     ACCESS_TOKEN_METHOD = "POST"
 
-    DEFAULT_SCOPE = ["email", "profile", "networks"]
-    EXTRA_DATA = ["networks"]
+    DEFAULT_SCOPE = ["email", "profile", "networks", "amr"]
+    EXTRA_DATA = ["networks", "amr"]
 
     def get_user_details(self, response):
         """Return user details."""
@@ -34,4 +34,5 @@ class PeeringDBOAuth2(BaseOAuth2):
         """Load user data from service."""
         headers = {"Authorization": "Bearer %s" % access_token}
         data = self.get_json(self.PROFILE_URL, headers=headers)
+        
         return data

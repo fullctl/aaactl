@@ -70,7 +70,9 @@ class Service(AaactlDataViewSet):
 
         return context
 
+    @grainy_endpoint("service_bridge")
     def list(self, request, *args, **kwargs):
+
         qset = self.filter(self.get_queryset(), request)
         qset, joins = self.join_relations(qset, request)
         context = self.serializer_context(request, {"joins": joins})

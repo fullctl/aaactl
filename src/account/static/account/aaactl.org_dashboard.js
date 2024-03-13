@@ -392,7 +392,7 @@ $ctl.application.ModalServiceUrl = $tc.extend(
   {
     ModalServiceUrl : function(data) {
       const modal = this;
-      const title = "Edit API Key Details";
+      const title = "Edit Service URL";
       const form = this.form = new twentyc.rest.Form(
         $ctl.template("form_service_url")
       );

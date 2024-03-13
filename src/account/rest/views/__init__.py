@@ -23,6 +23,7 @@ from account.rest.route import route
 from account.rest.serializers import Serializers
 from account.session import set_selected_org
 from applications.models import Service
+import applications.rest.serializers as application_serializers
 from common.rest.decorators import grainy_endpoint, user_endpoint
 
 
@@ -645,6 +646,28 @@ class Organization(viewsets.ViewSet):
             return self._create_or_resend_invite(request, org)
         elif request.method == "DELETE":
             return self._delete_invite(request, org)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def services(self, request, pk, org):
+        services = {svc.slug: svc for svc in Service.objects.all()}
+
+        # loading for specific org, so we need to check if there
+        # is service federation setup and replace the service
+        # with the federated service
+
+        for fed_svc_url in federation_models.FederatedServiceURL.objects.filter(
+            auth__org=org
+        ):
+            services[
+                fed_svc_url.service.slug
+            ] = Service.from_federated_service_url(fed_svc_url)
+
+        services = list(services.values())
+        serializer = application_serializers.Serializers.service_application(services, many=True)
+        return Response(serializer.data)
+
 
     def _create_or_resend_invite(self, request, org):
         """

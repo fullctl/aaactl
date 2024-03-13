@@ -128,6 +128,7 @@ class AuthFederation(HandleRefModel):
 class ServiceFederationSupport(HandleRefModel):
     slug = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255, unique=True)
+    logo_url = models.URLField(null=True, blank=True)
     federation_level = models.CharField(
         max_length=255,
         help_text=_("The level of federation for this service."),

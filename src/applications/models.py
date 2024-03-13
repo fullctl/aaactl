@@ -76,6 +76,7 @@ class Service(HandleRefModel):
     config = models.JSONField(
         default=dict,
         help_text=_("Service specific configuration for this URL."),
+        blank=True,
     )
 
     class Meta:
@@ -94,12 +95,14 @@ class Service(HandleRefModel):
         inst = cls(
             slug=url.service.slug,
             name=url.service.name,
+            logo=url.service.logo_url,
             service_url=url.url,
             api_url=url.url,
             config=url.config,
         )
 
         inst.federated = True
+        inst.id = 0
 
         return inst
 

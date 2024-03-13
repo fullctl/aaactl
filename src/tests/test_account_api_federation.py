@@ -89,7 +89,7 @@ def test_federated_service_url_create(db, account_objects):
 
     assert result["url"] == test_url
     assert result["service"] == service_id
-    
+
     # test that calling create again with the same service errors with 400 Bad request
 
     response = account_objects.api_client.post(
@@ -172,7 +172,7 @@ def test_federated_auth_create(db, account_objects):
     # assert client secret is not hashed
     assert not result["client_secret"].startswith("pbkdf2_sha256")
 
-    # test that second call errors with 400 Bad request 
+    # test that second call errors with 400 Bad request
     # "An OAuth application already exists for this organization"
 
     response = account_objects.api_client.post(

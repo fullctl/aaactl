@@ -564,7 +564,11 @@ class Organization(viewsets.ViewSet):
         # only one application per organization
         if federation_models.AuthFederation.objects.filter(org=org).exists():
             return Response(
-                {"non_field_errors": [_("An OAuth application already exists for this organization.")]},
+                {
+                    "non_field_errors": [
+                        _("An OAuth application already exists for this organization.")
+                    ]
+                },
                 status=400,
             )
 

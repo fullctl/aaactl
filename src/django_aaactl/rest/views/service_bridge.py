@@ -82,13 +82,16 @@ class Service(AaactlDataViewSet):
             # is service federation setup and replace the service
             # with the federated service
 
-            for fed_svc_url in account_models.FederatedServiceURL.objects.filter(auth__org=context["org"]):
-                services[fed_svc_url.service.slug] = application_models.Service.from_federated_service_url(fed_svc_url)
+            for fed_svc_url in account_models.FederatedServiceURL.objects.filter(
+                auth__org=context["org"]
+            ):
+                services[
+                    fed_svc_url.service.slug
+                ] = application_models.Service.from_federated_service_url(fed_svc_url)
 
         services = list(services.values())
         serializer = self.serializer_class(services, many=True, context=context)
         return Response(serializer.data)
-
 
     @action(
         detail=False,

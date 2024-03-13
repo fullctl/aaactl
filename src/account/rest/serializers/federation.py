@@ -11,6 +11,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug"]
         read_only_fields = ["id"]
 
+
 @register
 class ServiceURLSerializer(serializers.ModelSerializer):
 
@@ -50,7 +51,6 @@ class AddServiceURLSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Service URL for this service already exists."
             )
-        
 
         return data
 

@@ -82,6 +82,7 @@ class Service(ModelSerializer):
     def get_federated(self, obj):
         return getattr(obj, "federated", False)
 
+
 @register
 class OrganizationCanTrialForObject(serializers.Serializer):
     org_slug = serializers.CharField()

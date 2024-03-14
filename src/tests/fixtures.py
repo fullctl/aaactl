@@ -211,7 +211,10 @@ class AccountObjects:
         )
         from account.models.federation import ServiceFederationSupport
 
-        self.federated_service_support, _ = ServiceFederationSupport.objects.get_or_create(
+        (
+            self.federated_service_support,
+            _,
+        ) = ServiceFederationSupport.objects.get_or_create(
             name="Test Service",
             slug="test_service",
         )

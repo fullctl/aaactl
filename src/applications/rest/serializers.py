@@ -13,4 +13,12 @@ Serializers, register = serializer_registry()
 class Service(ModelSerializer):
     class Meta:
         model = models.Service
-        fields = ["name", "slug", "api_url", "service_url", "description", "logo"]
+        fields = [
+            "name",
+            "slug",
+            "api_url",
+            "service_url",
+            "description",
+            "logo",
+            "config",
+        ]

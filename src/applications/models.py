@@ -3,6 +3,7 @@ from django.utils.translation import gettext as _
 from django_grainy.decorators import grainy_model
 
 from account.models import Organization
+from account.models.federation import FederatedServiceURL
 from applications.service_bridge import Bridge, get_client_bridge
 from common.models import HandleRefModel
 
@@ -72,6 +73,12 @@ class Service(HandleRefModel):
         ),
     )
 
+    config = models.JSONField(
+        default=dict,
+        help_text=_("Service specific configuration for this URL."),
+        blank=True,
+    )
+
     class Meta:
         db_table = "applications_service"
         verbose_name = _("Service Application")
@@ -79,6 +86,25 @@ class Service(HandleRefModel):
 
     class HandleRef:
         tag = "service_application"
+
+    @classmethod
+    def from_federated_service_url(cls, url):
+        """
+        Returns a service application from a federated service url
+        """
+        inst = cls(
+            slug=url.service.slug,
+            name=url.service.name,
+            logo=url.service.logo_url,
+            service_url=url.url,
+            api_url=url.url,
+            config=url.config,
+        )
+
+        inst.federated = True
+        inst.id = 0
+
+        return inst
 
     @property
     def products_that_grant_access(self):

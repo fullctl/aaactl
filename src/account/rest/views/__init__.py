@@ -16,6 +16,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 import account.models as models
+import account.models.federation as federation_models
+import account.rest.serializers.federation
+import applications.rest.serializers as application_serializers
 from account.rest.decorators import disable_api_key, set_org
 from account.rest.route import route
 from account.rest.serializers import Serializers
@@ -547,6 +550,82 @@ class Organization(viewsets.ViewSet):
 
     @action(detail=True, methods=["GET"])
     @set_org
+    @grainy_endpoint("org.{org.id}")
+    def federated_auth(self, request, pk, org):
+        auth = federation_models.AuthFederation.objects.get(org=org)
+        serializer = Serializers.auth_federation(auth, many=False)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def create_federated_auth(self, request, pk, org, auditlog=None):
+
+        # only one application per organization
+        if federation_models.AuthFederation.objects.filter(org=org).exists():
+            return Response(
+                {
+                    "non_field_errors": [
+                        _("An OAuth application already exists for this organization.")
+                    ]
+                },
+                status=400,
+            )
+
+        auth = federation_models.AuthFederation.create_for_org(org, request.user)
+        ctx = {"client_secret": auth.client_secret}
+        serializer = Serializers.auth_federation(auth.auth, many=False, context=ctx)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("org.{org.id}")
+    def federated_service_urls(self, request, pk, org):
+        urls = federation_models.FederatedServiceURL.objects.filter(auth__org=org)
+        serializer = Serializers.federated_service_url(urls, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["POST"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def add_federated_service_url(self, request, pk, org, auditlog=None):
+        auth = federation_models.AuthFederation.objects.get(org=org)
+        serializer = Serializers.add_federated_service_url(
+            data=request.data, many=False, context={"auth": auth}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["DELETE"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def remove_federated_service_url(self, request, pk, org, auditlog=None):
+        url = federation_models.FederatedServiceURL.objects.get(
+            id=request.data.get("id"), auth__org=org
+        )
+        serializer = Serializers.federated_service_url(url)
+        response = Response(serializer.data)
+        url.delete()
+        return response
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @auditlog()
+    @grainy_endpoint("org.{org.id}")
+    def federated_services(self, request, pk, org, auditlog=None):
+        services = federation_models.ServiceFederationSupport.objects.all()
+        serializer = Serializers.federated_service(services, many=True)
+        response = Response(serializer.data)
+
+        return response
+
+    @action(detail=True, methods=["GET"])
+    @set_org
     @grainy_endpoint("user.{org.id}", explicit=False)
     def invites(self, request, pk, org):
         invitations = models.Invitation.objects.filter(org__slug=pk)
@@ -567,6 +646,29 @@ class Organization(viewsets.ViewSet):
             return self._create_or_resend_invite(request, org)
         elif request.method == "DELETE":
             return self._delete_invite(request, org)
+
+    @action(detail=True, methods=["GET"])
+    @set_org
+    @grainy_endpoint("user.{org.id}", explicit=False)
+    def services(self, request, pk, org):
+        services = {svc.slug: svc for svc in Service.objects.all()}
+
+        # loading for specific org, so we need to check if there
+        # is service federation setup and replace the service
+        # with the federated service
+
+        for fed_svc_url in federation_models.FederatedServiceURL.objects.filter(
+            auth__org=org
+        ):
+            services[fed_svc_url.service.slug] = Service.from_federated_service_url(
+                fed_svc_url
+            )
+
+        services = list(services.values())
+        serializer = application_serializers.Serializers.service_application(
+            services, many=True
+        )
+        return Response(serializer.data)
 
     def _create_or_resend_invite(self, request, org):
         """

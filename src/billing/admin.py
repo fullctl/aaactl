@@ -129,6 +129,7 @@ class OrganizationProduct(BaseAdmin):
     search_fields = ("product__name", "org__name", "org__slug")
     readonly_fields = ("component_object", "component")
     list_filter = ("product__component__slug",)
+    autocomplete_fields = ("org",)
 
     def component_object(self, obj):
         try:
@@ -155,6 +156,7 @@ class OrganizationProductHistoryAdmin(BaseAdmin):
     )
     search_fields = ("product__name", "org__name", "org__slug")
     list_filter = ("product__component__slug",)
+    autocomplete_fields = ("org",)
 
 
 class SubscriptionProductModifierInline(admin.TabularInline):
@@ -271,6 +273,7 @@ class SubscriptionAdminForm(forms.ModelForm):
 class SubscriptionAdmin(BaseAdmin):
     list_display = ("group", "org", "subscription_cycle", "subscription_cycle_start")
     search_fields = ("group__name", "product__name", "org__name")
+    autocomplete_fields = ("org",)
     inlines = (
         SubscriptionProductInline,
         SubscriptionCycleInline,
@@ -444,6 +447,7 @@ class BillingContactAdmin(BaseAdmin):
     list_display = ("id", "org", "name", "email", "created", "status")
     search_fields = ("org__name", "name", "email")
     list_filter = ("status",)
+    autocomplete_fields = ("org",)
 
 
 @admin.register(Ledger)

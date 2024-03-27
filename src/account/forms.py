@@ -1,11 +1,11 @@
 import re
 
 import fullctl.django.enum as enum
-from captcha.fields import ReCaptchaField
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext as _
+from django_recaptcha.fields import ReCaptchaField
 
 from account.models import ContactMessage, Organization, OrganizationRole
 from account.models import PasswordReset as PasswordResetModel

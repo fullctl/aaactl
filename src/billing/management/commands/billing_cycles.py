@@ -1,9 +1,21 @@
+import dataclasses
+import traceback
+
 import reversion
+from django.core.management.base import CommandError
 from django.utils import timezone
+from fullctl.django.auditlog import auditlog
 from fullctl.django.management.commands.base import CommandInterface
 
-from billing.models import Invoice, OrganizationProduct, Subscription
+from billing.models import Invoice, OrganizationProduct, Subscription, SubscriptionCycle
 from billing.payment_processors.processor import InternalProcessorError
+
+
+@dataclasses.dataclass
+class InternalErrorInfo:
+    subscription_cycle: SubscriptionCycle
+    exc: Exception
+    traceback: str
 
 
 def catch_internal_processor_error(fn):
@@ -22,6 +34,15 @@ def catch_internal_processor_error(fn):
 
 class Command(CommandInterface):
     help = "Progresses billing subscription cycles and product expiry"
+
+    commit = False
+
+    def handle(self, *args, **kwargs):
+        self.critical_cycle_errors = []
+
+        super().handle(*args, **kwargs)
+
+        self.handle_cycle_errors(self.critical_cycle_errors)
 
     def run(self, *args, **kwargs):
         self.progress_product_expiry()
@@ -67,6 +88,8 @@ class Command(CommandInterface):
     def progress_subscription_cycles(self):
         qset = Subscription.objects.filter(status="ok")
 
+        errored = self.critical_cycle_errors
+
         for subscription in qset:
             self.log_info(
                 f"checking subscription {subscription} ({subscription.id}) ..."
@@ -108,16 +131,43 @@ class Command(CommandInterface):
                         f"-- charging ${subscription_cycle.price} for subscription cycle: {subscription_cycle}"
                     )
 
-                    with reversion.create_revision():
-                        subscription_cycle_charge = subscription_cycle.charge(
-                            commit=self.commit
-                        )
-
-                    with reversion.create_revision():
-                        if subscription_cycle_charge:
-                            subscription_cycle_charge.payment_charge.sync_status(
+                    try:
+                        with reversion.create_revision():
+                            subscription_cycle_charge = subscription_cycle.charge(
                                 commit=self.commit
                             )
+
+                        with reversion.create_revision():
+                            if subscription_cycle_charge:
+                                subscription_cycle_charge.payment_charge.sync_status(
+                                    commit=self.commit
+                                )
+                    except InternalProcessorError:
+                        # Errors like legacy payment methods, etc. that are handled
+                        # separately and don't lead to any actual charges made
+                        raise
+                    except Exception as exc:
+                        # DATABASE/DJANGO error where the charge may have been made
+                        #
+                        # subscription cycle will be set to `error` and manual
+                        # review wil be required.
+                        #
+                        # A proper error will be raised at the end of command
+                        # execution containing all errored subscriptions.
+                        #
+                        # Subscription cycles with status `error` will not be retried
+                        # and will require manual review.
+                        error_info = InternalErrorInfo(
+                            subscription_cycle=subscription_cycle,
+                            exc=exc,
+                            traceback=traceback.format_exc(),
+                        )
+                        errored.append(error_info)
+                        self.log_error(
+                            f"INTERNAL ERROR (possibly charged)\n{error_info}"
+                        )
+
+            # sync charge processing status
 
             for subscription_cycle in subscription.subscription_cycle_set.filter(
                 subscription_cycle_charge_set__payment_charge__status__in=["pending"]
@@ -134,6 +184,21 @@ class Command(CommandInterface):
                     subscription_cycle_charge.payment_charge.sync_status(
                         commit=self.commit
                     )
+
+    def handle_cycle_errors(self, errored):
+        if not errored:
+            return
+
+        subscriptions = []
+
+        for error_info in errored:
+            if self.commit:
+                error_info.subscription_cycle.set_error(error_info.traceback)
+            subscriptions.append(error_info.subscription_cycle.subscription)
+
+        raise CommandError(
+            f"Critical errors occurred in {len(subscriptions)} subscriptions: \n\n{subscriptions}\n\nPlease review manually."
+        )
 
     def collect(self, subscription_product, subscription_cycle):
         org = subscription_cycle.subscription.org

@@ -252,8 +252,18 @@ class Organization(serializers.ModelSerializer):
     personal = serializers.SerializerMethodField()
     label = serializers.CharField(read_only=True)
     selected = serializers.SerializerMethodField()
-    is_admin = serializers.SerializerMethodField()
-    is_default = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField(
+        help_text="Requesting user is organization admin"
+    )
+    is_default = serializers.SerializerMethodField(
+        help_text="Organization is requesting user's default"
+    )
+    roles = serializers.SerializerMethodField(
+        help_text="Requesting user's role in the organization"
+    )
+    all_roles = serializers.SerializerMethodField(
+        help_text="All roles in the organization"
+    )
 
     class Meta:
         model = models.Organization
@@ -266,6 +276,8 @@ class Organization(serializers.ModelSerializer):
             "personal",
             "is_admin",
             "is_default",
+            "roles",
+            "all_roles",
         ]
 
     def get_personal(self, obj):
@@ -289,6 +301,20 @@ class Organization(serializers.ModelSerializer):
             self._default_org = models.Organization.default_org(user)
 
         return self._default_org.id == obj.id
+
+    def get_roles(self, obj):
+        # if user is set in context populate roles
+        # with the user's roles for the org
+        user = self.context.get("user")
+        if not user:
+            return []
+
+        return list(obj.roles.filter(user=user).values_list("role__name", flat=True))
+
+    def get_all_roles(self, obj):
+        # TODO: currently this assumes all Role(s) are available
+        # to all organizations - this may change in the future
+        return list(models.Role.objects.all().values_list("name", flat=True))
 
     def validate(self, data):
         user = self.context.get("user")

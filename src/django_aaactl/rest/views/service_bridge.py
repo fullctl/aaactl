@@ -187,7 +187,7 @@ class Contact(AaactlDataViewSet):
 
 @route
 class OrganizationWhiteLabeling(AaactlDataViewSet):
-    path_prefix = "/whitelabeling_data"
+    path_prefix = "/data"
     allowed_http_methods = ["GET"]
     valid_filters = [
         ("name", "org__name"),

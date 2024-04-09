@@ -913,7 +913,7 @@ pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
 name = "fullctl"
-version = "1.13.0-rc.2"
+version = "1.13.0-rc.6"
 description = "Core classes and functions for service applications"
 optional = false
 python-versions = "^3.9"
@@ -949,7 +949,7 @@ whitenoise = ">=6"
 type = "git"
 url = "https://github.com/fullctl/fullctl.git"
 reference = "prep-release"
-resolved_reference = "db15c84db4d8bdd07e1c9e917555dd3b4643c4ce"
+resolved_reference = "63f0377137085b4921afbb28e4fb3264ac3e9d86"
 
 [[package]]
 name = "future"

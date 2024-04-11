@@ -190,10 +190,9 @@ class OrganizationWhiteLabeling(AaactlDataViewSet):
     path_prefix = "/data"
     allowed_http_methods = ["GET"]
     valid_filters = [
-        ("name", "org__name"),
+        ("slug", "org__slug"),
     ]
-    allow_unfiltered = False
-    autocomplete = "name"
+    allow_unfiltered = True
 
     queryset = whitelabel_models.OrganizationWhiteLabeling.objects.all()
     serializer_class = Serializers.org_whitelabeling

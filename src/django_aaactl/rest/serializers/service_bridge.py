@@ -237,4 +237,4 @@ class OauthAccessToken(ModelSerializer):
 class OrganizationWhiteLabelingSerializer(ModelSerializer):
     class Meta:
         model = whitelabel_models.OrganizationWhiteLabeling
-        fields = ['org', 'html_header', 'html_footer', 'css', 'logo_url']
+        fields = ['org', 'html_header', 'html_footer', 'css', 'light_logo_url', 'dark_logo_url']

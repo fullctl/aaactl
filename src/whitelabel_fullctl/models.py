@@ -13,11 +13,17 @@ class OrganizationWhiteLabeling(HandleRefModel):
     html_header = models.TextField(blank=True, null=True)
     html_footer = models.TextField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
-    logo_url = models.URLField(
-        _("Logo URL"),
+    dark_logo_url = models.URLField(
+        _("Dark Logo URL"),
         max_length=2000,
         null=True,
-        help_text=_("URL used to display the logo on the dashboard."),
+        help_text=_("URL used to display the dark logo on the dashboard."),
+    )
+    light_logo_url = models.URLField(
+        _("Light Logo URL"),
+        max_length=2000,
+        null=True,
+        help_text=_("URL used to display the light logo on the dashboard."),
     )
 
     class HandleRef:

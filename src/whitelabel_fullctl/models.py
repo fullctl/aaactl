@@ -16,12 +16,14 @@ class OrganizationWhiteLabeling(HandleRefModel):
     dark_logo_url = models.URLField(
         _("Dark Logo URL"),
         max_length=2000,
+        blank=True,
         null=True,
         help_text=_("URL used to display the dark logo on the dashboard."),
     )
     light_logo_url = models.URLField(
         _("Light Logo URL"),
         max_length=2000,
+        blank=True,
         null=True,
         help_text=_("URL used to display the light logo on the dashboard."),
     )

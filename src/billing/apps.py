@@ -6,3 +6,4 @@ class BillingConfig(AppConfig):
 
     def ready(self):
         import billing.signals  # noqa: F401
+        import billing.tasks  # noqa: F401

@@ -1,6 +1,10 @@
+import io
+
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from fullctl.django.models import Task
 from fullctl.django.tasks import register
+from fullctl.django.tasks.qualifiers import ConcurrencyLimit
 
 import account.models
 import billing.models
@@ -46,3 +50,24 @@ class UpdateSubscriptionProductInfo(Task):
                 f"{subscription_product.component_object.name} ({org_name})"
             )
             subscription_product.save()
+
+
+@register
+class BillingCycles(Task):
+    class Meta:
+        proxy = True
+
+    class HandleRef:
+        tag = "task_billing_cycles"
+
+    class TaskMeta:
+        qualifiers = [
+            # max run one billing_cycles task at any given time
+            ConcurrencyLimit(1),
+        ]
+
+    def run(self, *args, **kwargs):
+        stdout = io.StringIO()
+        call_command("billing_cycles", stdout=stdout, commit=True)
+        output = stdout.getvalue()
+        return output

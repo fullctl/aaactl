@@ -158,6 +158,11 @@ class OrganizationAdmin(admin.ModelAdmin):
     def save_formset(self, request, form, formset, change):
         return super().save_formset(request, form, formset, change)
 
+    # dont allow deletion
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):

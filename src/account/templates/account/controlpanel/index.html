@@ -4,6 +4,23 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript" src="{% static "account/aaactl.org_dashboard.js" %}"></script>
+<script>
+  const root = document.documentElement;
+  const primaryColorValue = "{{ org_whitelabel.css.primary_color }}"
+  if (primaryColorValue) {
+    root.style.setProperty('--clr-accent-400', primaryColorValue);
+  }
+
+document.addEventListener("DOMContentLoaded", function() {
+  var appLogo = document.querySelector(".app-logo");
+  if (appLogo) {
+      logo_width = "{{ org_whitelabel.css.logo_width }}"
+      if (logo_width) {
+        appLogo.setAttribute("width", logo_width);
+      }
+  }
+});
+</script>
 {% endblock %}
 
 {% block content %}

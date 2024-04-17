@@ -1,5 +1,9 @@
+import json
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+
+from whitelabel_fullctl.models import OrganizationWhiteLabeling
+
 
 import account.forms
 
@@ -55,6 +59,33 @@ def index(request):
             },
         )
 
+    org_whitelabel = OrganizationWhiteLabeling.objects.filter(
+        org__slug=request.selected_org.slug
+    ).first()
+
+    if not org_whitelabel:
+        org_whitelabel = OrganizationWhiteLabeling.objects.get(
+            org__slug="fullctl"
+        )
+        org_whitelabel_components = {
+            "html_title": org_whitelabel.html_title if org_whitelabel.html_title else json.dumps(org_whitelabel.html_title),
+        }
+    else:
+        css_dict = json.loads(org_whitelabel.css)
+        org_whitelabel_components = {
+            "name": org_whitelabel.org.name,
+            "html_title": org_whitelabel.html_title if org_whitelabel.html_title else json.dumps(org_whitelabel.html_title),
+            "html_footer": org_whitelabel.html_footer if org_whitelabel.html_footer else json.dumps(org_whitelabel.html_footer),
+            "css": {
+                "primary_color": css_dict.get("primary_color", json.dumps(None)),
+                "logo_width": css_dict.get("logo_width", json.dumps(None))
+
+            },
+            "dark_logo_url": org_whitelabel.dark_logo_url if org_whitelabel.dark_logo_url else json.dumps(org_whitelabel.dark_logo_url),
+            "light_logo_url": org_whitelabel.light_logo_url if org_whitelabel.light_logo_url else json.dumps(org_whitelabel.light_logo_url),
+            "custom_org": json.dumps(True)
+        }
+
     env.update(
         change_user_info_form=form,
         change_pwd_form=change_pwd_form,
@@ -65,6 +96,7 @@ def index(request):
         create_key_form=create_key_form,
         user_settings_form=user_settings_form,
         can_invite=request.perms.check([request.selected_org, "users"], "c"),
+        org_whitelabel=org_whitelabel_components,
     )
 
     return render(request, "account/controlpanel/index.html", env)

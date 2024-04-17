@@ -191,7 +191,7 @@ class OrganizationWhiteLabeling(AaactlDataViewSet):
     path_prefix = "/data"
     allowed_http_methods = ["GET"]
     valid_filters = [
-        ("slug", "org__slug"),
+        ("org", "org__slug"),
     ]
     allow_unfiltered = True
 

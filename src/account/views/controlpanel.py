@@ -69,13 +69,13 @@ def index(request):
             org__slug="fullctl"
         )
         org_whitelabel_components = {
-            "html_header": org_whitelabel.html_header if org_whitelabel.html_header else json.dumps(org_whitelabel.html_header),
+            "html_title": org_whitelabel.html_title if org_whitelabel.html_title else json.dumps(org_whitelabel.html_title),
         }
     else:
         css_dict = json.loads(org_whitelabel.css)
         org_whitelabel_components = {
             "name": org_whitelabel.org.name,
-            "html_header": org_whitelabel.html_header if org_whitelabel.html_header else json.dumps(org_whitelabel.html_header),
+            "html_title": org_whitelabel.html_title if org_whitelabel.html_title else json.dumps(org_whitelabel.html_title),
             "html_footer": org_whitelabel.html_footer if org_whitelabel.html_footer else json.dumps(org_whitelabel.html_footer),
             "css": {
                 "primary_color": css_dict.get("primary_color", json.dumps(None)),

@@ -856,8 +856,13 @@ class SubscriptionCycle(HandleRefModel):
             ("open", "Open"),
             ("paid", "Paid"),
             ("failed", "Payment failure"),
+            ("error", "Critical error (Manually review)"),
         ),
         default="open",
+    )
+
+    error_information = models.TextField(
+        blank=True, null=True, help_text=_("Error information")
     )
 
     start = models.DateField()
@@ -925,6 +930,11 @@ class SubscriptionCycle(HandleRefModel):
 
     def __str__(self):
         return f"{self.subscription} {self.start} - {self.end}"
+
+    def set_error(self, error):
+        self.status = "error"
+        self.error_information = error
+        self.save()
 
     def update_usage(self, subscription_product, usage):
         """

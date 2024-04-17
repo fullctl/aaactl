@@ -7,15 +7,17 @@
     data-api-base="{% url "applications_api:service_application-list" %}"
   >
     <div class="selected d-flex align-items-center">
-      <img class="app-logo" src="{% static "common/fullctl.svg" %}" alt="{{ service_tag }}">
+      {% if org_whitelabel.custom_org %}
+        <img class="app-logo" src="{{ org_whitelabel.dark_logo_url }}" alt="{{ org_whitelabel.name }}">
+      {% else %}
+        <img class="app-logo" src="{% static "common/fullctl.svg" %}" alt="{{ service_tag }}">
+      {% endif %}
       <span class="icon {{ request.app_id }} icon-caret-y ms-4"></span>
       <div class="others list-body" style="display:none">
       </div>
       <div class="templates" style="display:none">
         <a class="list-item" data-template="row">
-
-          <img class="app-logo" alt="" data-logo-url="{% static "common/logos/svc_slug-dark.svg" %}">
-
+            <img class="app-logo" alt="" data-logo-url="{% static "common/logos/svc_slug-dark.svg" %}">
           <span class="icon-arrow | icon icon-lg"></span>
         </a>
       </div>
@@ -26,7 +28,7 @@
 </div>
 <script>
   $(document).ready(function() {
-    new aaactl.Header();
+    new aaactl.Header({{ org_whitelabel|safe }});
   });
 </script>
 {% endblock %}

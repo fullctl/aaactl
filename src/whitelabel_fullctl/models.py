@@ -10,7 +10,6 @@ class OrganizationWhiteLabeling(HandleRefModel):
     org = models.OneToOneField(
         Organization, on_delete=models.CASCADE
     )
-    html_title = models.CharField(max_length=255, blank=True, null=True)
     html_footer = models.TextField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
     dark_logo_url = models.URLField(

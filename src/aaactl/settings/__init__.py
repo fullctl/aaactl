@@ -77,6 +77,7 @@ INSTALLED_APPS += (
     "django_recaptcha",
     "django_handleref",
     "rest_framework",
+    "rest_framework_simplejwt",
     # rendering
     "crispy_forms",
     "crispy_bootstrap5",
@@ -135,6 +136,9 @@ AUTHENTICATION_BACKENDS = [
 ] + AUTHENTICATION_BACKENDS
 
 DEFAULT_SCOPES = ["email", "profile", "peeringdb"]
+
+settings_manager.set_list("CORS_ALLOWED_ORIGINS", [], envvar_element_type=str)
+settings_manager.set_list("FRONTEND_ORIGINS", [], envvar_element_type=str)
 
 OAUTH2_PROVIDER = {
     "SCOPES": {
@@ -214,7 +218,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["common.rest.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         #        'rest_framework.authentication.BasicAuthentication',
-        "account.rest.authentication.APIKeyAuthentication",
+        "account.rest.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     # Use hyperlinked styles by default.

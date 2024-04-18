@@ -64,12 +64,9 @@ def index(request):
     ).first()
 
     if not org_whitelabel:
-        org_whitelabel = OrganizationWhiteLabeling.objects.get(
-            org__slug="fullctl"
-        )
         org_whitelabel_components = {
-            "name": org_whitelabel.org.name,
-            "show_logo": json.dumps(org_whitelabel.show_logo),
+            "name": "FullCtl",
+            "show_logo": json.dumps(True),
         }
     else:
         css_dict = json.loads(org_whitelabel.css)

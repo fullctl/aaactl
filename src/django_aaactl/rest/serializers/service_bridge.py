@@ -241,6 +241,7 @@ class OrganizationWhiteLabelingSerializer(ModelSerializer):
         fields = [
             "org",
             "show_logo",
+            "http_host",
             "html_footer",
             "css",
             "light_logo_url",

@@ -26,6 +26,9 @@ class OrganizationWhiteLabeling(HandleRefModel):
         null=True,
         help_text=_("URL used to display the light logo on the dashboard."),
     )
+    show_logo = models.BooleanField(
+        default=False, help_text=_("Show logo in the services drop down")
+    )
 
     class HandleRef:
         tag = "org_whitelabeling"

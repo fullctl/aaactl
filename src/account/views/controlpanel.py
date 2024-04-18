@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from whitelabel_fullctl.models import OrganizationWhiteLabeling
-from account.models import Organization
 
 
 import account.forms
@@ -70,6 +69,7 @@ def index(request):
         )
         org_whitelabel_components = {
             "name": org_whitelabel.org.name,
+            "show_logo": json.dumps(org_whitelabel.show_logo),
         }
     else:
         css_dict = json.loads(org_whitelabel.css)
@@ -83,6 +83,7 @@ def index(request):
             },
             "dark_logo_url": org_whitelabel.dark_logo_url if org_whitelabel.dark_logo_url else json.dumps(org_whitelabel.dark_logo_url),
             "light_logo_url": org_whitelabel.light_logo_url if org_whitelabel.light_logo_url else json.dumps(org_whitelabel.light_logo_url),
+            "show_logo": json.dumps(org_whitelabel.show_logo),
             "custom_org": json.dumps(True)
         }
 

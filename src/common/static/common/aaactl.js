@@ -40,15 +40,15 @@ aaactl.Header = twentyc.cls.define(
 
         row.attr("href", redirect_url);
 
-        if (org_whitelabel.custom_org) {
-          const span = $('<span class="name"></span>').text(data.name);
-          img.replaceWith(span);
-        } else {
+        if (org_whitelabel.show_logo === "true") {
           if(!data.logo) {
             img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
           } else {
             img.attr("src", data.logo);
           }
+        } else {
+          const span = $('<span class="name"></span>').text(data.name);
+          img.replaceWith(span);
         }
       };
 

@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('whitelabel_fullctl', '0005_remove_organizationwhitelabeling_html_title'),
+        ("whitelabel_fullctl", "0005_remove_organizationwhitelabeling_html_title"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organizationwhitelabeling',
-            name='show_logo',
-            field=models.BooleanField(default=False, help_text='Show logo in the services drop down'),
+            model_name="organizationwhitelabeling",
+            name="show_logo",
+            field=models.BooleanField(
+                default=False, help_text="Show logo in the services drop down"
+            ),
         ),
     ]

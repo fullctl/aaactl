@@ -233,8 +233,16 @@ class OauthAccessToken(ModelSerializer):
     def get_expired(self, obj):
         return obj.is_expired()
 
+
 @register
 class OrganizationWhiteLabelingSerializer(ModelSerializer):
     class Meta:
         model = whitelabel_models.OrganizationWhiteLabeling
-        fields = ['org', 'show_logo', 'html_footer', 'css', 'light_logo_url', 'dark_logo_url']
+        fields = [
+            "org",
+            "show_logo",
+            "html_footer",
+            "css",
+            "light_logo_url",
+            "dark_logo_url",
+        ]

@@ -5,11 +5,10 @@ from django.utils.translation import gettext as _
 from account.models import Organization
 from common.models import HandleRefModel
 
+
 @reversion.register
 class OrganizationWhiteLabeling(HandleRefModel):
-    org = models.OneToOneField(
-        Organization, on_delete=models.CASCADE
-    )
+    org = models.OneToOneField(Organization, on_delete=models.CASCADE)
     html_footer = models.TextField(blank=True, null=True)
     css = models.TextField(blank=True, null=True)
     dark_logo_url = models.URLField(

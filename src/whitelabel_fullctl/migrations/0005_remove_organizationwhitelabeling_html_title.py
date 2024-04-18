@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('whitelabel_fullctl', '0004_auto_20240417_1120'),
+        ("whitelabel_fullctl", "0004_auto_20240417_1120"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='organizationwhitelabeling',
-            name='html_title',
+            model_name="organizationwhitelabeling",
+            name="html_title",
         ),
     ]

@@ -1,11 +1,10 @@
 import json
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from whitelabel_fullctl.models import OrganizationWhiteLabeling
-
-
 import account.forms
+from whitelabel_fullctl.models import OrganizationWhiteLabeling
 
 # Create your views here.
 
@@ -72,16 +71,21 @@ def index(request):
         css_dict = json.loads(org_whitelabel.css)
         org_whitelabel_components = {
             "name": org_whitelabel.org.name,
-            "html_footer": org_whitelabel.html_footer if org_whitelabel.html_footer else json.dumps(org_whitelabel.html_footer),
+            "html_footer": org_whitelabel.html_footer
+            if org_whitelabel.html_footer
+            else json.dumps(org_whitelabel.html_footer),
             "css": {
                 "primary_color": css_dict.get("primary_color", json.dumps(None)),
-                "logo_width": css_dict.get("logo_width", json.dumps(None))
-
+                "logo_width": css_dict.get("logo_width", json.dumps(None)),
             },
-            "dark_logo_url": org_whitelabel.dark_logo_url if org_whitelabel.dark_logo_url else json.dumps(org_whitelabel.dark_logo_url),
-            "light_logo_url": org_whitelabel.light_logo_url if org_whitelabel.light_logo_url else json.dumps(org_whitelabel.light_logo_url),
+            "dark_logo_url": org_whitelabel.dark_logo_url
+            if org_whitelabel.dark_logo_url
+            else json.dumps(org_whitelabel.dark_logo_url),
+            "light_logo_url": org_whitelabel.light_logo_url
+            if org_whitelabel.light_logo_url
+            else json.dumps(org_whitelabel.light_logo_url),
             "show_logo": json.dumps(org_whitelabel.show_logo),
-            "custom_org": json.dumps(True)
+            "custom_org": json.dumps(True),
         }
 
     env.update(

@@ -185,6 +185,7 @@ class Contact(AaactlDataViewSet):
     queryset = account_models.ContactMessage.objects.all()
     serializer_class = Serializers.contact_message
 
+
 @route
 class OrganizationWhiteLabeling(AaactlDataViewSet):
     path_prefix = "/data"

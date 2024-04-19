@@ -7,7 +7,7 @@ from rest_framework import serializers
 import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
-import whitelabel_fullctl.models as whitelabel_models
+import whitelabel_fullctl.models as branding_models
 from account.rest.serializers import Serializers as AccountSerializers
 
 Serializers, register = serializer_registry()
@@ -235,13 +235,12 @@ class OauthAccessToken(ModelSerializer):
 
 
 @register
-class OrganizationWhiteLabelingSerializer(ModelSerializer):
+class OrganizationBrandingSerializer(ModelSerializer):
     class Meta:
-        model = whitelabel_models.OrganizationWhiteLabeling
+        model = branding_models.OrganizationBranding
         fields = [
             "org",
             "show_logo",
-            "http_host",
             "html_footer",
             "css",
             "light_logo_url",

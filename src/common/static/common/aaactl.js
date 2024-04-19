@@ -7,7 +7,7 @@ aaactl.api_client = new twentyc.rest.Client("/api/account")
 aaactl.Header = twentyc.cls.define(
   "Header",
   {
-    Header : function(org_whitelabel={}) {
+    Header : function(org_branding={}) {
       this.elements = {}
       this.elements.app_switcher = $('[data-element="app_switcher"]');
 
@@ -40,7 +40,7 @@ aaactl.Header = twentyc.cls.define(
 
         row.attr("href", redirect_url);
 
-        if (org_whitelabel.show_logo === "true") {
+        if (org_branding.show_logo === "true") {
           if(!data.logo) {
             img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
           } else {

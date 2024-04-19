@@ -7,8 +7,8 @@
     data-api-base="{% url "applications_api:service_application-list" %}"
   >
     <div class="selected d-flex align-items-center">
-      {% if org_whitelabel.custom_org == "true" %}
-        <img class="app-logo" src="{{ org_whitelabel.dark_logo_url }}" alt="{{ org_whitelabel.name }}">
+      {% if org_branding.custom_org == "true" %}
+        <img class="app-logo" src="{{ org_branding.dark_logo_url }}" alt="{{ org_branding.name }}">
       {% else %}
         <img class="app-logo" src="{% static "common/fullctl.svg" %}" alt="{{ service_tag }}">
       {% endif %}
@@ -28,7 +28,7 @@
 </div>
 <script>
   $(document).ready(function() {
-    new aaactl.Header({{ org_whitelabel|safe }});
+    new aaactl.Header({{ org_branding|safe }});
   });
 </script>
 {% endblock %}

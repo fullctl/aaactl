@@ -28,6 +28,13 @@ class OrganizationBranding(HandleRefModel):
     show_logo = models.BooleanField(
         default=False, help_text=_("Show logo in the services drop down")
     )
+    http_host = models.CharField(
+        _("HTTP Host"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("The HTTP host used to display the branding."),
+    )
 
     class HandleRef:
         tag = "org_branding"

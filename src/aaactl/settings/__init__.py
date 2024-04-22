@@ -288,3 +288,5 @@ settings_manager.set_option("SERVICE_KEY", "")
 # feature request and support contact forms, as those use the service bridge
 
 settings_manager.set_option("CONTACT_ALLOWED_ORIGINS", settings.exposed_list())
+
+settings_manager.set_option("BRANDING_ORG", "")

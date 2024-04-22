@@ -76,7 +76,7 @@ def login(request):
 
     if branding_org:
         org_branding = OrganizationBranding.objects.filter(
-            org=branding_org
+            org__slug=branding_org
         ).first()
     elif http_host:
         org_branding = OrganizationBranding.objects.filter(

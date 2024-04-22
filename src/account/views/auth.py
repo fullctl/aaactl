@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
@@ -17,6 +18,7 @@ import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
 from account.session import set_selected_org
 from applications.models import Service
+from whitelabel_fullctl.models import OrganizationBranding
 
 # Create your views here.
 
@@ -37,6 +39,9 @@ def valid_redirect(path, fallback):
 
 def login(request):
     env = {}
+    org_branding = {}
+    branding_org = getattr(settings, "BRANDING_ORG", None)
+    http_host = request.get_host()
 
     if request.user.is_authenticated:
         messages.info(request, _("Already logged in"))
@@ -68,9 +73,28 @@ def login(request):
     else:
         form = account.forms.Login()
 
-    env.update(login_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED)
+    if branding_org:
+        org_branding = OrganizationBranding.objects.filter(org=branding_org).first()
+    elif http_host:
+        org_branding = OrganizationBranding.objects.filter(http_host=http_host).first()
 
-    return render(request, "account/auth/login.html", env)
+    if org_branding:
+        css_dict = json.loads(org_branding.css) if org_branding.css else {}
+        name = org_branding.org.name
+        org_branding_components = {
+            "name": name,
+            "html_footer": org_branding.html_footer,
+            "css": css_dict,
+            "dark_logo_url": org_branding.dark_logo_url,
+            "light_logo_url": org_branding.light_logo_url,
+            "custom_org": True,
+        }
+
+    env.update(
+        login_form=form,
+        password_login_enabled=settings.PASSWORD_LOGIN_ENABLED,
+        org_branding=org_branding_components,
+    )
 
 
 def get_jwt_tokens(user):

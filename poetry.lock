@@ -948,8 +948,8 @@ whitenoise = ">=6"
 [package.source]
 type = "git"
 url = "https://github.com/fullctl/fullctl.git"
-reference = "federation"
-resolved_reference = "1ec533fd49dec1574b7855c4e653255ed01005ea"
+reference = "federation_with_branding"
+resolved_reference = "2253fe22f9a6b21e8e28b8651434b448449d434c"
 
 [[package]]
 name = "future"
@@ -2551,4 +2551,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1006d1c90e7914149879f81f605e3279239228942f9378ba9d1e42ff43679f57"
+content-hash = "b87b0568302b1b377fe3972c67d73ae09e9af5c2c93c7ab32b7385ef89f4d021"

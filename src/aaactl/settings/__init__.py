@@ -86,6 +86,7 @@ INSTALLED_APPS += (
     # oauth
     "social_django",
     # aaactl apps
+    "whitelabel_fullctl",
     "common",
     "account",
     "billing",

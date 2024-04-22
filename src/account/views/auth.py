@@ -79,9 +79,7 @@ def login(request):
             org__slug=branding_org
         ).first()
     elif http_host:
-        org_branding = OrganizationBranding.objects.filter(
-            http_host=http_host
-        ).first()
+        org_branding = OrganizationBranding.objects.filter(http_host=http_host).first()
 
     if org_branding:
         css_dict = json.loads(org_branding.css) if org_branding.css else {}

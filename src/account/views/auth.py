@@ -42,6 +42,7 @@ def login(request):
     org_branding = {}
     branding_org = getattr(settings, "BRANDING_ORG", None)
     http_host = request.get_host()
+    org_branding_components = {}
 
     if request.user.is_authenticated:
         messages.info(request, _("Already logged in"))
@@ -99,6 +100,8 @@ def login(request):
         password_login_enabled=settings.PASSWORD_LOGIN_ENABLED,
         org_branding=org_branding_components,
     )
+
+    return render(request, "account/auth/login.html", env)
 
 
 def get_jwt_tokens(user):

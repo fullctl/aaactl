@@ -55,6 +55,7 @@ LOGIN_REDIRECT_URL = "/account"
 # hard overwrite MIDDLEWARE, since ordering here is important
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",

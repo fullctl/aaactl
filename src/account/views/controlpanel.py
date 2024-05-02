@@ -68,7 +68,7 @@ def index(request):
             "show_logo": json.dumps(True),
         }
     else:
-        css_dict = json.loads(org_branding.css) if org_branding.css else {}
+        css_dict = org_branding.css
         org_branding_components = {
             "name": org_branding.org.name,
             "html_footer": org_branding.html_footer

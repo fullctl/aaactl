@@ -74,10 +74,7 @@ def index(request):
             "html_footer": org_branding.html_footer
             if org_branding.html_footer
             else json.dumps(org_branding.html_footer),
-            "css": {
-                "primary_color": css_dict.get("primary_color", json.dumps(None)),
-                "logo_width": css_dict.get("logo_width", json.dumps(None)),
-            },
+            "css": css_dict,
             "dark_logo_url": org_branding.dark_logo_url
             if org_branding.dark_logo_url
             else json.dumps(org_branding.dark_logo_url),

@@ -1,4 +1,4 @@
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -74,13 +74,9 @@ def login(request):
         form = account.forms.Login()
 
     if branding_org:
-        org_branding = OrganizationBranding.objects.filter(
-            org__slug=branding_org
-        ).first()
+        org_branding = OrganizationBranding.objects.filter(org_slug=branding_org).first()
     elif http_host:
-        org_branding = OrganizationBranding.objects.filter(
-            http_host=http_host
-        ).first()
+        org_branding = OrganizationBranding.objects.filter(http_host=http_host).first()
 
     if org_branding:
         name = org_branding.org.name

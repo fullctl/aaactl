@@ -7,6 +7,7 @@ from rest_framework import serializers
 import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
+import whitelabel_fullctl.models as branding_models
 from account.rest.serializers import Serializers as AccountSerializers
 
 Serializers, register = serializer_registry()
@@ -245,3 +246,17 @@ class OauthAccessToken(ModelSerializer):
 
     def get_expired(self, obj):
         return obj.is_expired()
+
+
+@register
+class OrganizationBrandingSerializer(ModelSerializer):
+    class Meta:
+        model = branding_models.OrganizationBranding
+        fields = [
+            "org",
+            "show_logo",
+            "html_footer",
+            "css",
+            "light_logo_url",
+            "dark_logo_url",
+        ]

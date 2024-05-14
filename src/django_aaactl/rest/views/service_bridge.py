@@ -9,6 +9,7 @@ from rest_framework.response import Response
 import account.models as account_models
 import applications.models as application_models
 import billing.models as billing_models
+import whitelabel_fullctl.models as branding_models
 from common.rest.decorators import grainy_endpoint
 from django_aaactl.rest.serializers.service_bridge import Serializers
 
@@ -208,3 +209,16 @@ class Contact(AaactlDataViewSet):
 
     queryset = account_models.ContactMessage.objects.all()
     serializer_class = Serializers.contact_message
+
+
+@route
+class OrganizationBranding(AaactlDataViewSet):
+    path_prefix = "/data"
+    allowed_http_methods = ["GET"]
+    valid_filters = [
+        ("org", "org__slug"),
+    ]
+    allow_unfiltered = True
+
+    queryset = branding_models.OrganizationBranding.objects.all()
+    serializer_class = Serializers.org_branding

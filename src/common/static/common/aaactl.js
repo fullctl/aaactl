@@ -7,7 +7,7 @@ aaactl.api_client = new twentyc.rest.Client("/api/account")
 aaactl.Header = twentyc.cls.define(
   "Header",
   {
-    Header : function() {
+    Header : function(org_branding={}) {
       this.elements = {}
       this.elements.app_switcher = $('[data-element="app_switcher"]');
 
@@ -39,10 +39,16 @@ aaactl.Header = twentyc.cls.define(
         const img =  row.find("img.app-logo")
 
         row.attr("href", redirect_url);
-        if(!data.logo) {
-          img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+
+        if (org_branding.show_logo === "true") {
+          if(!data.logo) {
+            img.attr("src", img.data("logo-url").replace("svc_slug", data.slug));
+          } else {
+            img.attr("src", data.logo);
+          }
         } else {
-          img.attr("src", data.logo);
+          const span = $('<span class="name"></span>').text(data.name);
+          img.replaceWith(span);
         }
       };
 

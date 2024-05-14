@@ -931,8 +931,8 @@ whitenoise = ">=6"
 [package.source]
 type = "git"
 url = "https://github.com/fullctl/fullctl.git"
-reference = "federation"
-resolved_reference = "f9dc1f70ccfae0f4239d475669ff69539b858376"
+reference = "prep-release"
+resolved_reference = "13512d254e1d50323a64cee25b1a1d394c7fd1a4"
 
 [[package]]
 name = "future"
@@ -2567,4 +2567,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1006d1c90e7914149879f81f605e3279239228942f9378ba9d1e42ff43679f57"
+content-hash = "d78cf0f5df12510c2ab703bbea662d50e32869d6ad8013f6e352b427e4a3805a"

@@ -10,7 +10,7 @@ from common.models import HandleRefModel
 class OrganizationBranding(HandleRefModel):
     org = models.OneToOneField(Organization, on_delete=models.CASCADE)
     html_footer = models.TextField(blank=True, null=True)
-    css = models.TextField(blank=True, null=True)
+    css = models.JSONField(default=dict, blank=True)
     dark_logo_url = models.URLField(
         _("Dark Background Logo URL"),
         max_length=2000,

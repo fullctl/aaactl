@@ -1,5 +1,4 @@
-import json
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -82,12 +81,11 @@ def login(request):
         org_branding = OrganizationBranding.objects.filter(http_host=http_host).first()
 
     if org_branding:
-        css_dict = json.loads(org_branding.css) if org_branding.css else {}
         name = org_branding.org.name
         org_branding_components = {
             "name": name,
             "html_footer": org_branding.html_footer,
-            "css": css_dict,
+            "css": org_branding.css,
             "dark_logo_url": org_branding.dark_logo_url,
             "light_logo_url": org_branding.light_logo_url,
             "custom_org": True,

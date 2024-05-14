@@ -211,7 +211,6 @@ class AccountObjects:
         )
         from whitelabel_fullctl.models import OrganizationBranding
 
-
         self.user = user = get_user_model().objects.create_user(
             username=f"user_{handle}",
             email=f"{handle}@localhost",

@@ -9,6 +9,23 @@ def test_login(db, client_anon):
     assert response.status_code == 200
 
 
+def test_org_branding_slug_filtering(db, client_anon, account_objects, settings):
+    settings.BRANDING_ORG = account_objects.org.slug
+    response = client_anon.get(reverse("account:auth-login"))
+
+    assert response.context["org_branding"]["name"] == account_objects.org.name
+
+
+def test_org_branding_http_host_filtering(db, client_anon, account_objects):
+    # http_host is set as testserver and settings.BRANDING_ORG is None
+    account_objects.org_branding.http_host = "testserver"
+    account_objects.org_branding.save()
+
+    response = client_anon.get(reverse("account:auth-login"))
+
+    assert response.context["org_branding"]["name"] == account_objects.org.name
+
+
 def test_valid_frontend_redirect(db, settings, account_objects):
     settings.FRONTEND_ORIGINS = ["http://localhost:8080"]
     url = valid_frontend_redirect(

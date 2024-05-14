@@ -181,6 +181,30 @@ document.addEventListener("DOMContentLoaded", function() {
               {% include "account/controlpanel/service-list.html" %}
             {% endblock %}
           </div>
+          
+          <!-- FEDERATION -->
+          {% if permissions.read_org_org_key %}
+          <div class="accordion-item">
+            <h5 class="accordion-header" id="heading-federated-auth">
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-federated-auth"
+                aria-expanded="false"
+                aria-controls="collapse-federated-auth">
+                {% trans "Service Authentication" %}
+              </button>
+            </h5>
+            <div id="collapse-federated-auth" class="accordion-collapse collapse" aria-labelledby="heading-federated-auth">
+              <div class="row key-container">
+                {% block federated_service_urls %}
+                {% include "account/controlpanel/org-dashboard/federation.html" %}
+                {% endblock %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
 
           <!-- USERS -->
 

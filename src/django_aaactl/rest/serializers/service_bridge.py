@@ -21,6 +21,8 @@ class Service(ModelSerializer):
     org_can_trial = serializers.SerializerMethodField()
     org_has_access = serializers.SerializerMethodField()
 
+    federated = serializers.SerializerMethodField()
+
     class Meta:
         model = application_models.Service
         fields = [
@@ -38,9 +40,15 @@ class Service(ModelSerializer):
             "org_has_access",
             "always_show_dashboard",
             "cross_promote",
+            "config",
+            "federated",
         ]
 
     def get_products(self, obj):
+
+        if getattr(obj, "federated", False):
+            return []
+
         return [product.name for product in obj.products_that_grant_access]
 
     def get_trial_product_name(self, obj):
@@ -63,11 +71,17 @@ class Service(ModelSerializer):
         if not org:
             return None
 
+        if getattr(obj, "federated", False):
+            return True
+
         for org_product in org.products.filter(product__in=obj.products.all()):
             if not org_product.expired:
                 return True
 
         return False
+
+    def get_federated(self, obj):
+        return getattr(obj, "federated", False)
 
 
 @register

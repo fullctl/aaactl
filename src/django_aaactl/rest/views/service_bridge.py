@@ -71,6 +71,31 @@ class Service(AaactlDataViewSet):
 
         return context
 
+    @grainy_endpoint("service_bridge")
+    def list(self, request, *args, **kwargs):
+
+        qset = self.filter(self.get_queryset(), request)
+        qset, joins = self.join_relations(qset, request)
+        context = self.serializer_context(request, {"joins": joins})
+
+        services = {svc.slug: svc for svc in qset}
+
+        if context.get("org"):
+            # loading for specific org, so we need to check if there
+            # is service federation setup and replace the service
+            # with the federated service
+
+            for fed_svc_url in account_models.FederatedServiceURL.objects.filter(
+                auth__org=context["org"]
+            ):
+                services[
+                    fed_svc_url.service.slug
+                ] = application_models.Service.from_federated_service_url(fed_svc_url)
+
+        services = list(services.values())
+        serializer = self.serializer_class(services, many=True, context=context)
+        return Response(serializer.data)
+
     @action(
         detail=False,
         methods=["GET"],

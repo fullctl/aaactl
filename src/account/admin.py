@@ -40,6 +40,11 @@ from account.models import (
     UserPermissionOverride,
     UserSettings,
 )
+from account.models.federation import (
+    AuthFederation,
+    FederatedServiceURL,
+    ServiceFederationSupport,
+)
 
 # registered models
 
@@ -324,3 +329,25 @@ class ContactMessageAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(ServiceFederationSupport)
+class ServiceFederationAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "federation_level", "created", "updated")
+    search_fields = ("name", "slug")
+
+
+class ServiceURLInline(admin.TabularInline):
+    model = FederatedServiceURL
+    extra = 1
+    fields = ("url", "service", "config")
+    autocomplete_fields = ("service",)
+
+
+@admin.register(AuthFederation)
+class AuthFederationAdmin(admin.ModelAdmin):
+    list_display = ("org", "application")
+    search_fields = ("org__name", "org__slug")
+    autocomplete_fields = ("org",)
+
+    inlines = (ServiceURLInline,)

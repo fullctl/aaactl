@@ -55,6 +55,7 @@ LOGIN_REDIRECT_URL = "/account"
 # hard overwrite MIDDLEWARE, since ordering here is important
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",
@@ -77,6 +78,7 @@ INSTALLED_APPS += (
     "django_recaptcha",
     "django_handleref",
     "rest_framework",
+    "rest_framework_simplejwt",
     # rendering
     "crispy_forms",
     "crispy_bootstrap5",
@@ -85,6 +87,7 @@ INSTALLED_APPS += (
     # oauth
     "social_django",
     # aaactl apps
+    "whitelabel_fullctl",
     "common",
     "account",
     "billing",
@@ -136,6 +139,9 @@ AUTHENTICATION_BACKENDS = [
 
 DEFAULT_SCOPES = ["email", "profile", "peeringdb"]
 
+settings_manager.set_list("CORS_ALLOWED_ORIGINS", [], envvar_element_type=str)
+settings_manager.set_list("FRONTEND_ORIGINS", [], envvar_element_type=str)
+
 OAUTH2_PROVIDER = {
     "SCOPES": {
         "profile": "user profile",
@@ -147,6 +153,10 @@ OAUTH2_PROVIDER = {
     "REQUEST_APPROVAL_PROMPT": "auto",
     "PKCE_REQUIRED": False,
 }
+
+settings_manager.set_option(
+    "OAUTH2_PROVIDER_APPLICATION_MODEL", "oauth2_provider.Application"
+)
 
 # SOCIAL AUTH
 
@@ -214,7 +224,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["common.rest.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         #        'rest_framework.authentication.BasicAuthentication',
-        "account.rest.authentication.APIKeyAuthentication",
+        "account.rest.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     # Use hyperlinked styles by default.
@@ -283,3 +293,5 @@ settings_manager.set_option("SERVICE_KEY", "")
 # feature request and support contact forms, as those use the service bridge
 
 settings_manager.set_option("CONTACT_ALLOWED_ORIGINS", settings.exposed_list())
+
+settings_manager.set_option("BRANDING_ORG", "")

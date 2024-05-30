@@ -209,6 +209,16 @@ class AccountObjects:
             OrganizationRole,
             Role,
         )
+        from account.models.federation import ServiceFederationSupport
+        from whitelabel_fullctl.models import OrganizationBranding
+
+        (
+            self.federated_service_support,
+            _,
+        ) = ServiceFederationSupport.objects.get_or_create(
+            name="Test Service",
+            slug="test_service",
+        )
 
         self.user = user = get_user_model().objects.create_user(
             username=f"user_{handle}",
@@ -226,6 +236,10 @@ class AccountObjects:
 
         self.org = org = Organization.objects.create(name=handle, slug=handle)
         org.add_user(user, perms="crud")
+
+        self.org_branding = org_branding = OrganizationBranding.objects.create(
+            org=self.org
+        )
 
         admin_role, _ = Role.objects.get_or_create(
             name="admin",

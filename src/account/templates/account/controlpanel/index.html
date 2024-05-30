@@ -4,6 +4,23 @@
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript" src="{% static "account/aaactl.org_dashboard.js" %}"></script>
+<script>
+  const root = document.documentElement;
+  const primaryColorValue = "{{ org_branding.css.primary_color }}"
+  if (primaryColorValue) {
+    root.style.setProperty('--clr-accent-400', primaryColorValue);
+  }
+
+document.addEventListener("DOMContentLoaded", function() {
+  var appLogo = document.querySelector(".app-logo");
+  if (appLogo) {
+      logo_width = "{{ org_branding.css.logo_width }}"
+      if (logo_width) {
+        appLogo.setAttribute("width", logo_width);
+      }
+  }
+});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -164,6 +181,30 @@
               {% include "account/controlpanel/service-list.html" %}
             {% endblock %}
           </div>
+          
+          <!-- FEDERATION -->
+          {% if permissions.read_org_org_key %}
+          <div class="accordion-item">
+            <h5 class="accordion-header" id="heading-federated-auth">
+              <button
+                class="accordion-button fs-5 collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-federated-auth"
+                aria-expanded="false"
+                aria-controls="collapse-federated-auth">
+                {% trans "Service Authentication" %}
+              </button>
+            </h5>
+            <div id="collapse-federated-auth" class="accordion-collapse collapse" aria-labelledby="heading-federated-auth">
+              <div class="row key-container">
+                {% block federated_service_urls %}
+                {% include "account/controlpanel/org-dashboard/federation.html" %}
+                {% endblock %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
 
           <!-- USERS -->
 

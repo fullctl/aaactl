@@ -1,11 +1,67 @@
 from django.urls import reverse
 
 import account.models as models
+from account.views.auth import valid_frontend_redirect
 
 
 def test_login(db, client_anon):
     response = client_anon.get(reverse("account:auth-login"))
     assert response.status_code == 200
+
+
+def test_org_branding_slug_filtering(db, client_anon, account_objects, settings):
+    settings.BRANDING_ORG = account_objects.org.slug
+    response = client_anon.get(reverse("account:auth-login"))
+
+    assert response.context["org_branding"]["name"] == account_objects.org.name
+
+
+def test_org_branding_http_host_filtering(db, client_anon, account_objects):
+    # http_host is set as testserver and settings.BRANDING_ORG is None
+    account_objects.org_branding.http_host = "testserver"
+    account_objects.org_branding.save()
+
+    response = client_anon.get(reverse("account:auth-login"))
+
+    assert response.context["org_branding"]["name"] == account_objects.org.name
+
+
+def test_valid_frontend_redirect(db, settings, account_objects):
+    settings.FRONTEND_ORIGINS = ["http://localhost:8080"]
+    url = valid_frontend_redirect(
+        "http://localhost:8080", reverse("account:controlpanel"), account_objects.user
+    )
+    assert url[:28] == "http://localhost:8080/login/"
+
+    url = valid_frontend_redirect(
+        "http://localhost:8081", reverse("account:controlpanel"), account_objects.user
+    )
+    assert url == reverse("account:controlpanel")
+
+
+def test_login_frontend(db, account_objects, client_anon, settings):
+    response = client_anon.get(reverse("account:auth-login-frontend"))
+    assert response.status_code == 200
+
+    settings.FRONTEND_ORIGINS = ["http://localhost:8080"]
+    payload = {
+        "username_or_email": account_objects.user.username,
+        "password": "test",
+        "next": "http://localhost:8080",
+    }
+    response = client_anon.post(
+        reverse("account:auth-login-frontend"),
+        data=payload,
+    )
+    assert response.status_code == 302
+    assert response.url[:28] == "http://localhost:8080/login/"
+
+    payload = {"next": "http://localhost:8080"}
+    response = account_objects.client.get(
+        reverse("account:auth-login-frontend"), payload
+    )
+    assert response.status_code == 302
+    assert response.url[:28] == "http://localhost:8080/login/"
 
 
 def test_logout(db, account_objects):

@@ -1,4 +1,4 @@
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib import messages
@@ -6,16 +6,18 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as fn_login
 from django.contrib.auth import logout as fn_logout
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import resolve, reverse
 from django.utils.translation import gettext as _
 from oauth2_provider.oauth2_backends import get_oauthlib_core
+from rest_framework_simplejwt.tokens import RefreshToken
 
 import account.forms
 from account.models import EmailConfirmation, Invitation, PasswordReset
 from account.session import set_selected_org
 from applications.models import Service
+from whitelabel_fullctl.models import OrganizationBranding
 
 # Create your views here.
 
@@ -36,6 +38,10 @@ def valid_redirect(path, fallback):
 
 def login(request):
     env = {}
+    org_branding = {}
+    branding_org = getattr(settings, "BRANDING_ORG", None)
+    http_host = request.get_host()
+    org_branding_components = {}
 
     if request.user.is_authenticated:
         messages.info(request, _("Already logged in"))
@@ -46,7 +52,6 @@ def login(request):
         redirect_next = valid_redirect(
             request.POST.get("next"), reverse("account:controlpanel")
         )
-        print("redirecting", redirect_next)
         if form.is_valid():
             user = authenticate(
                 request,
@@ -68,7 +73,113 @@ def login(request):
     else:
         form = account.forms.Login()
 
-    env.update(login_form=form, password_login_enabled=settings.PASSWORD_LOGIN_ENABLED)
+    if branding_org:
+        org_branding = OrganizationBranding.objects.filter(
+            org__slug=branding_org
+        ).first()
+    elif http_host:
+        org_branding = OrganizationBranding.objects.filter(http_host=http_host).first()
+
+    if org_branding:
+        name = org_branding.org.name
+        org_branding_components = {
+            "name": name,
+            "html_footer": org_branding.html_footer,
+            "css": org_branding.css,
+            "dark_logo_url": org_branding.dark_logo_url,
+            "light_logo_url": org_branding.light_logo_url,
+            "custom_org": True,
+        }
+
+    env.update(
+        login_form=form,
+        password_login_enabled=settings.PASSWORD_LOGIN_ENABLED,
+        org_branding=org_branding_components,
+    )
+
+    return render(request, "account/auth/login.html", env)
+
+
+def get_jwt_tokens(user):
+    """
+    Generate JWT tokens for the given user.
+
+    Returns a dictionary containing the refresh and access tokens as strings.
+    """
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }
+
+
+def valid_frontend_redirect(path, fallback, user):
+    """
+    Validates the redirect path to a frontend service and returns a valid redirect URL
+    or the fallback URL if the redirect path is invalid.
+    """
+    if not path:
+        return fallback
+
+    parts = urlparse(path)
+    origin = f"{parts.scheme}://{parts.netloc}"
+    if origin not in settings.FRONTEND_ORIGINS:
+        return fallback
+
+    tokens = get_jwt_tokens(user)
+    parts = parts._replace(path=f'/login/{tokens.get("refresh")}/')
+
+    return parts.geturl()
+
+
+def login_frontend(request):
+    """
+    View function for handling frontend login.
+    Will redirect to the frontend service with a JWT refresh token if the user is authenticated.
+    """
+    env = {}
+
+    if request.user.is_authenticated:
+        redirect_next = valid_frontend_redirect(
+            request.GET.get("next"), reverse("account:controlpanel"), request.user
+        )
+
+        # redirect_next is already cleaned and validated
+        # through valid_frontend_redirect at this point
+        return HttpResponseRedirect(redirect_next)
+
+    if request.method == "POST":
+        form = account.forms.Login(data=request.POST)
+        if form.is_valid():
+            user = authenticate(
+                request,
+                username=form.cleaned_data["username_or_email"],
+                password=form.cleaned_data["password"],
+            )
+
+            if user is not None:
+                fn_login(request, user)
+                redirect_next = valid_frontend_redirect(
+                    request.POST.get("next"), reverse("account:controlpanel"), user
+                )
+
+                # redirect_next is already cleaned and validated
+                # through valid_frontend_redirect at this point
+                return HttpResponseRedirect(redirect_next)
+            else:
+                messages.error(
+                    request, _("Login failed: Wrong username / email / password")
+                )
+
+    else:
+        form = account.forms.Login()
+
+    env.update(
+        login_form=form,
+        password_login_enabled=settings.PASSWORD_LOGIN_ENABLED,
+        login_form_action="account:auth-login-frontend",
+    )
 
     return render(request, "account/auth/login.html", env)
 
